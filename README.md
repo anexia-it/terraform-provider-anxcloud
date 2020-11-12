@@ -14,6 +14,7 @@
 - Forum: [discuss.hashicorp.com](https://discuss.hashicorp.com/c/terraform-providers/tf-anxcloud/)
 - Chat: [gitter](https://gitter.im/hashicorp-terraform/Lobby)
 - Mailing List: [Google Groups](http://groups.google.com/group/terraform-tool)
+- Contact: [opensource@anexia-it.com](opensource@anexia-it.com)
 
 This provider is maintained internally by the Anexia Cloud team.
 
