@@ -11,7 +11,7 @@
 
 - Website: [terraform.io](https://terraform.io)
 - Tutorials: [learn.hashicorp.com](https://learn.hashicorp.com/terraform?track=getting-started#getting-started)
-- Forum: [discuss.hashicorp.com](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/)
+- Forum: [discuss.hashicorp.com](https://discuss.hashicorp.com/c/terraform-providers/tf-anxcloud/)
 - Chat: [gitter](https://gitter.im/hashicorp-terraform/Lobby)
 - Mailing List: [Google Groups](http://groups.google.com/group/terraform-tool)
 
