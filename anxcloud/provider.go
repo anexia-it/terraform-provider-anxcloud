@@ -12,7 +12,7 @@ import (
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"token": &schema.Schema{
+			"token": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,

@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Anexia Provider for Terraform Roadmap
-    url: https://github.com/hashicorp/terraform-provider-kubernetes/blob/master/_about/ROADMAP.md
-    about: Each quarter the team highlights our areas of focus for our work and upcoming research.
+  - name: Anexia contact form
+    url: https://anexia.com/en/company/contact
+    about: "General contact form, or use e-mail: opensource@anexia-it.com to ask contribution related questions."
