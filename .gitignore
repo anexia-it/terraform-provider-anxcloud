@@ -37,3 +37,7 @@ override.tf.json
 .terraformrc
 terraform.rc
 terraform
+
+# Ignore vendor directory
+vendor
+tools/vendor

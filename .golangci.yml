@@ -1,0 +1,24 @@
+run:
+  deadline: 2m30s
+
+issues:
+  max-per-linter: 0
+  max-same-issues: 0
+
+linters:
+  disable-all: true
+  enable:
+    - deadcode
+    - errcheck
+    - gofmt
+    - gosimple
+    - ineffassign
+    - misspell
+    - nakedret
+    - staticcheck
+    - structcheck
+    - unconvert
+    - unused
+    - unparam
+    - varcheck
+    - vet

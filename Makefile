@@ -1,3 +1,7 @@
+export GOPATH?=$(shell go env GOPATH)
+export GOPROXY=https://proxy.golang.org
+export GO111MODULE=on
+
 HOSTNAME=hashicorp.com
 NAMESPACE=anexia-it
 NAME=anxcloud
@@ -11,7 +15,7 @@ GOFMT_FILES  := $$(find $(PROVIDER_DIR) -name '*.go' |grep -v vendor)
 default: install
 
 .PHONY: build
-build:
+build: fmtcheck
 	go build -o ${BINARY}
 
 .PHONY: release
@@ -53,44 +57,40 @@ fmtcheck:
 
 .PHONY: tools
 tools:
-	go install github.com/bflad/tfproviderdocs
-	go install github.com/client9/misspell/cmd/misspell
-	go install github.com/katbyte/terrafmt
-	go mod tidy
-	go mod vendor
+	cd tools && go install github.com/bflad/tfproviderdocs
+	cd tools && go install github.com/client9/misspell/cmd/misspell
+	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	cd tools && go install github.com/katbyte/terrafmt
+	cd tools && go install github.com/terraform-linters/tflint
+	cd tools && go install github.com/pavius/impi/cmd/impi
 
 .PHONY: docs-lint
-docs-lint: tools
+docs-lint:
 	@echo "==> Checking docs against linters..."
-	@misspell -error -source=text ./docs || (echo; \
-		echo "Unexpected mispelling found in docs files."; \
+	@misspell -error -source=text docs/ || (echo; \
+		echo "Unexpected misspelling found in docs files."; \
 		echo "To automatically fix the misspelling, run 'make docs-lint-fix' and commit the changes."; \
 		exit 1)
-	@echo "==> Running markdownlint-cli using DOCKER='$(DOCKER)', DOCKER_RUN_OPTS='$(DOCKER_RUN_OPTS)' and DOCKER_VOLUME_OPTS='$(DOCKER_VOLUME_OPTS)'"
-	@$(DOCKER) run $(DOCKER_RUN_OPTS) -v $(PROVIDER_DIR):/workspace:$(DOCKER_VOLUME_OPTS) -w /workspace 06kellyjac/markdownlint-cli ./docs || (echo; \
+	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli docs/ || (echo; \
 		echo "Unexpected issues found in docs Markdown files."; \
 		echo "To apply any automatic fixes, run 'make docs-lint-fix' and commit the changes."; \
 		exit 1)
-	@echo "==> Running terrafmt diff..."
-	@terrafmt diff ./docs --check --pattern '*.markdown' --quiet || (echo; \
+	@terrafmt diff ./docs --check --pattern '*.md' --quiet || (echo; \
 		echo "Unexpected differences in docs HCL formatting."; \
-		echo "To see the full differences, run: terrafmt diff ./docs --pattern '*.markdown'"; \
+		echo "To see the full differences, run: terrafmt diff ./docs --pattern '*.md'"; \
 		echo "To automatically fix the formatting, run 'make docs-lint-fix' and commit the changes."; \
 		exit 1)
-	@echo "==> Statically compiling provider for tfproviderdocs..."
-	@env CGO_ENABLED=0 GOOS=$$(go env GOOS) GOARCH=$$(go env GOARCH) go build -a -o $(TF_PROV_DOCS)/terraform-provider-kubernetes
-	@echo "==> Getting provider schema for tfproviderdocs..."
-		@$(DOCKER) run $(DOCKER_RUN_OPTS) -v $(TF_PROV_DOCS):/workspace:$(DOCKER_VOLUME_OPTS) -w /workspace hashicorp/terraform:0.12.29 init
-		@$(DOCKER) run $(DOCKER_RUN_OPTS) -v $(TF_PROV_DOCS):/workspace:$(DOCKER_VOLUME_OPTS) -w /workspace hashicorp/terraform:0.12.29 providers schema -json > $(TF_PROV_DOCS)/schema.json
-	@echo "==> Running tfproviderdocs..."
-	@tfproviderdocs check -providers-schema-json $(TF_PROV_DOCS)/schema.json -provider-name kubernetes
-	@rm -f $(TF_PROV_DOCS)/schema.json $(TF_PROV_DOCS)/terraform-provider-kubernetes
 
 .PHONY: docs-lint-fix
-docs-lint-fix: tools
+docs-lint-fix:
 	@echo "==> Applying automatic docs linter fixes..."
-	@misspell -w -source=text ./docs
-	@echo "==> Running markdownlint-cli --fix using DOCKER='$(DOCKER)', DOCKER_RUN_OPTS='$(DOCKER_RUN_OPTS)' and DOCKER_VOLUME_OPTS='$(DOCKER_VOLUME_OPTS)'"
-	@$(DOCKER) run $(DOCKER_RUN_OPTS) -v $(PROVIDER_DIR):/workspace:$(DOCKER_VOLUME_OPTS) -w /workspace 06kellyjac/markdownlint-cli --fix ./docs
-	@echo "==> Fixing docs terraform blocks code with terrafmt..."
-	@terrafmt fmt ./docs --pattern '*.markdown'
+	@misspell -w -source=text docs/
+	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix docs/
+
+.PHONY: go-lint
+go-lint:
+	@echo "==> Checking source code against linters..."
+	@golangci-lint run ./$(NAME)
+
+.PHONY: lint
+lint: go-lint docs-lint
