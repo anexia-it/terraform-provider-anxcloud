@@ -27,13 +27,14 @@ By doing this you state that you can certify the following (from https://develop
 ## Email and discussions
 
 The terraform-provider-anxcloud project currently uses the general email list and forum topics:
+
 - Email: [opensource@anexia-it.com](opensource@anexia-it.com)
 - Forum: [discuss.hashicorp.com](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/)
 
 Please avoid emailing maintainers found in the MAINTAINERS file directly. They
 are very busy and read the mailing lists.
 
-##  Reporting a security vulnerability
+## Reporting a security vulnerability
 
 Due to their public nature, GitHub and mailing lists are not appropriate places for reporting vulnerabilities. If you suspect you have found a security vulnerability in rkt, please do not file a GitHub issue, but instead email opensource@anexia-it.com with the full details, including steps to reproduce the issue.
 

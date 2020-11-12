@@ -15,11 +15,11 @@ GOFMT_FILES  := $$(find $(PROVIDER_DIR) -name '*.go' |grep -v vendor)
 default: install
 
 .PHONY: build
-build: fmtcheck
+build: fmtcheck lint
 	go build -o ${BINARY}
 
 .PHONY: release
-release:
+release: fmtcheck lint test testacc
 	GOOS=darwin GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_darwin_amd64
 	GOOS=freebsd GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_freebsd_386
 	GOOS=freebsd GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_freebsd_amd64
