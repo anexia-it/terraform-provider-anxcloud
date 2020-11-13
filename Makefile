@@ -64,12 +64,9 @@ depscheck:
 
 .PHONY: tools
 tools:
-	cd tools && go install github.com/bflad/tfproviderdocs
 	cd tools && go install github.com/client9/misspell/cmd/misspell
 	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
 	cd tools && go install github.com/katbyte/terrafmt
-	cd tools && go install github.com/terraform-linters/tflint
-	cd tools && go install github.com/pavius/impi/cmd/impi
 
 .PHONY: docs-lint
 docs-lint:

@@ -9,6 +9,7 @@ bin
 # .tfstate files
 *.tfstate
 *.tfstate.*
+examples/.terraform
 
 # Crash log files
 crash.log
