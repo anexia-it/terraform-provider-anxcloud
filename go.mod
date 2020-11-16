@@ -5,6 +5,8 @@ go 1.14
 require (
 	github.com/anexia-it/go-anxcloud v0.3.0
 	github.com/fatih/color v1.10.0 // indirect
+	github.com/google/go-cmp v0.5.2
+	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-hclog v0.14.1 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.6.0 // indirect

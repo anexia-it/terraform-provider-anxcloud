@@ -35,4 +35,19 @@ func expandNetworks(p []interface{}) []vm.Network {
 	return networks
 }
 
+func expandDNS(p []interface{}) (dns [maxDNSLen]string) {
+	if len(p) < 1 {
+		return dns
+	}
+
+	for i, elem := range p {
+		if i > len(dns) {
+			return dns
+		}
+		dns[i] = elem.(string)
+	}
+
+	return dns
+}
+
 // flatteners

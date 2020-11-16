@@ -1,7 +1,6 @@
 package anxcloud
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/vm"
@@ -43,7 +42,56 @@ func TestExpanderNetworks(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandNetworks(tc.Input)
-		fmt.Println(output)
+		if diff := cmp.Diff(tc.ExpectedOutput, output); diff != "" {
+			t.Fatalf("Unexpected output from expander: mismatch (-want +got):\n%s", diff)
+		}
+	}
+}
+
+func TestExpanderDNS(t *testing.T) {
+	cases := []struct {
+		Input          []interface{}
+		ExpectedOutput [maxDNSLen]string
+	}{
+		{
+			[]interface{}{
+				"1.1.1.1",
+				"2.2.2.2",
+				"3.3.3.3",
+				"4.4.4.4",
+			},
+			[maxDNSLen]string{
+				"1.1.1.1",
+				"2.2.2.2",
+				"3.3.3.3",
+				"4.4.4.4",
+			},
+		},
+		{
+			[]interface{}{
+				"1.1.1.1",
+				"2.2.2.2",
+			},
+			[maxDNSLen]string{
+				"1.1.1.1",
+				"2.2.2.2",
+				"",
+				"",
+			},
+		},
+		{
+			[]interface{}{},
+			[maxDNSLen]string{
+				"",
+				"",
+				"",
+				"",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		output := expandDNS(tc.Input)
 		if diff := cmp.Diff(tc.ExpectedOutput, output); diff != "" {
 			t.Fatalf("Unexpected output from expander: mismatch (-want +got):\n%s", diff)
 		}

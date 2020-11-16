@@ -8,9 +8,14 @@ import (
 	"github.com/anexia-it/go-anxcloud/pkg/client"
 	"github.com/anexia-it/go-anxcloud/pkg/vsphere"
 	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/vm"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+const (
+	maxDNSLen = 4
 )
 
 func resourceVirtualServer() *schema.Resource {
@@ -25,74 +30,7 @@ func resourceVirtualServer() *schema.Resource {
 			Update: schema.DefaultTimeout(5 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
-		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Virtual server identifier.",
-			},
-			"location_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Location identifier.",
-			},
-			"template_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Template identifier.",
-			},
-			"template_type": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "OS template type.",
-			},
-			"hostname": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Virtual server hostname.",
-			},
-			"cpus": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "Amount of CPUs.",
-			},
-			"memory": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "Memory in MB.",
-			},
-			"disk": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "Disk capacity in GB.",
-			},
-			"network": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "Network interfaces",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"vlan_id": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "VLAN identifier.",
-						},
-						"nic_type": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "Network interface card type.",
-						},
-						"ips": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     schema.TypeString,
-							Description: "List of IPs and IPs identifiers. IPs are ignored when using template_type 'from_scratch'." +
-								"Defaults to free IPs from IP pool attached to VLAN.",
-						},
-					},
-				},
-			},
-		},
+		Schema: schemaVirtualServer(),
 	}
 }
 
@@ -102,9 +40,9 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		networks []vm.Network
 	)
 
-	locationID := d.Get("location_id").(string)
 	c := m.(client.Client)
 	v := vsphere.NewAPI(c)
+	locationID := d.Get("location_id").(string)
 
 	networks = expandNetworks(d.Get("networks").([]interface{}))
 	for _, n := range networks {
@@ -128,20 +66,42 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		})
 	}
 
+	dns := expandDNS(d.Get("dns").([]interface{}))
+	if len(dns) != maxDNSLen {
+		diags = append(diags, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Warning level message",
+			Detail:        "This is a warning, a very detailed one",
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "dns"}},
+		})
+	}
+
 	if len(diags) > 0 {
 		return diags
 	}
 
-	def := v.Provisioning().VM().NewDefinition(
-		locationID,
-		d.Get("template_type").(string),
-		d.Get("template_id").(string),
-		d.Get("hostname").(string),
-		d.Get("cpus").(int),
-		d.Get("memory").(int),
-		d.Get("disk").(int),
-		networks,
-	)
+	def := vm.Definition{
+		Location:           locationID,
+		TemplateType:       d.Get("template_type").(string),
+		TemplateID:         d.Get("template_id").(string),
+		Hostname:           d.Get("hostname").(string),
+		Memory:             d.Get("memory").(int),
+		CPUs:               d.Get("cpus").(int),
+		Disk:               d.Get("disk").(int),
+		DiskType:           d.Get("disk_type").(string),
+		CPUPerformanceType: d.Get("cpu_performance_type").(string),
+		Sockets:            d.Get("sockets").(int),
+		Network:            networks,
+		DNS1:               dns[0],
+		DNS2:               dns[1],
+		DNS3:               dns[2],
+		DNS4:               dns[3],
+		Password:           d.Get("password").(string),
+		SSH:                d.Get("ssh_key").(string),
+		Script:             d.Get("script").(string),
+		BootDelay:          d.Get("boot_delay").(int),
+		EnterBIOSSetup:     d.Get("enter_bios_setup").(bool),
+	}
 
 	provision, err := v.Provisioning().VM().Provision(ctx, def)
 	if err != nil {
@@ -169,9 +129,18 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 }
 
 func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+	c := m.(client.Client)
+	v := vsphere.NewAPI(c)
 
-	return diags
+	info, err := v.Info().Get(ctx, d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.Set("id", info.Identifier)
+	d.Set("status", info.Status)
+
+	return nil
 }
 
 func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
