@@ -17,9 +17,12 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("ANEXIA_TOKEN", nil),
+				Description: "Anexia Cloud token.",
 			},
 		},
-		ResourcesMap:         map[string]*schema.Resource{},
+		ResourcesMap: map[string]*schema.Resource{
+			"anxcloud_virtual_server": resourceVirtualServer(),
+		},
 		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,
 	}
