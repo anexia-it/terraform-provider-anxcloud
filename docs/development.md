@@ -1,9 +1,18 @@
 # Terraform Provider Anexia
 
+
+## Build provider
+
 Run the following command to build the provider
 
 ```shell
 go build -o terraform-provider-anexia
+```
+
+or 
+
+```shell
+make build
 ```
 
 ## Test sample configuration

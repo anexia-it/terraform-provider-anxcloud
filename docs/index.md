@@ -15,11 +15,15 @@ The AnxCloud provider is used to interact with Anexia Cloud API.
 
 Do not keep your authentication token in HCL for production environments, use Terraform environment variables.
 
-```terraform
+```hcl
 provider "anxcloud" {
   token = "example-token"
 }
 ```
+
+## Guides
+
+Check the [authenticating guide](guides/authenticating.md) to get knowledge how to run authenticate terraform that interacts with Anexia Cloud.
 
 ## Contact
 
