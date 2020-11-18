@@ -1,6 +1,5 @@
 # Terraform Provider Anexia
 
-
 ## Build provider
 
 Run the following command to build the provider
@@ -32,18 +31,21 @@ terraform init && terraform apply
 ## Run unit tests
 
 Execute the following command to run unit tests:
+
 ```shell
 make test
 ```
 
-## Run integration tests:
+## Run integration tests
 
 Export `ANEXIA_TOKEN` by executing:
+
 ```shell
 export ANEXIA_TOKEN='<token>'
 ```
 
 and run all integration tests by executing the following command:
+
 ```shell
 make testacc
 ```

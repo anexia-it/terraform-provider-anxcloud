@@ -2,6 +2,8 @@
 page_title: "Authenticating with Anexia Cloud"
 ---
 
+# Authenticate with Anexia Cloud
+
 Export `ANEXIA_TOKEN` environment variable to authenticate with Anexia Cloud.
 
 ```shell script
