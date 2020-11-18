@@ -183,6 +183,9 @@ func TestFlattenVirtualServerInfo(t *testing.T) {
 							"ip_v6":       []string{"2001:db8::8a2e:370:7334"},
 						},
 					},
+					"ram":          4096,
+					"cpu":          4,
+					"cores":        4,
 					"disks_number": 1,
 					"disks_info": []map[string]interface{}{
 						{

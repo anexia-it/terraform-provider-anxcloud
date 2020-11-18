@@ -15,7 +15,7 @@ GOFMT_FILES  := $$(find $(PROVIDER_DIR) -name '*.go' |grep -v vendor)
 default: install
 
 .PHONY: build
-build: fmtcheck lint
+build: fmtcheck go-lint
 	go build -o ${BINARY}
 
 .PHONY: release
@@ -90,6 +90,7 @@ docs-lint-fix:
 	@echo "==> Applying automatic docs linter fixes..."
 	@misspell -w -source=text docs/
 	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix docs/
+	@terrafmt fmt ./docs --pattern '*.md'
 
 .PHONY: go-lint
 go-lint:

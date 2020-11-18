@@ -69,8 +69,8 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 	if len(dns) != maxDNSEntries {
 		diags = append(diags, diag.Diagnostic{
 			Severity:      diag.Error,
-			Summary:       "Warning level message",
-			Detail:        "This is a warning, a very detailed one",
+			Summary:       "DNS entries exceed limit",
+			Detail:        "Number of DNS entries cannot exceed limit 4",
 			AttributePath: cty.Path{cty.GetAttrStep{Name: "dns"}},
 		})
 	}
@@ -117,7 +117,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 			d.SetId(p.VMIdentifier)
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf("VM with provisioning id '%s' is not ready yet: %d %%", provision.Identifier, p.Progress))
+		return resource.RetryableError(fmt.Errorf("vm with provisioning id '%s' is not ready yet: %d %%", provision.Identifier, p.Progress))
 	})
 
 	if err != nil {
@@ -138,13 +138,6 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		return diag.FromErr(err)
 	}
 
-	if err = d.Set("cpus", info.CPU); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
-	if err = d.Set("memory", info.RAM); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
-
 	fInfo := flattenVirtualServerInfo(&info)
 	if err = d.Set("info", fInfo); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
@@ -156,6 +149,23 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	//c := m.(client.Client)
+	//v := vsphere.NewAPI(c)
+
+	/*
+		1. Network
+			1.1 add new ok
+			1.2 remove old ForceNew
+		2. Disk (it doesn't make sense since I cannot add multiple disks at start)
+			2.1 list to add
+			2.2 list to remove
+			3.3 list to change
+		3. cpu_performance_type
+		4. sockets
+		5. memory_mb
+		6. cpus
+	*/
+
 	if len(diags) > 0 {
 		return diags
 	}
@@ -164,7 +174,33 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 }
 
 func resourceVirtualServerDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+	c := m.(client.Client)
+	v := vsphere.NewAPI(c)
 
-	return diags
+	delayedDeprovision := false
+	err := v.Provisioning().VM().Deprovision(ctx, d.Id(), delayedDeprovision)
+	if err != nil {
+		if err := handleNotFoundError(err); err != nil {
+			return diag.FromErr(err)
+		}
+		d.SetId("")
+		return nil
+	}
+
+	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		_, err := v.Info().Get(ctx, d.Id())
+		if err != nil {
+			if err := handleNotFoundError(err); err != nil {
+				return resource.NonRetryableError(fmt.Errorf("unable to get VM '%s': %w", d.Id(), err))
+			}
+			d.SetId("")
+			return nil
+		}
+		return resource.RetryableError(fmt.Errorf("waiting for VM with ID '%s' to be deleted", d.Id()))
+	})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }

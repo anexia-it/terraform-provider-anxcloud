@@ -65,6 +65,9 @@ func flattenVirtualServerInfo(in *info.Info) []interface{} {
 	att["location_code"] = in.LocationCode
 	att["location_country"] = in.LocationCountry
 	att["location_name"] = in.LocationName
+	att["cpu"] = in.CPU
+	att["cores"] = in.Cores
+	att["ram"] = in.RAM
 	att["disks_number"] = in.Disks
 	att["guest_os"] = in.GuestOS
 	att["version_tools"] = in.VersionTools

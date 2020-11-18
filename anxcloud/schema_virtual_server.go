@@ -6,25 +6,29 @@ import (
 
 func schemaVirtualServer() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"hostname": {
+			Type:        schema.TypeString,
+			Required:    true,
+			ForceNew:    true,
+			Description: "Virtual server hostname.",
+		},
 		"location_id": {
 			Type:        schema.TypeString,
 			Required:    true,
+			ForceNew:    true,
 			Description: "Location identifier.",
 		},
 		"template_id": {
 			Type:        schema.TypeString,
 			Required:    true,
+			ForceNew:    true,
 			Description: "Template identifier.",
 		},
 		"template_type": {
 			Type:        schema.TypeString,
 			Required:    true,
+			ForceNew:    true,
 			Description: "OS template type.",
-		},
-		"hostname": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Virtual server hostname.",
 		},
 		"cpus": {
 			Type:        schema.TypeInt,
@@ -40,7 +44,7 @@ func schemaVirtualServer() map[string]*schema.Schema {
 		"sockets": {
 			Type:     schema.TypeInt,
 			Optional: true,
-			Description: "Amount of CPU sockets Number of cores have to be a multiple of sockets, as they will be spread evenly across all sockets." +
+			Description: "Amount of CPU sockets Number of cores have to be a multiple of sockets, as they will be spread evenly across all sockets. " +
 				"Defaults to number of cores, i.e. one socket per CPU core.",
 		},
 		"memory": {
@@ -61,7 +65,7 @@ func schemaVirtualServer() map[string]*schema.Schema {
 		"network": {
 			Type:        schema.TypeList,
 			Optional:    true,
-			Description: "Network interfaces",
+			Description: "Network interface",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"vlan_id": {
@@ -77,7 +81,7 @@ func schemaVirtualServer() map[string]*schema.Schema {
 					"ips": {
 						Type:     schema.TypeList,
 						Optional: true,
-						Description: "Requested list of IPs and IPs identifiers. IPs are ignored when using template_type 'from_scratch'." +
+						Description: "Requested list of IPs and IPs identifiers. IPs are ignored when using template_type 'from_scratch'. " +
 							"Defaults to free IPs from IP pool attached to VLAN.",
 						Elem: &schema.Schema{
 							Type: schema.TypeString,
@@ -90,6 +94,7 @@ func schemaVirtualServer() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Optional:    true,
 			MaxItems:    4,
+			ForceNew:    true,
 			Description: "DNS configuration. Maximum items 4. Defaults to template settings.",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
@@ -99,18 +104,21 @@ func schemaVirtualServer() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Sensitive:   true,
+			ForceNew:    true,
 			Description: "Plaintext password. Example: ('!anx123mySuperStrongPassword123anx!', 'go3ju0la1ro3', …). USE IT AT YOUR OWN RISK! (or SSH key instead).",
 		},
 		"ssh_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			ForceNew:    true,
 			Description: "Public key (instead of password, only for Linux systems). Recommended over providing a plaintext password.",
 		},
 		"script": {
 			Type:     schema.TypeString,
 			Optional: true,
-			Description: "Script to be executed after provisioning. Should be base64 encoded." +
-				"Consider the corresponding shebang at the beginning of your script." +
+			ForceNew: true,
+			Description: "Script to be executed after provisioning. Should be base64 encoded. " +
+				"Consider the corresponding shebang at the beginning of your script. " +
 				"If you want to use PowerShell, the first line should be: #ps1_sysnative.",
 		},
 		"boot_delay": {
@@ -123,6 +131,23 @@ func schemaVirtualServer() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     false,
 			Description: "Start the VM into BIOS setup on next boot.",
+		},
+		"force_restart_if_needed": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+			Description: "Certain operations may only be performed in powered off stat." +
+				"Such as: shrinking memory, shrinking/adding cpu, removing disk, scale a disk beyond 2 GB. " +
+				"Passing this value as true will always execute a power offand reboot request after completing all other operations. " +
+				"Without this flag set to true scaling operations requiring a reboot will fail.",
+		},
+		"critical_operation_confirmed": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+			Description: "Confirms a critical operation (if needed). " +
+				"Potentially dangerous operations (e.g. resulting in data loss) require an additional confirmation. " +
+				"The parameter is used for VM UPDATE requests.",
 		},
 		"info": {
 			Type:        schema.TypeList,
@@ -159,6 +184,21 @@ func schemaVirtualServer() map[string]*schema.Schema {
 						Type:        schema.TypeString,
 						Computed:    true,
 						Description: "Location name.",
+					},
+					"cpu": {
+						Type:        schema.TypeInt,
+						Computed:    true,
+						Description: "Number of cpus.",
+					},
+					"cores": {
+						Type:        schema.TypeInt,
+						Computed:    true,
+						Description: "Number of cpu cores.",
+					},
+					"ram": {
+						Type:        schema.TypeInt,
+						Computed:    true,
+						Description: "Memory in MB.",
 					},
 					"disks_number": {
 						Type:        schema.TypeInt,
@@ -228,7 +268,7 @@ func schemaVirtualServer() map[string]*schema.Schema {
 								"ip_v4": {
 									Type:        schema.TypeList,
 									Computed:    true,
-									Description: "List of IPv4 addresses to the interface.",
+									Description: "List of IPv4 addresses attached to the interface.",
 									Elem: &schema.Schema{
 										Type: schema.TypeString,
 									},
@@ -236,15 +276,15 @@ func schemaVirtualServer() map[string]*schema.Schema {
 								"ip_v6": {
 									Type:        schema.TypeList,
 									Computed:    true,
-									Description: "List of IPv6 addresses to the interface.",
+									Description: "List of IPv6 addresses attached to the interface.",
 									Elem: &schema.Schema{
 										Type: schema.TypeString,
 									},
 								},
 								"nic": {
-									Type:     schema.TypeInt,
-									Computed: true,
-									// Description: TODO: fill description of nic
+									Type:        schema.TypeInt,
+									Computed:    true,
+									Description: "NIC type number.",
 								},
 								"vlan": {
 									Type:        schema.TypeString,
