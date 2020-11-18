@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	maxDNSLen = 4
+	maxDNSEntries = 4
 )
 
 func resourceVirtualServer() *schema.Resource {
@@ -44,30 +44,29 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 	v := vsphere.NewAPI(c)
 	locationID := d.Get("location_id").(string)
 
-	networks = expandNetworks(d.Get("networks").([]interface{}))
-	for _, n := range networks {
-		var ips []string
-
+	networks = expandVirtualServerNetworks(d.Get("network").([]interface{}))
+	for i, n := range networks {
 		if len(n.IPs) > 0 {
-			ips = n.IPs
-		} else {
-			freeIPs, err := v.Provisioning().IPs().GetFree(ctx, locationID, n.VLAN)
-			if err != nil {
-				diags = append(diags, diag.FromErr(err)...)
-			}
-			ip := freeIPs[0]
-			ips = append(ips, ip.Identifier)
+			continue
 		}
 
-		networks = append(networks, vm.Network{
-			NICType: n.NICType,
-			VLAN:    n.VLAN,
-			IPs:     ips,
-		})
+		freeIPs, err := v.Provisioning().IPs().GetFree(ctx, locationID, n.VLAN)
+		if err != nil {
+			diags = append(diags, diag.FromErr(err)...)
+		} else if len(freeIPs) > 0 {
+			networks[i].IPs = append(networks[i].IPs, freeIPs[0].Identifier)
+		} else {
+			diags = append(diags, diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       "Free IP not found",
+				Detail:        fmt.Sprintf("Free IP not found for VLAN: '%s'", n.VLAN),
+				AttributePath: cty.Path{cty.GetAttrStep{Name: "ips"}},
+			})
+		}
 	}
 
-	dns := expandDNS(d.Get("dns").([]interface{}))
-	if len(dns) != maxDNSLen {
+	dns := expandVirtualServerDNS(d.Get("dns").([]interface{}))
+	if len(dns) != maxDNSEntries {
 		diags = append(diags, diag.Diagnostic{
 			Severity:      diag.Error,
 			Summary:       "Warning level message",
@@ -129,6 +128,8 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 }
 
 func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	c := m.(client.Client)
 	v := vsphere.NewAPI(c)
 
@@ -137,10 +138,19 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		return diag.FromErr(err)
 	}
 
-	d.Set("id", info.Identifier)
-	d.Set("status", info.Status)
+	if err = d.Set("cpus", info.CPU); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+	if err = d.Set("memory", info.RAM); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
 
-	return nil
+	fInfo := flattenVirtualServerInfo(&info)
+	if err = d.Set("info", fInfo); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+
+	return diags
 }
 
 func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
