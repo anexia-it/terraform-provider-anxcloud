@@ -45,7 +45,16 @@ test: fmtcheck
 
 .PHONY: testacc
 testacc: fmtcheck
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
+	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
+		echo ""; \
+		echo "Error: Skipping example acceptance testing pattern. Update TESTARGS to match the test naming in the relevant *_test.go file."; \
+		echo "Example:"; \
+		echo ""; \
+		echo "    make testacc TESTARGS='-run=TestAccAnxcloudVirtualServerBasic'"; \
+		echo ""; \
+		exit 1; \
+	fi
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -parallel=4
 
 .PHONY: fmt
 fmt:

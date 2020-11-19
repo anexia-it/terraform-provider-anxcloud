@@ -16,6 +16,7 @@ import (
 
 const (
 	maxDNSEntries = 4
+	vmPoweredOn   = "poweredOn"
 )
 
 func resourceVirtualServer() *schema.Resource {
@@ -107,17 +108,26 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		const complete = 100
-
-		p, err := v.Provisioning().Progress().Get(ctx, provision.Identifier)
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("unable to get VM progress by ID '%s', %w", provision.Identifier, err))
+		if d.Id() == "" {
+			p, err := v.Provisioning().Progress().Get(ctx, provision.Identifier)
+			if err != nil {
+				return resource.NonRetryableError(fmt.Errorf("unable to get vm progress by ID '%s', %w", provision.Identifier, err))
+			}
+			if p.VMIdentifier != "" {
+				d.SetId(p.VMIdentifier)
+			} else {
+				return resource.RetryableError(fmt.Errorf("vm with provisioning ID '%s' is not ready yet: %d %%", provision.Identifier, p.Progress))
+			}
 		}
-		if p.Progress == complete && p.VMIdentifier != "" {
-			d.SetId(p.VMIdentifier)
+
+		info, err := v.Info().Get(ctx, d.Id())
+		if err != nil {
+			return resource.NonRetryableError(fmt.Errorf("unable to get vm  by ID '%s', %w", d.Id(), err))
+		}
+		if info.Status == vmPoweredOn {
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf("vm with provisioning id '%s' is not ready yet: %d %%", provision.Identifier, p.Progress))
+		return resource.RetryableError(fmt.Errorf("vm with id '%s' is not %s yet: %s", d.Id(), vmPoweredOn, info.Status))
 	})
 
 	if err != nil {
@@ -191,12 +201,12 @@ func resourceVirtualServerDelete(ctx context.Context, d *schema.ResourceData, m 
 		_, err := v.Info().Get(ctx, d.Id())
 		if err != nil {
 			if err := handleNotFoundError(err); err != nil {
-				return resource.NonRetryableError(fmt.Errorf("unable to get VM '%s': %w", d.Id(), err))
+				return resource.NonRetryableError(fmt.Errorf("unable to get vm '%s': %w", d.Id(), err))
 			}
 			d.SetId("")
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf("waiting for VM with ID '%s' to be deleted", d.Id()))
+		return resource.RetryableError(fmt.Errorf("waiting for vm with ID '%s' to be deleted", d.Id()))
 	})
 	if err != nil {
 		return diag.FromErr(err)
