@@ -7,6 +7,11 @@ on:
   pull_request:
     branches:
     - main
+  pull_request_target:
+    types:
+    - opened
+    - synchronize
+    - reopened
 
 jobs:
   test-unit:
@@ -19,6 +24,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        repository: ${{ steps.head_repo_name.outputs.repo }}
+        fetch-depth: 0
     - name: run integration tests
       env:
         ANEXIA_TOKEN: ${{ secrets.ANEXIA_TOKEN }}
