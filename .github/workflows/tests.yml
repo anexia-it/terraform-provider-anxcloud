@@ -7,11 +7,6 @@ on:
   pull_request:
     branches:
     - main
-  pull_request_target:
-    types:
-    - opened
-    - synchronize
-    - reopened
 
 jobs:
   test-unit:
@@ -25,8 +20,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        repository: ${{ steps.head_repo_name.outputs.repo }}
-        fetch-depth: 0
+        ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
     - name: run integration tests
       env:
         ANEXIA_TOKEN: ${{ secrets.ANEXIA_TOKEN }}
