@@ -109,7 +109,6 @@ func TestFlattenVirtualServerInfo(t *testing.T) {
 		ExpectedOutput []interface{}
 	}{
 		{
-			// TODO: fix disk and networks structs in go-client
 			info.Info{
 				Name:            "12345-test",
 				CustomName:      "test-vm",
@@ -122,14 +121,7 @@ func TestFlattenVirtualServerInfo(t *testing.T) {
 				RAM:             4096,
 				CPU:             4,
 				Cores:           4,
-				Network: []struct {
-					NIC        int      `json:"nic"`
-					ID         int      `json:"id"`
-					VLAN       string   `json:"vlan"`
-					MACAddress string   `json:"mac_address"`
-					IPv4       []string `json:"ips_v4"`
-					IPv6       []string `json:"ips_v6"`
-				}{
+				Network: info.Network{
 					{
 						NIC:        3,
 						ID:         4000,
@@ -140,16 +132,7 @@ func TestFlattenVirtualServerInfo(t *testing.T) {
 					},
 				},
 				Disks: 1,
-				DiskInfo: []struct {
-					DiskType     string `json:"disk_type"`
-					StorageType  string `json:"storage_type"`
-					BusType      string `json:"bus_type"`
-					BusTypeLabel string `json:"bus_type_label"`
-					DiskGB       int    `json:"disk_gb"`
-					DiskID       int    `json:"disk_id"`
-					IOPS         int    `json:"iops"`
-					Latency      int    `json:"latence"`
-				}{
+				DiskInfo: info.DiskInfo{
 					{
 						DiskType:     "HPC5",
 						StorageType:  "SSD",

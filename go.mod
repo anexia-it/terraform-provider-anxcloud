@@ -3,7 +3,7 @@ module github.com/anexia-it/terraform-provider-anxcloud
 go 1.14
 
 require (
-	github.com/anexia-it/go-anxcloud v0.3.0
+	github.com/anexia-it/go-anxcloud v0.3.1
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/google/go-cmp v0.5.2
 	github.com/google/uuid v1.1.2 // indirect
