@@ -6,7 +6,7 @@ HOSTNAME=hashicorp.com
 NAMESPACE=anexia-it
 NAME=anxcloud
 BINARY=terraform-provider-${NAME}
-VERSION=0.1
+VERSION=0.1.0
 OS_ARCH=linux_amd64
 
 TEST?=$$(go list ./... | grep -v 'vendor')
@@ -15,7 +15,7 @@ GOFMT_FILES  := $$(find $(PROVIDER_DIR) -name '*.go' |grep -v vendor)
 default: install
 
 .PHONY: build
-build: fmtcheck lint
+build: fmtcheck go-lint
 	go build -o ${BINARY}
 
 .PHONY: release
@@ -45,7 +45,16 @@ test: fmtcheck
 
 .PHONY: testacc
 testacc: fmtcheck
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
+	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
+		echo ""; \
+		echo "Error: Skipping example acceptance testing pattern. Update TESTARGS to match the test naming in the relevant *_test.go file."; \
+		echo "Example:"; \
+		echo ""; \
+		echo "    make testacc TESTARGS='-run=TestAccAnxcloudVirtualServerBasic'"; \
+		echo ""; \
+		exit 1; \
+	fi
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -parallel=4
 
 .PHONY: fmt
 fmt:
@@ -90,6 +99,7 @@ docs-lint-fix:
 	@echo "==> Applying automatic docs linter fixes..."
 	@misspell -w -source=text docs/
 	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix docs/
+	@terrafmt fmt ./docs --pattern '*.md'
 
 .PHONY: go-lint
 go-lint:

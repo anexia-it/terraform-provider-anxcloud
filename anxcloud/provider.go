@@ -2,6 +2,8 @@ package anxcloud
 
 import (
 	"context"
+	"errors"
+	"net/http"
 
 	"github.com/anexia-it/go-anxcloud/pkg/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -17,9 +19,12 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("ANEXIA_TOKEN", nil),
+				Description: "Anexia Cloud token.",
 			},
 		},
-		ResourcesMap:         map[string]*schema.Resource{},
+		ResourcesMap: map[string]*schema.Resource{
+			"anxcloud_virtual_server": resourceVirtualServer(),
+		},
 		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,
 	}
@@ -41,4 +46,12 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	}
 
 	return c, diags
+}
+
+func handleNotFoundError(err error) error {
+	var respErr *client.ResponseError
+	if errors.As(err, &respErr) && respErr.ErrorData.Code == http.StatusNotFound {
+		return nil
+	}
+	return err
 }
