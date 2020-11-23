@@ -201,12 +201,12 @@ func resourceVirtualServerDelete(ctx context.Context, d *schema.ResourceData, m 
 		_, err := v.Info().Get(ctx, d.Id())
 		if err != nil {
 			if err := handleNotFoundError(err); err != nil {
-				return resource.NonRetryableError(fmt.Errorf("unable to get vm '%s': %w", d.Id(), err))
+				return resource.NonRetryableError(fmt.Errorf("unable to get vm with id '%s': %w", d.Id(), err))
 			}
 			d.SetId("")
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf("waiting for vm with ID '%s' to be deleted", d.Id()))
+		return resource.RetryableError(fmt.Errorf("waiting for vm with id '%s' to be deleted", d.Id()))
 	})
 	if err != nil {
 		return diag.FromErr(err)
