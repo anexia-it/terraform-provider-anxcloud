@@ -15,9 +15,9 @@ The VLAN resource allows you to configure and create VLAN at Anexia Cloud.
 
 ```hcl
 resource "anxcloud_vlan" "example" {
-    location_id = "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
-    vm_provisioning = true
-    description_customer = "sample vlan"
+  location_id          = "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
+  vm_provisioning      = true
+  description_customer = "sample vlan"
 }
 ```
 
