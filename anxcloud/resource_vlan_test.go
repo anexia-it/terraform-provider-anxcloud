@@ -28,7 +28,7 @@ func TestAccAnxcloudVLAN(t *testing.T) {
 				Config: testAccCheckAnxcloudVLAN(resourceName, locationID, customerDescription),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
-					resource.TestCheckResourceAttr(resourcePath, "vm_provsioning", "true"),
+					resource.TestCheckResourceAttr(resourcePath, "vm_provisioning", "true"),
 					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescription),
 					testAccCheckAnxcloudVLANExists(resourcePath, customerDescription),
 				),
@@ -37,7 +37,7 @@ func TestAccAnxcloudVLAN(t *testing.T) {
 				Config: testAccCheckAnxcloudVLAN(resourceName, locationID, customerDescriptionUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
-					resource.TestCheckResourceAttr(resourcePath, "vm_provsioning", "true"),
+					resource.TestCheckResourceAttr(resourcePath, "vm_provisioning", "true"),
 					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescriptionUpdate),
 					testAccCheckAnxcloudVLANExists(resourcePath, customerDescriptionUpdate),
 				),
