@@ -83,6 +83,7 @@ In addition to all the arguments above, the following attributes are exported:
 
 ### Info
 
+- `identifier` - Virtual server identifier.
 - `status` - Virtual server status.
 - `name` - Virtual server name.
 - `custom_name` - Virtual server custom name.
