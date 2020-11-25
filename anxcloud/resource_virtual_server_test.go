@@ -19,7 +19,7 @@ func TestAccAnxcloudVirtualServerBasic(t *testing.T) {
 
 	locationID := "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
 	templateID := "12c28aa7-604d-47e9-83fb-5f1d1f1837b3"
-	vlanID := "ff70791b398e4ab29786dd34f211694c"
+	vlanID := "02f39d20ca0f4adfb5032f88dbc26c39"
 	cpus := 4
 	memory := 4096
 	diskSize := 50

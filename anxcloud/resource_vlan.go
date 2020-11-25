@@ -23,9 +23,9 @@ func resourceVLAN() *schema.Resource {
 		UpdateContext: resourceVLANUpdate,
 		DeleteContext: resourceVLANDelete,
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(15 * time.Minute),
+			Create: schema.DefaultTimeout(60 * time.Minute),
 			Read:   schema.DefaultTimeout(1 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(15 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 		Schema: schemaVLAN(),
@@ -112,7 +112,7 @@ func resourceVLANUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(err)
 	}
 
-	return nil
+	return resourceVLANRead(ctx, d, m)
 }
 
 func resourceVLANDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
