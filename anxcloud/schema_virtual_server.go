@@ -155,6 +155,11 @@ func schemaVirtualServer() map[string]*schema.Schema {
 			Description: "Virtual server info",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
+					"identifier": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "Virtual server identifier.",
+					},
 					"status": {
 						Type:        schema.TypeString,
 						Computed:    true,
