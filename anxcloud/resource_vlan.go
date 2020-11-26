@@ -84,10 +84,10 @@ func resourceVLANRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	if err := d.Set("status", vlan.Status); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	if err := d.Set("description_customer", vlan.InternalDescription); err != nil {
+	if err := d.Set("description_customer", vlan.CustomerDescription); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	if err := d.Set("description_internal", vlan.CustomerDescription); err != nil {
+	if err := d.Set("description_internal", vlan.InternalDescription); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 	if err := d.Set("locations", flattenVLANLocations(vlan.Locations)); err != nil {
