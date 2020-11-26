@@ -14,7 +14,7 @@ import (
 	"github.com/lithammer/shortuuid"
 )
 
-func TestAccAnxCloudVirtualServerBasic(t *testing.T) {
+func TestAccAnxCloudVirtualServer(t *testing.T) {
 	resourceName := "acc_test_vm_test"
 	resourcePath := "anxcloud_virtual_server." + resourceName
 
@@ -36,14 +36,20 @@ func TestAccAnxCloudVirtualServerBasic(t *testing.T) {
 		Password: "flatcar#1234$%%",
 	}
 
-	vmDefUpdate := vmDef
-	vmDefUpdate.CPUs = 4
-	vmDefUpdate.Disk = 80
-	vmDefUpdate.Memory = 4096
-	vmDefUpdate.Network = append(vmDefUpdate.Network, vm.Network{
+	// upscale resources
+	vmDefUpscale := vmDef
+	vmDefUpscale.CPUs = 4
+	vmDefUpscale.Disk = 80
+	vmDefUpscale.Memory = 4096
+	vmDefUpscale.Network = append(vmDefUpscale.Network, vm.Network{
 		VLAN:    "ff70791b398e4ab29786dd34f211694c",
 		NICType: "vmxnet3",
 	})
+
+	// down scale resources which does not require recreation of the VM
+	vmDefDownscale := vmDefUpscale
+	vmDefDownscale.CPUs = 2
+	vmDefDownscale.Memory = 2096
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -62,14 +68,25 @@ func TestAccAnxCloudVirtualServerBasic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDefUpdate),
+				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDefUpscale),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefUpdate),
-					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefUpdate.Location),
-					resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefUpdate.TemplateID),
-					resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefUpdate.CPUs)),
-					resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefUpdate.Memory)),
-					resource.TestCheckResourceAttr(resourcePath, "disk", strconv.Itoa(vmDefUpdate.Disk)),
+					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefUpscale),
+					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefUpscale.Location),
+					resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefUpscale.TemplateID),
+					resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefUpscale.CPUs)),
+					resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefUpscale.Memory)),
+					resource.TestCheckResourceAttr(resourcePath, "disk", strconv.Itoa(vmDefUpscale.Disk)),
+				),
+			},
+			{
+				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDefDownscale),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefDownscale),
+					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefDownscale.Location),
+					resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefDownscale.TemplateID),
+					resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefDownscale.CPUs)),
+					resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefDownscale.Memory)),
+					resource.TestCheckResourceAttr(resourcePath, "disk", strconv.Itoa(vmDefDownscale.Disk)),
 				),
 			},
 		},
