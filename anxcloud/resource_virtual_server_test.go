@@ -19,7 +19,7 @@ func TestAccAnxcloudVirtualServerBasic(t *testing.T) {
 
 	locationID := "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
 	templateID := "12c28aa7-604d-47e9-83fb-5f1d1f1837b3"
-	vlanID := "ff70791b398e4ab29786dd34f211694c"
+	vlanID := "02f39d20ca0f4adfb5032f88dbc26c39"
 	cpus := 4
 	memory := 4096
 	diskSize := 50
@@ -66,7 +66,7 @@ func testAccCheckAnxcloudVirtualServerDestroy(s *terraform.State) error {
 			return nil
 		}
 		if info.Identifier != "" {
-			return fmt.Errorf("virtual machine '%s' exist", info.Identifier)
+			return fmt.Errorf("virtual machine '%s' exists", info.Identifier)
 		}
 	}
 
@@ -102,11 +102,11 @@ func testAccCheckAnxcloudVirtualServerExists(n string) resource.TestCheckFunc {
 		ctx := context.Background()
 
 		if !ok {
-			return fmt.Errorf("not found: %s", n)
+			return fmt.Errorf("virtual server not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("id not set for virtual machine")
+			return fmt.Errorf("virtual server id not set")
 		}
 
 		info, err := v.Info().Get(ctx, rs.Primary.ID)
@@ -115,7 +115,7 @@ func testAccCheckAnxcloudVirtualServerExists(n string) resource.TestCheckFunc {
 		}
 
 		if info.Status != vmPoweredOn {
-			return fmt.Errorf("virtual machine found but it is in '%s' state", info.Status)
+			return fmt.Errorf("virtual machine found but it is not in the expected state '%s': '%s'", vmPoweredOn, info.Status)
 		}
 
 		return nil

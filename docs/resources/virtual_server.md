@@ -1,11 +1,11 @@
 ---
-page_title: "virtual_server Resource - terraform-provider-hashicups"
+page_title: "virtual_server resource - terraform-provider-anxcloud"
 subcategory: ""
 description: |-
   The Virual Server resource allows you to create virtual machines at Anexia Cloud.
 ---
 
-# Resource `hashicups_order`
+# Resource `anxcloud_virtual_server`
 
 -> Visit the [Perform CRUD operations with Providers](https://learn.hashicorp.com/tutorials/terraform/provider-use?in=terraform/providers&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) Learn tutorial for an interactive getting started experience.
 
@@ -78,8 +78,8 @@ Each order item contains a `coffee` object and a `quantity`.
 
 In addition to all the arguments above, the following attributes are exported:
 
-`id` - Virtual Server identifier.
-`info` - Virtual Server details.
+- `id` - Virtual Server identifier.
+- `info` - Virtual Server details. See [info](#info) below for details.
 
 ### Info
 

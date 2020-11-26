@@ -32,3 +32,9 @@ resource "anxcloud_virtual_server" "example" {
   dns = ["8.8.8.8"]
 
 }
+
+resource "anxcloud_vlan" "example" {
+  location_id = "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
+  vm_provisioning = true
+  description_customer = "sample vlan"
+}
