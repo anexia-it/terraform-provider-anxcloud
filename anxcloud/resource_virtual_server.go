@@ -311,7 +311,7 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	vmState := resource.StateChangeConf{
-		Delay:      1 * time.Minute,
+		Delay:      3 * time.Minute,
 		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		MinTimeout: 10 * time.Second,
 		Pending: []string{
