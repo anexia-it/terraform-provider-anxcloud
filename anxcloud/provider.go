@@ -25,6 +25,7 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"anxcloud_virtual_server": resourceVirtualServer(),
 			"anxcloud_vlan":           resourceVLAN(),
+			"anxcloud_network_prefix": resourceNetworkPrefix(),
 		},
 		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,

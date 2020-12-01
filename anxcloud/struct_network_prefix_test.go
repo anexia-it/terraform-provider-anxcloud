@@ -3,7 +3,7 @@ package anxcloud
 import (
 	"testing"
 
-	"github.com/anexia-it/go-anxcloud/pkg/vlan"
+	"github.com/anexia-it/go-anxcloud/pkg/ipam/prefix"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -11,30 +11,30 @@ import (
 
 // flatteners tests
 
-func TestFlattenVLANLocations(t *testing.T) {
+func TestFlattenNetworkPrefixLocations(t *testing.T) {
 	cases := []struct {
-		Input          []vlan.Location
+		Input          []prefix.Location
 		ExpectedOutput []interface{}
 	}{
 		{
-			[]vlan.Location{
+			[]prefix.Location{
 				{
-					Identifier:  "52b5f6b2fd3a4a7eaaedf1a7c0191234",
-					Name:        "AT, Vienna, Test",
-					Code:        "ANX-8888",
-					CountryCode: "AT",
-					Latitude:    "0.0",
-					Longitude:   "0.0",
-					CityCode:    "VIE",
+					ID:        "52b5f6b2fd3a4a7eaaedf1a7c0191234",
+					Name:      "AT, Vienna, Test",
+					Code:      "ANX-8888",
+					Country:   "AT",
+					Latitude:  "0.0",
+					Longitude: "0.0",
+					CityCode:  "VIE",
 				},
 				{
-					Identifier:  "72c5f6b2fd3a4a7eaaedf1a7c0194321",
-					Name:        "AT, Vienna, Test2",
-					Code:        "ANX-8889",
-					CountryCode: "AT",
-					Latitude:    "1.1",
-					Longitude:   "1.1",
-					CityCode:    "VIE",
+					ID:        "72c5f6b2fd3a4a7eaaedf1a7c0194321",
+					Name:      "AT, Vienna, Test2",
+					Code:      "ANX-8889",
+					Country:   "AT",
+					Latitude:  "1.1",
+					Longitude: "1.1",
+					CityCode:  "VIE",
 				},
 			},
 			[]interface{}{
@@ -59,13 +59,13 @@ func TestFlattenVLANLocations(t *testing.T) {
 			},
 		},
 		{
-			[]vlan.Location{},
+			[]prefix.Location{},
 			[]interface{}{},
 		},
 	}
 
 	for _, tc := range cases {
-		output := flattenVLANLocations(tc.Input)
+		output := flattenNetworkPrefixLocations(tc.Input)
 		if diff := cmp.Diff(tc.ExpectedOutput, output); diff != "" {
 			t.Fatalf("Unexpected output from expander: mismatch (-want +got):\n%s", diff)
 		}

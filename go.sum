@@ -41,8 +41,8 @@ github.com/agext/levenshtein v1.2.2/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki
 github.com/agl/ed25519 v0.0.0-20170116200512-5312a6153412/go.mod h1:WPjqKcmVOxf0XSf3YxCJs6N6AOSrOx3obionmG7T0y0=
 github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 h1:uSoVVbwJiQipAclBbw+8quDsfcvFjOpI5iCf4p/cqCs=
 github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7/go.mod h1:6zEj6s6u/ghQa61ZWa/C2Aw3RkjiTBOix7dkqa1VLIs=
-github.com/anexia-it/go-anxcloud v0.3.3 h1:qld0q9vir4BMeEZsNIQx3fnKWK6+2pzqqsT/06+5C04=
-github.com/anexia-it/go-anxcloud v0.3.3/go.mod h1:cevqezsbOJ4GBlAWaztfLKl9w4VzxJBt4ipgHORi3gw=
+github.com/anexia-it/go-anxcloud v0.3.4 h1:XXiwvXJwF+lIUXI0oWHZw90HYMfqX5RAW4xPSNMY1Kk=
+github.com/anexia-it/go-anxcloud v0.3.4/go.mod h1:cevqezsbOJ4GBlAWaztfLKl9w4VzxJBt4ipgHORi3gw=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 h1:kFOfPq6dUM1hTo4JG6LR5AXSUEsOjtdm0kw0FtQtMJA=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239/go.mod h1:2FmKhYUyUczH0OGQWaF5ceTx0UBShxjsH6f8oGKYe2c=
 github.com/apparentlymart/go-cidr v1.0.1/go.mod h1:EBcsNrHc3zQeuaeCeCtQruQm+n9/YjEn/vI25Lg7Gwc=
