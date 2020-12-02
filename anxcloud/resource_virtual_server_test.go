@@ -42,7 +42,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 	vmDefUpscale.Disk = 80
 	vmDefUpscale.Memory = 4096
 	vmDefUpscale.Network = append(vmDefUpscale.Network, vm.Network{
-		VLAN:    "ff70791b398e4ab29786dd34f211694c",
+		VLAN:    "02f39d20ca0f4adfb5032f88dbc26c39",
 		NICType: "vmxnet3",
 	})
 
