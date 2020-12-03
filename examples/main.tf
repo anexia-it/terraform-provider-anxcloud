@@ -9,6 +9,16 @@ terraform {
 
 provider "anxcloud" {}
 
+data "anxcloud_disk_type" "example" {
+  location_id = "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
+}
+
+locals {
+  disk_types = {
+    for obj in data.anxcloud_disk_type.example.types : obj.id => obj
+  }
+}
+
 resource "anxcloud_vlan" "example" {
   location_id = "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
   vm_provisioning = true
@@ -21,7 +31,6 @@ resource "anxcloud_network_prefix" "example" {
   ip_version = 4
   type = 0
   netmask = 29
-  vm_provisioning = true
   description_customer = "terraform prefix test"
 }
 
@@ -32,6 +41,7 @@ resource "anxcloud_virtual_server" "example" {
   hostname      = "example-terraform"
   cpus          = 8
   disk          = 70
+  disk_type     = disk_types.STD6.id
   memory        = 4096
   password      = "flatcar#1234$%"
   cpu_performance_type = "standard"
