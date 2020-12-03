@@ -36,7 +36,7 @@ func resourceIPAddress() *schema.Resource {
 func resourceIPAddressCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(client.Client)
 	a := address.NewAPI(c)
-	prefixID := d.Get("prefix_id").(string)
+	prefixID := d.Get("network_prefix_id").(string)
 
 	def := address.Create{
 		PrefixID:            prefixID,
@@ -94,9 +94,10 @@ func resourceIPAddressRead(ctx context.Context, d *schema.ResourceData, m interf
 	if err := d.Set("description_internal", info.DescriptionInternal); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	if err := d.Set("role", info.Role); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
+	// TODO: API require 'role' arg and returns 'role_text' arg, this must be fixed
+	//if err := d.Set("role", info.Role); err != nil {
+	//	diags = append(diags, diag.FromErr(err)...)
+	//}
 	if err := d.Set("version", info.Version); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}

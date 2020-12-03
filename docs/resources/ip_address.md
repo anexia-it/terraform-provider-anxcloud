@@ -15,8 +15,8 @@ The IP address resource allows you to configure and create IP address at Anexia 
 
 ```hcl
 resource "anxcloud_ip_address" "example" {
-  network_prefix_id     = "f4c2d6d415a0455d8ceb6bde09e4123e"
-  address = "185.160.55.162"
+  network_prefix_id    = "f4c2d6d415a0455d8ceb6bde09e4123e"
+  address              = "185.160.55.162"
   description_customer = "example IP address"
 }
 ```

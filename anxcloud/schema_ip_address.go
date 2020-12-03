@@ -31,7 +31,7 @@ func schemaIPAddress() map[string]*schema.Schema {
 		"role": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "default",
+			Default:     "Default",
 			Description: "Role of the IP address",
 		},
 		"organization": {
