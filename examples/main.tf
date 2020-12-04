@@ -9,6 +9,22 @@ terraform {
 
 provider "anxcloud" {}
 
+resource "anxcloud_vlan" "example" {
+  location_id = "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
+  vm_provisioning = true
+  description_customer = "terraform vlan test"
+}
+
+resource "anxcloud_network_prefix" "example" {
+  vlan_id = anxcloud_vlan.example.id
+  location_id = "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
+  ip_version = 4
+  type = 0
+  netmask = 29
+  vm_provisioning = true
+  description_customer = "terraform prefix test"
+}
+
 resource "anxcloud_virtual_server" "example" {
   location_id   = "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
   template_id   = "12c28aa7-604d-47e9-83fb-5f1d1f1837b3"
@@ -21,12 +37,7 @@ resource "anxcloud_virtual_server" "example" {
   cpu_performance_type = "standard"
 
   network {
-    vlan_id  = "02f39d20ca0f4adfb5032f88dbc26c39"
-    nic_type = "vmxnet3"
-  }
-
-  network {
-    vlan_id  = "02f39d20ca0f4adfb5032f88dbc26c39"
+    vlan_id  = anxcloud_vlan.example.id
     nic_type = "vmxnet3"
   }
 
@@ -34,10 +45,7 @@ resource "anxcloud_virtual_server" "example" {
   force_restart_if_needed = true
   critical_operation_confirmed = true
 
-}
-
-resource "anxcloud_vlan" "example" {
-  location_id = "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
-  vm_provisioning = true
-  description_customer = "sample vlan"
+  depends_on = [
+    anxcloud_network_prefix.example,
+  ]
 }

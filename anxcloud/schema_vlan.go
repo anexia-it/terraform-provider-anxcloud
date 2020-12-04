@@ -44,49 +44,6 @@ func schemaVLAN() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "VLAN status.",
 		},
-		"locations": {
-			Type:        schema.TypeList,
-			Computed:    true,
-			Description: "Role of the VLAN.",
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"identifier": {
-						Type:        schema.TypeString,
-						Computed:    true,
-						Description: "Identifier of the location.",
-					},
-					"name": {
-						Type:        schema.TypeString,
-						Computed:    true,
-						Description: "Name of the location.",
-					},
-					"code": {
-						Type:        schema.TypeString,
-						Computed:    true,
-						Description: "Location code.",
-					},
-					"country": {
-						Type:        schema.TypeString,
-						Computed:    true,
-						Description: "Location country.",
-					},
-					"city_code": {
-						Type:        schema.TypeString,
-						Computed:    true,
-						Description: "Location city code.",
-					},
-					"lat": {
-						Type:        schema.TypeString,
-						Computed:    true,
-						Description: "Location latitude.",
-					},
-					"lon": {
-						Type:        schema.TypeString,
-						Computed:    true,
-						Description: "Location longitude.",
-					},
-				},
-			},
-		},
+		"locations": schemaLocations(),
 	}
 }

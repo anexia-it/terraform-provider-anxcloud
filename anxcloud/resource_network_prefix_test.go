@@ -6,52 +6,52 @@ import (
 	"testing"
 
 	"github.com/anexia-it/go-anxcloud/pkg/client"
-	"github.com/anexia-it/go-anxcloud/pkg/vlan"
+	"github.com/anexia-it/go-anxcloud/pkg/ipam/prefix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAnxCloudVLAN(t *testing.T) {
+func TestAccAnxCloudNetworkPrefix(t *testing.T) {
 	resourceName := "acc_test"
-	resourcePath := "anxcloud_vlan." + resourceName
+	resourcePath := "anxcloud_network_prefix." + resourceName
 
 	locationID := "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
-	customerDescription := "vlan acceptance tests"
-	customerDescriptionUpdate := "vlan acceptance tests update"
+	customerDescription := "network prefix acceptance tests"
+	customerDescriptionUpdate := "network prefix acceptance tests update"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckAnxCloudVLANDestroy,
+		CheckDestroy:      testAccCheckAnxCloudNetworkPrefixDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAnxCloudVLAN(resourceName, locationID, customerDescription),
+				Config: testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescription),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
 					resource.TestCheckResourceAttr(resourcePath, "vm_provisioning", "true"),
 					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescription),
-					testAccCheckAnxCloudVLANExists(resourcePath, customerDescription),
+					testAccAnxCloudNetworkPrefixExists(resourcePath, customerDescription),
 				),
 			},
 			{
-				Config: testAccCheckAnxCloudVLAN(resourceName, locationID, customerDescriptionUpdate),
+				Config: testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescriptionUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
 					resource.TestCheckResourceAttr(resourcePath, "vm_provisioning", "true"),
 					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescriptionUpdate),
-					testAccCheckAnxCloudVLANExists(resourcePath, customerDescriptionUpdate),
+					testAccAnxCloudNetworkPrefixExists(resourcePath, customerDescriptionUpdate),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAnxCloudVLANDestroy(s *terraform.State) error {
+func testAccCheckAnxCloudNetworkPrefixDestroy(s *terraform.State) error {
 	c := testAccProvider.Meta().(client.Client)
-	v := vlan.NewAPI(c)
+	p := prefix.NewAPI(c)
 	ctx := context.Background()
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "anxcloud_vlan" {
+		if rs.Type != "anxcloud_network_prefix" {
 			continue
 		}
 
@@ -59,53 +59,56 @@ func testAccCheckAnxCloudVLANDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		info, err := v.Get(ctx, rs.Primary.ID)
+		info, err := p.Get(ctx, rs.Primary.ID)
 		if err != nil {
 			if err := handleNotFoundError(err); err != nil {
 				return err
 			}
 			return nil
 		}
-		if info.Status != vlanStatusDeleted {
-			return fmt.Errorf("vlan '%s' exists", info.Identifier)
+		if info.Status != prefixStatusDeleted {
+			return fmt.Errorf("vlan '%s' exists", info.ID)
 		}
 	}
 
 	return nil
 }
 
-func testAccCheckAnxCloudVLAN(resourceName, locationID, customerDescription string) string {
+func testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescription string) string {
 	return fmt.Sprintf(`
-	resource "anxcloud_vlan" "%s" {
+	resource "anxcloud_network_prefix" "%s" {
 		location_id   = "%s"
+		vlan_id = "02f39d20ca0f4adfb5032f88dbc26c39"
+		ip_version = 4
+		netmask = 30
 		vm_provisioning = true
 		description_customer = "%s"
 	}
 	`, resourceName, locationID, customerDescription)
 }
 
-func testAccCheckAnxCloudVLANExists(n string, expectedCustomerDescription string) resource.TestCheckFunc {
+func testAccAnxCloudNetworkPrefixExists(n string, expectedCustomerDescription string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		c := testAccProvider.Meta().(client.Client)
-		v := vlan.NewAPI(c)
+		p := prefix.NewAPI(c)
 		ctx := context.Background()
 
 		if !ok {
-			return fmt.Errorf("vlan not found: %s", n)
+			return fmt.Errorf("network prefix not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("vlan id not set")
+			return fmt.Errorf("network prefix id not set")
 		}
 
-		i, err := v.Get(ctx, rs.Primary.ID)
+		i, err := p.Get(ctx, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		if i.Status != vlanStatusActive {
-			return fmt.Errorf("vlan found but it is not in the expected state '%s': %s", vlanStatusActive, i.Status)
+		if i.Status != prefixStatusActive {
+			return fmt.Errorf("network prefix found but it is not in the expected state '%s': %s", prefixStatusActive, i.Status)
 		}
 
 		if i.CustomerDescription != expectedCustomerDescription {
