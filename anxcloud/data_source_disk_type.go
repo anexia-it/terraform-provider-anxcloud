@@ -20,7 +20,7 @@ func dataSourceDiskTypeRead(ctx context.Context, d *schema.ResourceData, m inter
 	c := m.(client.Client)
 	t := disktype.NewAPI(c)
 	locationID := d.Get("location_id").(string)
-	diskTypes, err := t.List(ctx, locationID)
+	diskTypes, err := t.List(ctx, locationID, 0, 1000)
 	if err != nil {
 		return diag.FromErr(err)
 	}
