@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	vlanStatusActive = "Active"
+	vlanStatusActive  = "Active"
+	vlanStatusDeleted = "Marked for deletion"
 )
 
 func resourceVLAN() *schema.Resource {
@@ -129,11 +130,15 @@ func resourceVLANDelete(ctx context.Context, d *schema.ResourceData, m interface
 	}
 
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := v.Get(ctx, d.Id())
+		info, err := v.Get(ctx, d.Id())
 		if err != nil {
 			if err := handleNotFoundError(err); err != nil {
 				return resource.NonRetryableError(fmt.Errorf("unable to get vlan with id '%s': %w", d.Id(), err))
 			}
+			d.SetId("")
+			return nil
+		}
+		if info.Status == vlanStatusDeleted {
 			d.SetId("")
 			return nil
 		}

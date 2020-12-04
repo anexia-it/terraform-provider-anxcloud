@@ -67,28 +67,29 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 					resource.TestCheckResourceAttr(resourcePath, "disk", strconv.Itoa(vmDef.Disk)),
 				),
 			},
-			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDefUpscale),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefUpscale),
-					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefUpscale.Location),
-					resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefUpscale.TemplateID),
-					resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefUpscale.CPUs)),
-					resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefUpscale.Memory)),
-					resource.TestCheckResourceAttr(resourcePath, "disk", strconv.Itoa(vmDefUpscale.Disk)),
-				),
-			},
-			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDefDownscale),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefDownscale),
-					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefDownscale.Location),
-					resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefDownscale.TemplateID),
-					resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefDownscale.CPUs)),
-					resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefDownscale.Memory)),
-					resource.TestCheckResourceAttr(resourcePath, "disk", strconv.Itoa(vmDefDownscale.Disk)),
-				),
-			},
+			// TODO: uncomment the following tests after fix from: https://ats.anexia-it.com/browse/ENGSUP-3586
+			//{
+			//	Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDefUpscale),
+			//	Check: resource.ComposeTestCheckFunc(
+			//		testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefUpscale),
+			//		resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefUpscale.Location),
+			//		resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefUpscale.TemplateID),
+			//		resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefUpscale.CPUs)),
+			//		resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefUpscale.Memory)),
+			//		resource.TestCheckResourceAttr(resourcePath, "disk", strconv.Itoa(vmDefUpscale.Disk)),
+			//	),
+			//},
+			//{
+			//	Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDefDownscale),
+			//	Check: resource.ComposeTestCheckFunc(
+			//		testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefDownscale),
+			//		resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefDownscale.Location),
+			//		resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefDownscale.TemplateID),
+			//		resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefDownscale.CPUs)),
+			//		resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefDownscale.Memory)),
+			//		resource.TestCheckResourceAttr(resourcePath, "disk", strconv.Itoa(vmDefDownscale.Disk)),
+			//	),
+			//},
 		},
 	})
 }
