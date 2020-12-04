@@ -66,7 +66,7 @@ func testAccCheckAnxcloudVLANDestroy(s *terraform.State) error {
 			}
 			return nil
 		}
-		if info.Identifier != "" {
+		if info.Status != vlanStatusDeleted {
 			return fmt.Errorf("vlan '%s' exists", info.Identifier)
 		}
 	}
