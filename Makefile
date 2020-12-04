@@ -50,7 +50,7 @@ testacc: fmtcheck
 		echo "Error: Skipping example acceptance testing pattern. Update TESTARGS to match the test naming in the relevant *_test.go file."; \
 		echo "Example:"; \
 		echo ""; \
-		echo "    make testacc TESTARGS='-run=TestAccAnxcloudVirtualServerBasic'"; \
+		echo "    make testacc TESTARGS='-run=TestAccAnxcloudVirtualServer'"; \
 		echo ""; \
 		exit 1; \
 	fi
