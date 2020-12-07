@@ -26,6 +26,7 @@ func Provider() *schema.Provider {
 			"anxcloud_virtual_server": resourceVirtualServer(),
 			"anxcloud_vlan":           resourceVLAN(),
 			"anxcloud_network_prefix": resourceNetworkPrefix(),
+			"anxcloud_ip_address":     resourceIPAddress(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anxcloud_disk_type": dataSourceDiskType(),

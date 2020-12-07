@@ -234,6 +234,10 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 	// vm.Networks with info.Networks thus we must trust that order from the info endpoint is correct
 	var networks []vm.Network
 	specNetworks := expandVirtualServerNetworks(d.Get("network").([]interface{}))
+	if len(info.Network) > len(specNetworks) {
+		diags = append(diags, diag.Errorf("vm has more NICs than specified, the issue must be solved manually")...)
+		return diags
+	}
 	for i, n := range info.Network {
 		network := vm.Network{
 			VLAN: n.VLAN,

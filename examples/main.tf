@@ -41,7 +41,7 @@ resource "anxcloud_virtual_server" "example" {
   template_id   = "12c28aa7-604d-47e9-83fb-5f1d1f1837b3"
   template_type = "templates"
   hostname      = "example-terraform"
-  cpus          = 8
+  cpus          = 2
   disk          = 70
   disk_type     = local.disk_types.STD6.id
   memory        = 2048
