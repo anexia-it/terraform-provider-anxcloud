@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAnxCloudDiskTypeDataSource(t *testing.T) {
+func TestAccAnxCloudTemplateDataSource(t *testing.T) {
 	resourceName := "acc_test"
-	resourcePath := "data.anxcloud_disk_type." + resourceName
+	resourcePath := "data.anxcloud_template." + resourceName
 
 	locationID := "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
 
@@ -19,39 +19,39 @@ func TestAccAnxCloudDiskTypeDataSource(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnxCloudDiskTypeDataSource(resourceName, locationID),
+				Config: testAccAnxCloudTemplateDataSource(resourceName, locationID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
 					resource.TestCheckResourceAttr(resourcePath, "id", locationID),
-					testAccAnxCloudDiskTypeDataSourceExists(resourcePath),
+					testAccAnxCloudTemplateDataSourceExists(resourcePath),
 				),
 			},
 		},
 	})
 }
 
-func testAccAnxCloudDiskTypeDataSource(resourceName, locationID string) string {
+func testAccAnxCloudTemplateDataSource(resourceName, locationID string) string {
 	return fmt.Sprintf(`
-	data "anxcloud_disk_type" "%s" {
+	data "anxcloud_template" "%s" {
 		location_id   = "%s"
 	}
 	`, resourceName, locationID)
 }
 
-func testAccAnxCloudDiskTypeDataSourceExists(n string) resource.TestCheckFunc {
+func testAccAnxCloudTemplateDataSourceExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 
 		if !ok {
-			return fmt.Errorf("disk type not found: %s", n)
+			return fmt.Errorf("template not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("disk type id not set")
+			return fmt.Errorf("template id not set")
 		}
 
 		if len(rs.Primary.Attributes) < 1 {
-			return fmt.Errorf("not found disk types")
+			return fmt.Errorf("not found templates")
 		}
 
 		return nil
