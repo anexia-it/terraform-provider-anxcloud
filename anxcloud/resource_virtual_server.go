@@ -185,6 +185,13 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 
+	tags := expandTags(d.Get("tags").([]interface{}))
+	for _, t := range tags {
+		if err := attachTag(ctx, c, d.Id(), t); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	return resourceVirtualServerRead(ctx, d, m)
 }
 
@@ -268,11 +275,14 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 		Reboot:          d.Get("force_restart_if_needed").(bool),
 		EnableDangerous: d.Get("critical_operation_confirmed").(bool),
 	}
+	requiresReboot := false
 
 	if d.HasChanges("sockets", "memory", "cpus") {
 		ch.CPUs = d.Get("cpus").(int)
 		ch.CPUSockets = d.Get("sockets").(int)
 		ch.MemoryMBs = d.Get("memory").(int)
+
+		requiresReboot = true
 	}
 
 	// must stay in a separate condition as any endpoint doesn't return info about the current state
@@ -308,14 +318,42 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 		disk.SizeGBs = d.Get("disk").(int)
 
 		ch.ChangeDisks = append(ch.ChangeDisks, disk)
+
+		requiresReboot = true
+	}
+
+	if d.HasChange("tags") {
+		old, new := d.GetChange("tags")
+		oldTags := expandTags(old.([]interface{}))
+		newTags := expandTags(new.([]interface{}))
+
+		dTags := getTagsDifferences(oldTags, newTags)
+		cTags := getTagsDifferences(newTags, oldTags)
+
+		for _, t := range dTags {
+			if err := detachTag(ctx, c, d.Id(), t); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		for _, t := range cTags {
+			if err := attachTag(ctx, c, d.Id(), t); err != nil {
+				return diag.FromErr(err)
+			}
+		}
 	}
 
 	if _, err := v.Provisioning().VM().Update(ctx, d.Id(), ch); err != nil {
 		return diag.FromErr(err)
 	}
 
+	delay := 10 * time.Second
+	if requiresReboot {
+		delay = 3 * time.Minute
+	}
+
 	vmState := resource.StateChangeConf{
-		Delay:      3 * time.Minute,
+		Delay:      delay,
 		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		MinTimeout: 10 * time.Second,
 		Pending: []string{
@@ -370,4 +408,22 @@ func resourceVirtualServerDelete(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	return nil
+}
+
+func getTagsDifferences(tagsA, tagsB []string) []string {
+	var out []string
+
+	for _, a := range tagsA {
+		found := false
+		for _, b := range tagsB {
+			if a == b {
+				found = true
+			}
+		}
+		if !found {
+			out = append(out, a)
+		}
+	}
+
+	return out
 }

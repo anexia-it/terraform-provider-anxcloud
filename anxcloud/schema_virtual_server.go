@@ -149,6 +149,14 @@ func schemaVirtualServer() map[string]*schema.Schema {
 				"Potentially dangerous operations (e.g. resulting in data loss) require an additional confirmation. " +
 				"The parameter is used for VM UPDATE requests.",
 		},
+		"tags": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "List of tags attached to the Virtual Server.",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
 		"info": {
 			Type:        schema.TypeList,
 			Computed:    true,
