@@ -30,3 +30,23 @@ The following attributes are exported.
 - `name` - Operating system name defined in the template.
 - `bit` - Operating system word size.
 - `build` - Operating system build.
+- `params` - Template parameters. See [Params](#params) below for details.
+
+### Params
+
+- `hostname` - The requirements for hostname field.
+- `cpus` - The requirements for cpus field.
+- `memory_mb` - The requirements for memory mb field.
+- `disk_gb` - The requirements for disk gb field.
+- `dns0` - The requirements for dns0 field.
+- `dns1` - The requirements for dns1 field.
+- `dns2` - The requirements for dns2 field.
+- `dns3` - The requirements for dns3 field.
+- `nics` - The requirements for nics field.
+- `vlan` - The requirements for vlan field.
+- `ips` - The requirements for ips field.
+- `boot_delay_seconds` - The requirements for boot delay seconds field.
+- `enter_bios_setup` - The requirements for enter bios setup field.
+- `password` - The requirements for password field.
+- `user` - The requirements for user field.
+- `disk_type` - The requirements for disk type field.
