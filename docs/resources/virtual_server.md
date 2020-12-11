@@ -40,7 +40,6 @@ resource "anxcloud_virtual_server" "example" {
 
 
   dns = ["8.8.8.8"]
-
 }
 ```
 
@@ -65,6 +64,7 @@ resource "anxcloud_virtual_server" "example" {
 - `enter_bios_setup` - (Optional) Start the VM into BIOS setup on next boot. Defaults to false.
 - `force_restart_if_needed` - (Optional) Certain operations may only be performed in powered off stat. Such as: shrinking memory, shrinking/adding cpu, removing disk, scale a disk beyond 2 GB. Passing this value as true will always execute a power offand reboot request after completing all other operations. Without this flag set to true scaling operations requiring a reboot will fail. Defaults to false.
 - `critical_operation_confirmed` - (Optional) Confirms a critical operation (if needed). Potentially dangerous operations (e.g. resulting in data loss) require an additional confirmation. The parameter is used for VM UPDATE requests. Defaults to false.
+- `tags` - (Optional) List of tags names that should be attached to Virtual Server (those should be created over `anxcloud_tag` resource).
 
 ### Network
 
