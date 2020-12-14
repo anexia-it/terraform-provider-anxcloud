@@ -31,6 +31,7 @@ func Provider() *schema.Provider {
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anxcloud_disk_type": dataSourceDiskType(),
+			"anxcloud_template":  dataSourceTemplate(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

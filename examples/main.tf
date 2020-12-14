@@ -9,6 +9,15 @@ terraform {
 
 provider "anxcloud" {}
 
+locals {
+  disk_types = {
+  for obj in data.anxcloud_disk_type.example.types : obj.id => obj
+  }
+
+  template_id = "12c28aa7-604d-47e9-83fb-5f1d1f1837b3"
+  location_id = "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
+}
+
 resource "anxcloud_tag" "example" {
   name = "example"
   service_id = "ff543fc08b3149ee9a8c50ee018b15a6"
@@ -23,13 +32,13 @@ data "anxcloud_disk_type" "example" {
   location_id = "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
 }
 
-locals {
-  disk_types = {
-    for obj in data.anxcloud_disk_type.example.types : obj.id => obj
-  }
+data "anxcloud_template" "example" {
+  location_id = local.location_id
+  template_type = "templates"
+}
 
-  template_id = "12c28aa7-604d-47e9-83fb-5f1d1f1837b3"
-  location_id = "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
+data "anxcloud_disk_type" "example" {
+  location_id = local.location_id
 }
 
 resource "anxcloud_vlan" "example" {

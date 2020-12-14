@@ -5,7 +5,7 @@ description: |-
   The disk type data source allows you to retrieve information about available disk types for specified location.
 ---
 
-# Data Source `disk_type`
+# Data Source `anxcloud_disk_type`
 
 The disk type data source allows you to retrieve information about available disk types for specified location.
 
