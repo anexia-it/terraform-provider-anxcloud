@@ -28,10 +28,6 @@ resource "anxcloud_tag" "example2" {
   service_id = "ff543fc08b3149ee9a8c50ee018b15a6"
 }
 
-data "anxcloud_disk_type" "example" {
-  location_id = "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
-}
-
 data "anxcloud_template" "example" {
   location_id = local.location_id
   template_type = "templates"

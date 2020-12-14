@@ -68,8 +68,6 @@ resource "anxcloud_virtual_server" "example" {
 
 ### Network
 
-Each order item contains a `coffee` object and a `quantity`.
-
 - `vlan_id` - (Required) VLAN identifier.
 - `nic_type` - (Required) Network interface card type.
 - `ips` - (Optional) Requested list of IPs and IPs identifiers. IPs are ignored when using template_type 'from_scratch'. Defaults to free IPs from IP pool attached to VLAN.
