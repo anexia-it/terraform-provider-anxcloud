@@ -1,3 +1,8 @@
+## 0.2.1
+
+* **New Data Source:** `anxcloud_template` ([#14](https://github.com/anexia-it/terraform-provider-anxcloud/pull/14))
+* **New Resource:** `anxcloud_tag` ([#15](https://github.com/anexia-it/terraform-provider-anxcloud/pull/15))
+
 ## 0.2.0
 
 FEATURES
