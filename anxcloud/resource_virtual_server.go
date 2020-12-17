@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/anexia-it/go-anxcloud/pkg/client"
+	"github.com/anexia-it/go-anxcloud/pkg/ipam/address"
 	"github.com/anexia-it/go-anxcloud/pkg/vsphere"
 	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/vm"
 	"github.com/hashicorp/go-cty/cty"
@@ -94,6 +95,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 
 	c := m.(client.Client)
 	v := vsphere.NewAPI(c)
+	a := address.NewAPI(c)
 	locationID := d.Get("location_id").(string)
 
 	networks = expandVirtualServerNetworks(d.Get("network").([]interface{}))
@@ -102,11 +104,15 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 			continue
 		}
 
-		freeIPs, err := v.Provisioning().IPs().GetFree(ctx, locationID, n.VLAN)
+		res, err := a.ReserveRandom(ctx, address.ReserveRandom{
+			LocationID: locationID,
+			VlanID:     n.VLAN,
+			Count:      1,
+		})
 		if err != nil {
 			diags = append(diags, diag.FromErr(err)...)
-		} else if len(freeIPs) > 0 {
-			networks[i].IPs = append(networks[i].IPs, freeIPs[0].Identifier)
+		} else if len(res.Data) > 0 {
+			networks[i].IPs = append(networks[i].IPs, res.Data[0].Address)
 		} else {
 			diags = append(diags, diag.Diagnostic{
 				Severity:      diag.Error,
