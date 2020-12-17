@@ -1,3 +1,9 @@
+## 0.2.2
+
+ENHANCEMENTS
+
+* resource/anxlcoud_virtual_server - reserve an IP address before creating a VM ([#20](https://github.com/anexia-it/terraform-provider-anxcloud/pull/20))
+
 ## 0.2.1
 
 FEATURES
