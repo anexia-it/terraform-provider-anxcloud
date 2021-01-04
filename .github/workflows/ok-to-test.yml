@@ -1,0 +1,22 @@
+# If someone with write access comments "/ok-to-test" on a pull request, emit a repository_dispatch event
+name: Ok To Test
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  ok-to-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Slash Command Dispatch
+        uses: peter-evans/slash-command-dispatch@v1
+        env:
+          TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        with:
+          token: ${{ env.TOKEN }}
+          reaction-token: ${{ secrets.RELEASE_TOKEN }}
+          issue-type: pull-request
+          commands: ok-to-test
+          named-args: true
+          permission: write
