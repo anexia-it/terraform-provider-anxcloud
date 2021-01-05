@@ -1,0 +1,12 @@
+name: Unit tests
+
+on:
+  pull_request:
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: run unit tests
+        run: make test
