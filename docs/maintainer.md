@@ -9,3 +9,8 @@ Integration tests are executed after adding a comment:
 ```bash
 /ok-to-test sha=<short-commit>
 ```
+
+After the `ok-to-test` job has started, move to the GitHub actions page to see the output from integration-tests jobs (click `ok-to-test` job).
+
+*Note: the `integration-fork` job status is updated on the main PR page once it is finished.*
+ 
