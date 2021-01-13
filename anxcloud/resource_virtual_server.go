@@ -209,7 +209,11 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 
 	info, err := v.Info().Get(ctx, d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		if err := handleNotFoundError(err); err != nil {
+			return diag.FromErr(err)
+		}
+		d.SetId("")
+		return nil
 	}
 
 	// we miss information about:
