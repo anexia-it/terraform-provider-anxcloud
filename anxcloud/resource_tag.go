@@ -52,7 +52,11 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, m interface{})
 
 	info, err := t.Get(ctx, d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		if err := handleNotFoundError(err); err != nil {
+			return diag.FromErr(err)
+		}
+		d.SetId("")
+		return nil
 	}
 
 	if err := d.Set("organisation_assignments", flattenOrganisationAssignments(info.Organisations)); err != nil {

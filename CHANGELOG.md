@@ -1,3 +1,9 @@
+## 0.2.3
+
+ENHANCEMENTS
+
+* all resources - if resources not found then let terraform to reflect this in the status ([#27](https://github.com/anexia-it/terraform-provider-anxcloud/pull/27))
+
 ## 0.2.2
 
 ENHANCEMENTS
