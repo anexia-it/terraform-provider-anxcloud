@@ -19,7 +19,7 @@ $ make testacc TESTARGS='-run=TestAccXXX'
 ```
 
 ### Release Note
-Release note for [CHANGELOG](https://github.com/hashicorp/terraform-provider-anxcloud/blob/master/CHANGELOG.md):
+Release note for [CHANGELOG](https://github.com/anexia-it/terraform-provider-anxcloud/blob/master/CHANGELOG.md):
 <!--
 If change is not user facing, just write "NONE" in the release-note block below.
 -->
