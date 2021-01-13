@@ -17,8 +17,9 @@ require (
 	github.com/lithammer/shortuuid v3.0.0+incompatible
 	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/zclconf/go-cty v1.6.1 // indirect
-	golang.org/x/net v0.0.0-20200822124328-c89045814202 // indirect
 	golang.org/x/sys v0.0.0-20201009025420-dfb3f7c4e634 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200506231410-2ff61e1afc86 // indirect
 )
+
+replace github.com/anexia-it/go-anxcloud v0.3.8 => ../go-anxcloud
