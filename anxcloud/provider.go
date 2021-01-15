@@ -33,6 +33,7 @@ func Provider() *schema.Provider {
 			"anxcloud_disk_type":    dataSourceDiskType(),
 			"anxcloud_template":     dataSourceTemplate(),
 			"anxcloud_ip_addresses": dataSourceIPAddresses(),
+			"anxcloud_nic_types":    dataSourceNICTypes(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
