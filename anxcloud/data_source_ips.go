@@ -27,7 +27,7 @@ func dataSourceIPAddressesRead(ctx context.Context, d *schema.ResourceData, m in
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("data", flattenIPAddresses(addresses)); err != nil {
+	if err := d.Set("addresses", flattenIPAddresses(addresses)); err != nil {
 		return diag.FromErr(err)
 	}
 

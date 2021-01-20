@@ -24,7 +24,7 @@ func flattenCoreLocations(in []corelocation.Location) []interface{} {
 		m["identifier"] = l.ID
 		m["name"] = l.Name
 		m["code"] = l.Code
-		m["city_code"] = l.Code
+		m["city_code"] = l.CityCode
 		m["country"] = l.Country
 		m["lat"] = l.Latitude
 		m["lon"] = l.Longitude

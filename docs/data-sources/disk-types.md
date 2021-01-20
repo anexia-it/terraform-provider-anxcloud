@@ -2,17 +2,17 @@
 page_title: "disk_type Data Source - terraform-provider-anxcloud"
 subcategory: ""
 description: |-
-  The disk type data source allows you to retrieve information about available disk types for specified location.
+  The disk types data source allows you to retrieve information about available disk types for specified location.
 ---
 
-# Data Source `anxcloud_disk_type`
+# Data Source `anxcloud_disk_types`
 
-The disk type data source allows you to retrieve information about available disk types for specified location.
+The disk types data source allows you to retrieve information about available disk types for specified location.
 
 ## Example Usage
 
 ```hcl
-data "anxcloud_disk_type" "example" {
+data "anxcloud_disk_types" "example" {
   location_id = "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
 }
 ```

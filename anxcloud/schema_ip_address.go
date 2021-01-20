@@ -23,7 +23,7 @@ func schemaIPAddresses() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "An optional string allowing to search trough entities.",
 		},
-		"data": {
+		"addresses": {
 			Type:        schema.TypeList,
 			Computed:    true,
 			Description: "List of available addresses.",

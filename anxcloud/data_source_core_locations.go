@@ -20,9 +20,9 @@ func dataSourceCoreLocations() *schema.Resource {
 
 func dataSourceCoreLocationsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(client.Client)
-	n := location.NewAPI(c)
+	l := location.NewAPI(c)
 
-	locations, err := n.List(ctx, d.Get("page").(int), d.Get("limit").(int), d.Get("search").(string))
+	locations, err := l.List(ctx, d.Get("page").(int), d.Get("limit").(int), d.Get("search").(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}

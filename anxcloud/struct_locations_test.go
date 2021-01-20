@@ -27,6 +27,7 @@ func TestFlattenCoreLocations(t *testing.T) {
 					Country:   "AT",
 					Latitude:  "0.0",
 					Longitude: "0.0",
+					CityCode:  "VIE",
 				},
 				{
 					ID:        "72c5f6b2fd3a4a7eaaedf1a7c0194321",

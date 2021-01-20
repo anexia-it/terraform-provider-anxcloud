@@ -27,9 +27,9 @@ data "anxcloud_ip_addresses" "example" {
 
 The following attributes are exported.
 
-- `data` - List of ip addresses. See [Data](#data) below for details.
+- `addresses` - List of ip addresses. See [Addresses](#addresses) below for details.
 
-### Data
+### Addresses
 
 - `identifier` - The identifier of the address.
 - `address` - The IP address.

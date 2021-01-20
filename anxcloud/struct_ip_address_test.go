@@ -12,7 +12,7 @@ import (
 
 // flatteners tests
 
-func TestFlattenIPAddressesList(t *testing.T) {
+func TestFlattenIPAddresses(t *testing.T) {
 	cases := []struct {
 		Input          []address.Summary
 		ExpectedOutput []interface{}

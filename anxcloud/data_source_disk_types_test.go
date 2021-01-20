@@ -43,11 +43,11 @@ func testAccAnxCloudDiskTypeDataSourceExists(n string) resource.TestCheckFunc {
 		rs, ok := s.RootModule().Resources[n]
 
 		if !ok {
-			return fmt.Errorf("disk type not found: %s", n)
+			return fmt.Errorf("disk types not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("disk type id not set")
+			return fmt.Errorf("disk types id not set")
 		}
 
 		if len(rs.Primary.Attributes) < 1 {
