@@ -16,6 +16,26 @@ func expandTags(p []interface{}) []string {
 
 // flatteners
 
+func flattenTags(in []tags.Summary) []interface{} {
+
+	att := []interface{}{}
+	if len(in) < 1 {
+		return att
+	}
+
+	for _, d := range in {
+		m := map[string]interface{}{}
+
+		m["identifier"] = d.Identifier
+		m["name"] = d.Name
+
+		att = append(att, m)
+	}
+
+	return att
+
+}
+
 func flattenOrganisationAssignments(in []tags.Organisation) []interface{} {
 	att := []interface{}{}
 	if len(in) < 1 {
