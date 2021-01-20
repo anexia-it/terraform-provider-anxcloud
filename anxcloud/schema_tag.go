@@ -39,7 +39,7 @@ func schemaTags() map[string]*schema.Schema {
 			Description: "The order of the tags",
 		},
 		"sort_ascending": {
-			Type:        schema.TypeString,
+			Type:        schema.TypeBool,
 			Optional:    true,
 			Description: "Ascending or descending",
 		},
