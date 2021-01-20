@@ -30,9 +30,10 @@ func Provider() *schema.Provider {
 			"anxcloud_tag":            resourceTag(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"anxcloud_disk_type": dataSourceDiskType(),
-			"anxcloud_template":  dataSourceTemplate(),
-			"anxcloud_tags":      dataSourceTags(),
+			"anxcloud_disk_type":             dataSourceDiskType(),
+			"anxcloud_template":              dataSourceTemplate(),
+			"anxcloud_tags":                  dataSourceTags(),
+			"anxcloud_cpu_performance_types": dataSourceCPUPerformanceTypes(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
