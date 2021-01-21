@@ -8,22 +8,18 @@ import (
 
 // flatteners
 
-func flattenVLANLocations(in []vlan.Location) []interface{} {
+func flattenVLANs(in []vlan.Summary) []interface{} {
 	att := []interface{}{}
 	if len(in) < 1 {
 		return att
 	}
 
-	for _, l := range in {
+	for _, v := range in {
 		m := map[string]interface{}{}
 
-		m["identifier"] = l.Identifier
-		m["name"] = l.Name
-		m["code"] = l.Code
-		m["city_code"] = l.CityCode
-		m["country"] = l.CountryCode
-		m["lat"] = l.Latitude
-		m["lon"] = l.Longitude
+		m["identifier"] = v.Identifier
+		m["name"] = v.Name
+		m["description_customer"] = v.CustomerDescription
 
 		att = append(att, m)
 	}

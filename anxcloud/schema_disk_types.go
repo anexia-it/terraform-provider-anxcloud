@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func schemaDiskType() map[string]*schema.Schema {
+func schemaDiskTypes() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"location_id": {
 			Type:        schema.TypeString,

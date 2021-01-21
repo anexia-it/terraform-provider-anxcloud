@@ -15,8 +15,8 @@ func TestAccAnxCloudIPAddress(t *testing.T) {
 	resourceName := "acc_test"
 	resourcePath := "anxcloud_ip_address." + resourceName
 
-	prefixID := "7545899235004092b2af15a64419b8c5"
-	ipAddress := "185.228.148.118"
+	prefixID := "b015c18f84234885b8a7d0338db39e65"
+	ipAddress := "10.244.2.18"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
