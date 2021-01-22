@@ -38,6 +38,7 @@ func Provider() *schema.Provider {
 			"anxcloud_vlans":                 dataSourceVLANs(),
 			"anxcloud_tags":                  dataSourceTags(),
 			"anxcloud_cpu_performance_types": dataSourceCPUPerformanceTypes(),
+			"anxcloud_vsphere_locations":     dataSourceVSphereLocations(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

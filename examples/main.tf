@@ -9,4 +9,4 @@ terraform {
 
 provider "anxcloud" {}
 
-data "anxcloud_core_locations" "example" {}
+data "anxcloud_vsphere_locations" "example" {}
