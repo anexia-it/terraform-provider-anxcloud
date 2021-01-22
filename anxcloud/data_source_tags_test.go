@@ -38,11 +38,11 @@ func testAccAnxCloudTagsDataSource(resourceName string, page, limit, query strin
 	data "anxcloud_tags" "%s" {
 		page = %v
 		limit = %v
-		query = %s
+		query = "%s"
 		service_identifier = ""
 		organization_identifier = ""
 		order = ""
-		sort_ascending = ""
+		sort_ascending = true
 	}
 	`, resourceName, page, limit, query)
 }

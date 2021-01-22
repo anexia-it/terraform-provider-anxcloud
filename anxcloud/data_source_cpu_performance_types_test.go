@@ -28,7 +28,7 @@ func TestAccAnxCloudCPUPerformanceTypesDataSource(t *testing.T) {
 
 func testAccAnxCloudCPUPerformanceTypesDataSource(resourceName string) string {
 	return fmt.Sprintf(`
-	data "anxcloud_tags" "%s" {
+	data "anxcloud_cpu_performance_types" "%s" {
 	}
 	`, resourceName)
 }
