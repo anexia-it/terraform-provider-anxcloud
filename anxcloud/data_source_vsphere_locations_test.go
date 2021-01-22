@@ -9,8 +9,8 @@ import (
 )
 
 func TestAccAnxCloudVSphereLocationsDataSource(t *testing.T) {
-	resourceName := "acc_locations_test"
-	resourcePath := "data.anxcloud_locations." + resourceName
+	resourceName := "acc_vsphere_locations_test"
+	resourcePath := "data.anxcloud_vsphere_locations." + resourceName
 
 	page := "1"
 	limit := "50"
@@ -33,7 +33,7 @@ func TestAccAnxCloudVSphereLocationsDataSource(t *testing.T) {
 
 func testAccAnxCloudVSphereLocationsDataSource(resourceName, page, limit string) string {
 	return fmt.Sprintf(`
-	data "anxcloud_location" "%s" {
+	data "anxcloud_vsphere_locations" "%s" {
 		page = %v
 		limit = %v
 	}
