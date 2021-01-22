@@ -9,14 +9,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceDiskType() *schema.Resource {
+func dataSourceDiskTypes() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceDiskTypeRead,
-		Schema:      schemaDiskType(),
+		ReadContext: dataSourceDiskTypesRead,
+		Schema:      schemaDiskTypes(),
 	}
 }
 
-func dataSourceDiskTypeRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceDiskTypesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(client.Client)
 	t := disktype.NewAPI(c)
 	locationID := d.Get("location_id").(string)

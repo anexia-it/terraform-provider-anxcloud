@@ -4,6 +4,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+func schemaDataSourceLocation() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"page": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     1,
+			Description: "The page of the list.",
+		},
+		"limit": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     1000,
+			Description: "The records limit of the list.",
+		},
+		"search": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "An optional string allowing to search trough entities.",
+		},
+		"locations": schemaLocations(),
+	}
+}
+
 func schemaLocations() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeList,
