@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAnxCloudLocationDataSource(t *testing.T) {
+func TestAccAnxCloudVSphereLocationsDataSource(t *testing.T) {
 	resourceName := "acc_locations_test"
 	resourcePath := "data.anxcloud_locations." + resourceName
 
@@ -20,18 +20,18 @@ func TestAccAnxCloudLocationDataSource(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnxCloudLocationDataSource(resourceName, page, limit),
+				Config: testAccAnxCloudVSphereLocationsDataSource(resourceName, page, limit),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "page", page),
 					resource.TestCheckResourceAttr(resourcePath, "limit", limit),
-					testAccAnxCloudLocationDataSourceExists(resourcePath),
+					testAccAnxCloudVSphereLocationsDataSourceExists(resourcePath),
 				),
 			},
 		},
 	})
 }
 
-func testAccAnxCloudLocationDataSource(resourceName, page, limit string) string {
+func testAccAnxCloudVSphereLocationsDataSource(resourceName, page, limit string) string {
 	return fmt.Sprintf(`
 	data "anxcloud_location" "%s" {
 		page = %v
@@ -40,7 +40,7 @@ func testAccAnxCloudLocationDataSource(resourceName, page, limit string) string 
 	`, resourceName, page, limit)
 }
 
-func testAccAnxCloudLocationDataSourceExists(n string) resource.TestCheckFunc {
+func testAccAnxCloudVSphereLocationsDataSourceExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 
