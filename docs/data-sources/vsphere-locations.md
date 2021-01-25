@@ -13,8 +13,8 @@ The vsphere locations data source allows you to get all available vsphere locati
 
 ```hcl
 data "anxcloud_core_locations" "example" {
-  page   = 1
-  limit  = 50
+  page  = 1
+  limit = 50
 }
 ```
 

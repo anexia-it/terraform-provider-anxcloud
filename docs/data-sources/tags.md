@@ -13,9 +13,9 @@ The tags data source allows you to get all available tags.
 
 ```hcl
 data "anxcloud_tags" "example" {
-		page = 1
-		limit = 100
-	}
+  page  = 1
+  limit = 100
+}
 ```
 
 ## Argument Reference

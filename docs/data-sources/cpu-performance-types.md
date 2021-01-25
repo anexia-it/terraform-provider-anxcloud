@@ -13,7 +13,7 @@ The cpu performance types data source allows you to get all available cpu perfor
 
 ```hcl
 data "anxcloud_cpu_performance_types" "example" {
-  }
+}
 ```
 
 ## Argument Reference
