@@ -84,10 +84,10 @@ resource "anxcloud_virtual_server" "example" {
   ]
 }
 
-data "anxcloud_core_locations" "example" {} 
+data "anxcloud_core_locations" "example" {}
 
-data "anxcloud_tags" "example" {} 
+data "anxcloud_tags" "example" {}
 
-data "anxcloud_cpu_performance_types" "example" {} 
+data "anxcloud_cpu_performance_types" "example" {}
 
-data "anxcloud_vsphere_locations" "example" {} 
+data "anxcloud_vsphere_locations" "example" {}
