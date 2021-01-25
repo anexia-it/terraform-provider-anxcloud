@@ -160,7 +160,8 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		EnterBIOSSetup:     d.Get("enter_bios_setup").(bool),
 	}
 
-	provision, err := v.Provisioning().VM().Provision(ctx, def)
+	base64Encoding := true
+	provision, err := v.Provisioning().VM().Provision(ctx, def, base64Encoding)
 	if err != nil {
 		return diag.FromErr(err)
 	}
