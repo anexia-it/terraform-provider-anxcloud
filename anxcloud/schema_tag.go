@@ -4,6 +4,67 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+func schemaTags() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"page": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     1,
+			Description: "Number of page",
+		},
+		"limit": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     1000,
+			Description: "Number of tags per page",
+		},
+		"query": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Search term",
+		},
+		"service_identifier": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The id of the service",
+		},
+		"organization_identifier": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The id of the organization",
+		},
+		"order": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The order of the tags",
+		},
+		"sort_ascending": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Ascending or descending",
+		},
+		"tags": {
+			Type:        schema.TypeList,
+			Computed:    true,
+			Description: "List of tags.",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"name": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "Name of the tag.",
+					},
+					"identifier": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "Identifier of the tag.",
+					},
+				},
+			},
+		},
+	}
+}
+
 func schemaTag() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"name": {
