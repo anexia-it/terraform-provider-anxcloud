@@ -4,6 +4,7 @@ import (
 	corelocation "github.com/anexia-it/go-anxcloud/pkg/core/location"
 	"github.com/anexia-it/go-anxcloud/pkg/ipam/prefix"
 	"github.com/anexia-it/go-anxcloud/pkg/vlan"
+	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/location"
 )
 
 // expanders
@@ -79,4 +80,29 @@ func flattenVLANLocations(in []vlan.Location) []interface{} {
 	}
 
 	return att
+}
+
+func flattenVSphereLocations(in []location.Location) []interface{} {
+
+	att := []interface{}{}
+	if len(in) < 1 {
+		return att
+	}
+
+	for _, d := range in {
+		m := map[string]interface{}{}
+
+		m["code"] = d.Code
+		m["country"] = d.Country
+		m["identifier"] = d.ID
+		m["lat"] = d.Latitude
+		m["lon"] = d.Longitude
+		m["name"] = d.Name
+		m["country_name"] = d.CountryName
+
+		att = append(att, m)
+	}
+
+	return att
+
 }
