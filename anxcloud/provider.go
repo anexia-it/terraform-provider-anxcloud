@@ -30,7 +30,7 @@ func Provider() *schema.Provider {
 			"anxcloud_tag":            resourceTag(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"anxcloud_disk_type":             dataSourceDiskTypes(),
+			"anxcloud_disk_types":            dataSourceDiskTypes(),
 			"anxcloud_template":              dataSourceTemplate(),
 			"anxcloud_ip_addresses":          dataSourceIPAddresses(),
 			"anxcloud_nic_types":             dataSourceNICTypes(),
