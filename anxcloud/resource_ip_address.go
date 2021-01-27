@@ -102,9 +102,9 @@ func resourceIPAddressRead(ctx context.Context, d *schema.ResourceData, m interf
 		diags = append(diags, diag.FromErr(err)...)
 	}
 	// TODO: API require 'role' arg and returns 'role_text' arg, this must be fixed
-	//if err := d.Set("role", info.Role); err != nil {
-	//	diags = append(diags, diag.FromErr(err)...)
-	//}
+	if err := d.Set("role", info.Role); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
 	if err := d.Set("version", info.Version); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}

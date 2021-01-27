@@ -11,7 +11,7 @@ provider "anxcloud" {}
 
 locals {
   disk_types = {
-  for obj in data.anxcloud_disk_type.example.types : obj.id => obj
+  for obj in data.anxcloud_disk_types.example.types : obj.id => obj
   }
 
   template_id = "12c28aa7-604d-47e9-83fb-5f1d1f1837b3"
@@ -33,7 +33,7 @@ data "anxcloud_template" "example" {
   template_type = "templates"
 }
 
-data "anxcloud_disk_type" "example" {
+data "anxcloud_disk_types" "example" {
   location_id = local.location_id
 }
 

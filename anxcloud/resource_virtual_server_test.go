@@ -89,6 +89,11 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 					resource.TestCheckResourceAttr(resourcePath, "disk", strconv.Itoa(vmDefDownscale.Disk)),
 				),
 			},
+			{
+				ResourceName:      resourcePath,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

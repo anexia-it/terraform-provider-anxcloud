@@ -101,7 +101,6 @@ func resourceVLANRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	if err := d.Set("locations", flattenVLANLocations(vlan.Locations)); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-
 	if err := d.Set("vm_provisioning", vlan.VMProvisioning); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}

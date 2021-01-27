@@ -2,7 +2,9 @@ package anxcloud
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"time"
 
@@ -76,13 +78,14 @@ func resourceVirtualServer() *schema.Resource {
 						if err := d.ForceNew(key); err != nil {
 							log.Fatalf("[ERROR] unable to force new '%s': %v", key, err)
 						}
-					}
-
-					for j, ip := range n.IPs {
-						if ip != oldNets[i].IPs[j] {
-							key := fmt.Sprintf("network.%d.ips", i)
-							if err := d.ForceNew(key); err != nil {
-								log.Fatalf("[ERROR] unable to force new '%s': %v", key, err)
+					} else {
+						for j, ip := range n.IPs {
+							_ = d.ForceNew("network")
+							if ip != oldNets[i].IPs[j] {
+								key := fmt.Sprintf("network.%d.ips", i)
+								if err := d.ForceNew(key); err != nil {
+									log.Fatalf("[ERROR] unable to force new '%s': %v", key, err)
+								}
 							}
 						}
 					}
@@ -271,8 +274,9 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		}
 	}
 
+	specNetworks := expandVirtualServerNetworks(d.Get("network").([]interface{}))
 	var networks []vm.Network
-	for _, net := range info.Network {
+	for i, net := range info.Network {
 		if len(nicTypes) < net.NIC {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
@@ -282,11 +286,18 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 			continue
 		}
 
-		networks = append(networks, vm.Network{
-			NICType: nicTypes[net.NIC],
+		network := vm.Network{
+			NICType: nicTypes[net.NIC-1],
 			VLAN:    net.VLAN,
-			IPs:     append(net.IPv4, net.IPv6...),
-		})
+		}
+
+		// in spec it's not required to set an IP address
+		// however when it's set we have to reflect that in the state
+		if i+1 < len(specNetworks) && len(specNetworks[i].IPs) > 0 {
+			network.IPs = append(net.IPv4, net.IPv6...)
+		}
+
+		networks = append(networks, network)
 	}
 
 	fNetworks := flattenVirtualServerNetwork(networks)
