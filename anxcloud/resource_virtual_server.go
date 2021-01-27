@@ -9,6 +9,7 @@ import (
 	"github.com/anexia-it/go-anxcloud/pkg/client"
 	"github.com/anexia-it/go-anxcloud/pkg/ipam/address"
 	"github.com/anexia-it/go-anxcloud/pkg/vsphere"
+	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/nictype"
 	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/vm"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -29,6 +30,9 @@ func resourceVirtualServer() *schema.Resource {
 		ReadContext:   resourceVirtualServerRead,
 		UpdateContext: resourceVirtualServerUpdate,
 		DeleteContext: resourceVirtualServerDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Read:   schema.DefaultTimeout(1 * time.Minute),
@@ -43,25 +47,31 @@ func resourceVirtualServer() *schema.Resource {
 				newNets := expandVirtualServerNetworks(new.([]interface{}))
 
 				if len(oldNets) > len(newNets) {
+					// some network has been deleted
 					return true
 				}
 
-				for i, n := range oldNets {
-					if n.VLAN != newNets[i].VLAN {
+				for i, n := range newNets {
+					if i+1 > len(oldNets) {
+						// new networks were added
+						break
+					}
+
+					if n.VLAN != oldNets[i].VLAN {
 						key := fmt.Sprintf("network.%d.vlan_id", i)
 						if err := d.ForceNew(key); err != nil {
 							log.Fatalf("[ERROR] unable to force new '%s': %v", key, err)
 						}
 					}
 
-					if n.NICType != newNets[i].NICType {
+					if n.NICType != oldNets[i].NICType {
 						key := fmt.Sprintf("network.%d.nic_type", i)
 						if err := d.ForceNew(key); err != nil {
 							log.Fatalf("[ERROR] unable to force new '%s': %v", key, err)
 						}
 					}
 
-					if len(n.IPs) != len(newNets[i].IPs) {
+					if len(n.IPs) != len(oldNets[i].IPs) {
 						key := fmt.Sprintf("network.%d.ips", i)
 						if err := d.ForceNew(key); err != nil {
 							log.Fatalf("[ERROR] unable to force new '%s': %v", key, err)
@@ -69,7 +79,7 @@ func resourceVirtualServer() *schema.Resource {
 					}
 
 					for j, ip := range n.IPs {
-						if ip != newNets[i].IPs[j] {
+						if ip != oldNets[i].IPs[j] {
 							key := fmt.Sprintf("network.%d.ips", i)
 							if err := d.ForceNew(key); err != nil {
 								log.Fatalf("[ERROR] unable to force new '%s': %v", key, err)
@@ -207,6 +217,7 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 
 	c := m.(client.Client)
 	v := vsphere.NewAPI(c)
+	n := nictype.NewAPI(c)
 
 	info, err := v.Info().Get(ctx, d.Id())
 	if err != nil {
@@ -217,16 +228,28 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		return nil
 	}
 
-	// we miss information about:
-	// * cpu_performance_type
-	// * networks.ips - we have info endpoint, but it's not compatible with networks.ips.identifiers
-	// * networks.nic_type - we have info endpoint, but it does not return networks.nic_type
+	nicTypes, err := n.List(ctx)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
+	// TODO: we miss information about:
+	// * cpu_performance_type
+
+	if err = d.Set("location_id", info.LocationID); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+	if err = d.Set("template_id", info.TemplateID); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+	if err = d.Set("template_type", info.TemplateType); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
 	if err = d.Set("cpus", info.CPU); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 	if v := d.Get("sockets").(int); v != 0 {
-		// info.Cores should be info.Sockets, there is info.Cpus which is info.Cores
+		// TODO: API fix: info.Cores should be info.Sockets, there is info.Cpus which is info.Cores
 		if err = d.Set("sockets", info.Cores); err != nil {
 			diags = append(diags, diag.FromErr(err)...)
 		}
@@ -248,24 +271,24 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		}
 	}
 
-	// networks status is taken from info endpoint and there is no id that we can join
-	// vm.Networks with info.Networks thus we must trust that order from the info endpoint is correct
 	var networks []vm.Network
-	specNetworks := expandVirtualServerNetworks(d.Get("network").([]interface{}))
-	if len(info.Network) > len(specNetworks) {
-		diags = append(diags, diag.Errorf("vm has more NICs than specified, the issue must be solved manually")...)
-		return diags
-	}
-	for i, n := range info.Network {
-		network := vm.Network{
-			VLAN: n.VLAN,
-			// we miss information about nic_type and ips and we have to prevent resource recreation
-			// that's why we copy the following fields
-			NICType: specNetworks[i].NICType,
-			IPs:     specNetworks[i].IPs,
+	for _, net := range info.Network {
+		if len(nicTypes) < net.NIC {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Requested invalid nic type",
+				Detail:   fmt.Sprintf("NIC type index out of range, available %d, wanted %d", len(nicTypes), net.NIC),
+			})
+			continue
 		}
-		networks = append(networks, network)
+
+		networks = append(networks, vm.Network{
+			NICType: nicTypes[net.NIC],
+			VLAN:    net.VLAN,
+			IPs:     append(net.IPv4, net.IPv6...),
+		})
 	}
+
 	fNetworks := flattenVirtualServerNetwork(networks)
 	if err = d.Set("network", fNetworks); err != nil {
 		diags = append(diags, diag.FromErr(err)...)

@@ -23,6 +23,9 @@ func resourceVLAN() *schema.Resource {
 		ReadContext:   resourceVLANRead,
 		UpdateContext: resourceVLANUpdate,
 		DeleteContext: resourceVLANDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Read:   schema.DefaultTimeout(1 * time.Minute),
@@ -97,6 +100,16 @@ func resourceVLANRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	}
 	if err := d.Set("locations", flattenVLANLocations(vlan.Locations)); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
+	}
+
+	if err := d.Set("vm_provisioning", vlan.VMProvisioning); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+
+	if len(vlan.Locations) > 0 {
+		if err := d.Set("location_id", vlan.Locations[0].Identifier); err != nil {
+			diags = append(diags, diag.FromErr(err)...)
+		}
 	}
 
 	return diags

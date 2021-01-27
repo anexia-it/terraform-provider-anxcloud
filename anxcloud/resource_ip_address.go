@@ -23,6 +23,9 @@ func resourceIPAddress() *schema.Resource {
 		ReadContext:   resourceIPAddressRead,
 		UpdateContext: resourceIPAddressUpdate,
 		DeleteContext: resourceIPAddressDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Read:   schema.DefaultTimeout(1 * time.Minute),
