@@ -29,6 +29,9 @@ func resourceNetworkPrefix() *schema.Resource {
 			Update: schema.DefaultTimeout(15 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: schemaNetworkPrefix(),
 	}
 }

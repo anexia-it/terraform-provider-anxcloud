@@ -42,6 +42,11 @@ func TestAccAnxCloudNetworkPrefix(t *testing.T) {
 					testAccAnxCloudNetworkPrefixExists(resourcePath, customerDescriptionUpdate),
 				),
 			},
+			{
+				ResourceName:      resourcePath,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
