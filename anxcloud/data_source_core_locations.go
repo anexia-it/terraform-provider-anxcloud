@@ -2,11 +2,11 @@ package anxcloud
 
 import (
 	"context"
+	"strconv"
+	"time"
 
 	"github.com/anexia-it/go-anxcloud/pkg/client"
 	"github.com/anexia-it/go-anxcloud/pkg/core/location"
-
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -31,10 +31,11 @@ func dataSourceCoreLocationsRead(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 
-	if id := uuid.New().String(); id != "" {
-		d.SetId(id)
-		return nil
+	if s := d.Get("search").(string); s != "" {
+		d.SetId(strconv.FormatInt(time.Now().Round(time.Hour).Unix(), 10) + "-" + s)
+	} else {
+		d.SetId(strconv.FormatInt(time.Now().Round(time.Hour).Unix(), 10))
 	}
 
-	return diag.Errorf("unable to create uuid for core locations data source")
+	return nil
 }
