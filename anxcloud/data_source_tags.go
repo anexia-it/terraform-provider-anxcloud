@@ -40,8 +40,16 @@ func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(err)
 	}
 
-	id := fmt.Sprintf("%s-%s-%s-%s",
-		strconv.FormatInt(time.Now().Round(time.Hour).Unix(), 10), query, serviceIdentifier, organizationIdentifier)
+	id := strconv.FormatInt(time.Now().Round(time.Hour).Unix(), 10)
+	if len(query) > 0 {
+		id = fmt.Sprintf("%s-%s", id, query)
+	}
+	if len(serviceIdentifier) > 0 {
+		id = fmt.Sprintf("%s-%s", id, serviceIdentifier)
+	}
+	if len(organizationIdentifier) > 0 {
+		id = fmt.Sprintf("%s-%s", id, organizationIdentifier)
+	}
 	d.SetId(id)
 	return nil
 }
