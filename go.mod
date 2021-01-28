@@ -21,3 +21,5 @@ require (
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200506231410-2ff61e1afc86 // indirect
 )
+
+replace  github.com/anexia-it/go-anxcloud v0.3.12 => ../go-anxcloud

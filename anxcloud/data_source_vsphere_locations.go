@@ -2,6 +2,7 @@ package anxcloud
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -36,6 +37,13 @@ func dataSourceVSphereLocationsRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
-	d.SetId(strconv.FormatInt(time.Now().Round(time.Hour).Unix(), 10))
+	id := strconv.FormatInt(time.Now().Round(time.Hour).Unix(), 10)
+	if len(locationCode) > 0 {
+		id = fmt.Sprintf("%s-%s", id, locationCode)
+	}
+	if len(organization) > 0 {
+		id = fmt.Sprintf("%s-%s", id, organization)
+	}
+	d.SetId(id)
 	return nil
 }
