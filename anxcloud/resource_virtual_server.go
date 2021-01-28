@@ -2,9 +2,7 @@ package anxcloud
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"time"
 
@@ -80,7 +78,6 @@ func resourceVirtualServer() *schema.Resource {
 						}
 					} else {
 						for j, ip := range n.IPs {
-							_ = d.ForceNew("network")
 							if ip != oldNets[i].IPs[j] {
 								key := fmt.Sprintf("network.%d.ips", i)
 								if err := d.ForceNew(key); err != nil {
