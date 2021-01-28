@@ -2,11 +2,11 @@ package anxcloud
 
 import (
 	"context"
+	"strconv"
+	"time"
 
 	"github.com/anexia-it/go-anxcloud/pkg/client"
 	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/nictype"
-
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -31,10 +31,6 @@ func dataSourceNICTypesRead(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.FromErr(err)
 	}
 
-	if id := uuid.New().String(); id != "" {
-		d.SetId(id)
-		return nil
-	}
-
-	return diag.Errorf("unable to create uuid for IPs data source")
+	d.SetId(strconv.FormatInt(time.Now().Round(time.Hour).Unix(), 10))
+	return nil
 }
