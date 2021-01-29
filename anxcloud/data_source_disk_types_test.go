@@ -10,7 +10,7 @@ import (
 
 func TestAccAnxCloudDiskTypeDataSource(t *testing.T) {
 	resourceName := "acc_test"
-	resourcePath := "data.anxcloud_disk_type." + resourceName
+	resourcePath := "data.anxcloud_disk_types." + resourceName
 
 	locationID := "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
 
@@ -32,7 +32,7 @@ func TestAccAnxCloudDiskTypeDataSource(t *testing.T) {
 
 func testAccAnxCloudDiskTypeDataSource(resourceName, locationID string) string {
 	return fmt.Sprintf(`
-	data "anxcloud_disk_type" "%s" {
+	data "anxcloud_disk_types" "%s" {
 		location_id   = "%s"
 	}
 	`, resourceName, locationID)
