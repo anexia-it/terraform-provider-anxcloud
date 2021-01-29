@@ -28,7 +28,6 @@ func TestAccAnxCloudNetworkPrefix(t *testing.T) {
 				Config: testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescription),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
-					resource.TestCheckResourceAttr(resourcePath, "vm_provisioning", "true"),
 					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescription),
 					testAccAnxCloudNetworkPrefixExists(resourcePath, customerDescription),
 				),
@@ -37,7 +36,6 @@ func TestAccAnxCloudNetworkPrefix(t *testing.T) {
 				Config: testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescriptionUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
-					resource.TestCheckResourceAttr(resourcePath, "vm_provisioning", "true"),
 					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescriptionUpdate),
 					testAccAnxCloudNetworkPrefixExists(resourcePath, customerDescriptionUpdate),
 				),
@@ -86,7 +84,6 @@ func testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescription 
 		vlan_id = "02f39d20ca0f4adfb5032f88dbc26c39"
 		ip_version = 4
 		netmask = 30
-		vm_provisioning = true
 		description_customer = "%s"
 	}
 	`, resourceName, locationID, customerDescription)

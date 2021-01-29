@@ -42,17 +42,14 @@ func resourceNetworkPrefixCreate(ctx context.Context, d *schema.ResourceData, m 
 	locationID := d.Get("location_id").(string)
 
 	createParams := prefix.Create{
-		Location:                locationID,
-		IPVersion:               d.Get("ip_version").(int),
-		Type:                    d.Get("type").(int),
-		NetworkMask:             d.Get("netmask").(int),
-		CreateVLAN:              d.Get("new_vlan").(bool),
-		VLANID:                  d.Get("vlan_id").(string),
-		EnableRedundancy:        d.Get("router_redundancy").(bool),
-		EnableVMProvisioning:    d.Get("vm_provisioning").(bool),
-		CustomerDescription:     d.Get("description_customer").(string),
-		CustomerVLANDescription: d.Get("description_vlan_customer").(string),
-		Organization:            d.Get("organization").(string),
+		Location:            locationID,
+		IPVersion:           d.Get("ip_version").(int),
+		Type:                d.Get("type").(int),
+		NetworkMask:         d.Get("netmask").(int),
+		VLANID:              d.Get("vlan_id").(string),
+		EnableRedundancy:    d.Get("router_redundancy").(bool),
+		CustomerDescription: d.Get("description_customer").(string),
+		Organization:        d.Get("organization").(string),
 	}
 	res, err := p.Create(ctx, createParams)
 	if err != nil {
@@ -115,6 +112,17 @@ func resourceNetworkPrefixRead(ctx context.Context, d *schema.ResourceData, m in
 		diags = append(diags, diag.FromErr(err)...)
 	}
 	if err := d.Set("locations", flattenNetworkPrefixLocations(info.Locations)); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+	if len(info.Locations) > 0 {
+		if err := d.Set("location_id", info.Locations[0].ID); err != nil {
+			diags = append(diags, diag.FromErr(err)...)
+		}
+	}
+	if err := d.Set("router_redundancy", info.RouterRedundancy); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+	if err := d.Set("vlan_id", info.VLANID); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
