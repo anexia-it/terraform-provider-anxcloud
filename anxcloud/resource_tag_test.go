@@ -30,6 +30,11 @@ func TestAccAnxCloudTag(t *testing.T) {
 					testAccAnxCloudTagExists(resourcePath),
 				),
 			},
+			{
+				ResourceName:      resourcePath,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

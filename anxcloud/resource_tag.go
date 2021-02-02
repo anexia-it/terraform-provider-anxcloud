@@ -11,6 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// TODO tags currently only works if they are attached to a compute resource.
+// we’ll need a rewrite of it after we come to a second service which is also using tags.
+
 func resourceTag() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceTagCreate,
@@ -20,6 +23,9 @@ func resourceTag() *schema.Resource {
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Read:   schema.DefaultTimeout(1 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
+		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: schemaTag(),
 	}
@@ -59,6 +65,13 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, m interface{})
 		return nil
 	}
 
+	if err := d.Set("name", info.Name); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+	err = d.Set("service_id", info.Organisations[0].Service.Identifier)
+	if err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
 	if err := d.Set("organisation_assignments", flattenOrganisationAssignments(info.Organisations)); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}

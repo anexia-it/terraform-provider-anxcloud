@@ -30,14 +30,6 @@ func schemaNetworkPrefix() map[string]*schema.Schema {
 			ForceNew:    true,
 			Description: "The Prefix type: 0 = Public, 1 = Private.",
 		},
-		"new_vlan": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			ForceNew: true,
-			Default:  false,
-			Description: "If new VLAN shall be created. WARNING, the VLAN status won't be reflected in the terraform status." +
-				"Use at your own risk.",
-		},
 		"vlan_id": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -47,32 +39,17 @@ func schemaNetworkPrefix() map[string]*schema.Schema {
 		"router_redundancy": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			ForceNew:    true,
 			Default:     false,
 			Description: "If router Redundancy shall be enabled.",
-		},
-		"vm_provisioning": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			ForceNew:    true,
-			Default:     false,
-			Description: "If VM provisioning shall be enabled.",
 		},
 		"description_customer": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Additional description.",
 		},
-		"description_vlan_customer": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			ForceNew:    true,
-			Description: "Additional description for the generated VLAN if new_vlan.",
-		},
 		"organization": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			ForceNew:    true,
 			Description: "Customer of yours. Reseller only.",
 		},
 		"status": {

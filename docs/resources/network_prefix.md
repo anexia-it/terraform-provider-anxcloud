@@ -29,11 +29,8 @@ resource "anxcloud_network_prefix" "example" {
 - `netmask` - (Required) Netmask size. Example: 29 which would result in x.x.x.x/29.
 - `ip_version` - (Optional) The Prefix version: 4 = IPv4, 6 = IPv6.
 - `type` - (Optional) The Prefix type: 0 = Public, 1 = Private.
-- `new_vlan` - (Optional) If a new VLAN shall be created. WARNING, the VLAN status won't be reflected in the terraform status. Use at your own risk.
-- `description_vlan_customer` - (Optional) Additional description for the generated VLAN if new_vlan.
 - `vlan_id` - (Optional) Identifier for the related VLAN. Not applicable when using `new_vlan` option.
 - `router_redundancy` - (Optional) If router Redundancy shall be enabled.
-- `vm_provisioning` - (Optional) True if VM provisioning shall be enabled. Defaults to false.
 - `description_customer` - (Optional) Additional customer description.
 - `organization` - (Optional) Customer of yours. Reseller only.
 
