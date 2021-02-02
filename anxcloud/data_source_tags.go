@@ -2,10 +2,12 @@ package anxcloud
 
 import (
 	"context"
+	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/anexia-it/go-anxcloud/pkg/client"
 	"github.com/anexia-it/go-anxcloud/pkg/core/tags"
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -38,10 +40,16 @@ func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(err)
 	}
 
-	if id := uuid.New().String(); id != "" {
-		d.SetId(id)
-		return nil
+	id := strconv.FormatInt(time.Now().Round(time.Hour).Unix(), 10)
+	if len(query) > 0 {
+		id = fmt.Sprintf("%s-%s", id, query)
 	}
-
-	return diag.Errorf("unable to create uuid for tags data source")
+	if len(serviceIdentifier) > 0 {
+		id = fmt.Sprintf("%s-%s", id, serviceIdentifier)
+	}
+	if len(organizationIdentifier) > 0 {
+		id = fmt.Sprintf("%s-%s", id, organizationIdentifier)
+	}
+	d.SetId(id)
+	return nil
 }

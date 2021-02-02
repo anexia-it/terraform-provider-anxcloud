@@ -29,6 +29,11 @@ func TestAccAnxCloudIPAddress(t *testing.T) {
 					resource.TestCheckResourceAttr(resourcePath, "network_prefix_id", prefixID),
 				),
 			},
+			{
+				ResourceName:      resourcePath,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -38,6 +43,7 @@ func testAccAnxCloudIPAddress(resourceName, prefixID, ipAddress string) string {
 	resource "anxcloud_ip_address" "%s" {
 		network_prefix_id   = "%s"
 		address = "%s"
+		role = "Default"
 	}
 	`, resourceName, prefixID, ipAddress)
 }
