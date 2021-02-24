@@ -2,6 +2,7 @@ package anxcloud
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -101,6 +102,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 	var (
 		diags    diag.Diagnostics
 		networks []vm.Network
+		disks    []vm.Disk
 	)
 
 	c := m.(client.Client)
@@ -143,6 +145,16 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		})
 	}
 
+	disks = expandVirtualServerDisks(d.Get("disks").([]interface{}))
+	if len(disks) < 1 {
+		diags = append(diags, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "No disk specified",
+			Detail:        "Minimum of one disk has to be specified",
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "size_gb"}},
+		})
+	}
+
 	if len(diags) > 0 {
 		return diags
 	}
@@ -154,8 +166,8 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		Hostname:           d.Get("hostname").(string),
 		Memory:             d.Get("memory").(int),
 		CPUs:               d.Get("cpus").(int),
-		Disk:               d.Get("disk").(int),
-		DiskType:           d.Get("disk_type").(string),
+		Disk:               disks[0].SizeGBs, //d.Get("disk").(int),
+		DiskType:           disks[0].Type,    //d.Get("disk_type").(string),
 		CPUPerformanceType: d.Get("cpu_performance_type").(string),
 		Sockets:            d.Get("sockets").(int),
 		Network:            networks,
@@ -188,14 +200,14 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 			}
 		}
 
-		info, err := v.Info().Get(ctx, d.Id())
+		vmInfo, err := v.Info().Get(ctx, d.Id())
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("unable to get vm  by ID '%s', %w", d.Id(), err))
 		}
-		if info.Status == vmPoweredOn {
+		if vmInfo.Status == vmPoweredOn {
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf("vm with id '%s' is not %s yet: %s", d.Id(), vmPoweredOn, info.Status))
+		return resource.RetryableError(fmt.Errorf("vm with id '%s' is not %s yet: %s", d.Id(), vmPoweredOn, vmInfo.Status))
 	})
 
 	if err != nil {
@@ -209,7 +221,24 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		}
 	}
 
-	return resourceVirtualServerRead(ctx, d, m)
+	if read := resourceVirtualServerRead(ctx, d, m); read.HasError() {
+		return read
+	}
+
+	initialDisks := expandVirtualServerDisks(d.Get("disks").([]interface{}))
+	log.Println("+++++++++++++++++++++++++++++++++++++++++++++++++++")
+	log.Println(disks)
+	log.Println(initialDisks)
+	log.Println("++++++++++++++++++++++++++++++++++++++++++++++++++++")
+	if update := updateVirtualServerDisk(ctx, c, d.Id(), disks, initialDisks); update != nil {
+		return update
+	}
+
+	diags = resourceVirtualServerRead(ctx, d, m)
+	log.Println("+++++++++++++++++++++++++++++++++++++++++++++++++++")
+	log.Println(d.Get("disks"))
+	log.Println("+++++++++++++++++++++++++++++++++++++++++++++++++++")
+	return diags
 }
 
 func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -259,17 +288,38 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
-	if len(info.DiskInfo) != 1 {
-		return diag.Errorf("unsupported number of disks, currently only 1 disk is allowed, got %d", len(info.DiskInfo))
+	//if len(info.DiskInfo) != 1 {
+	//	return diag.Errorf("unsupported number of disks, currently only 1 disk is allowed, got %d", len(info.DiskInfo))
+	//}
+	//if err = d.Set("disk", info.DiskInfo[0].DiskGB); err != nil {
+	//	diags = append(diags, diag.FromErr(err)...)
+	//}
+	//if v := d.Get("disk_type").(string); v != "" {
+	//	if err = d.Set("disk_type", info.DiskInfo[0].DiskType); err != nil {
+	//		diags = append(diags, diag.FromErr(err)...)
+	//	}
+	//}
+	var disks []vm.Disk
+	for _, diskInfo := range info.DiskInfo {
+		//if i < len(specDisks) {
+		//	specDisks[i].ID = diskInfo.DiskID
+		//	disks = append(disks, specDisks[i])
+		//	continue
+		//}
+		disk := vm.Disk{
+			ID:      diskInfo.DiskID,
+			Type:    diskInfo.DiskType,
+			SizeGBs: diskInfo.DiskGB,
+		}
+		disks = append(disks, disk)
 	}
-	if err = d.Set("disk", info.DiskInfo[0].DiskGB); err != nil {
+
+	fDisks := flattenVirtualServerDisks(disks)
+	if err = d.Set("disks", fDisks); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	if v := d.Get("disk_type").(string); v != "" {
-		if err = d.Set("disk_type", info.DiskInfo[0].DiskType); err != nil {
-			diags = append(diags, diag.FromErr(err)...)
-		}
-	}
+
+	log.Println("Updated Disks from Info: ", fDisks)
 
 	specNetworks := expandVirtualServerNetworks(d.Get("network").([]interface{}))
 	var networks []vm.Network
@@ -347,20 +397,56 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 		}
 	}
 
-	if d.HasChanges("disk_type", "disk") {
-		var disk vm.Disk
+	//if d.HasChanges("disk_type", "disk") {
+	//	var disk vm.Disk
+	//
+	//	info := expandVirtualServerInfo(d.Get("info").([]interface{}))
+	//	if len(info.DiskInfo) != 1 {
+	//		return diag.Errorf("unsupported number of disks, currently only 1 disk is allowed, got %d", len(info.DiskInfo))
+	//	}
+	//
+	//	disk.ID = info.DiskInfo[0].DiskID
+	//	disk.Type = d.Get("disk_type").(string)
+	//	disk.SizeGBs = d.Get("disk").(int)
+	//
+	//	ch.ChangeDisks = append(ch.ChangeDisks, disk)
+	//
+	//	requiresReboot = true
+	//}
 
-		info := expandVirtualServerInfo(d.Get("info").([]interface{}))
-		if len(info.DiskInfo) != 1 {
-			return diag.Errorf("unsupported number of disks, currently only 1 disk is allowed, got %d", len(info.DiskInfo))
+	if d.HasChange("disks") {
+		old, new := d.GetChange("disks")
+		oldDisks := expandVirtualServerDisks(old.([]interface{}))
+		newDisks := expandVirtualServerDisks(new.([]interface{}))
+		log.Println("======================================================")
+		log.Println(oldDisks)
+		log.Println(newDisks)
+		log.Println("======================================================")
+
+		if len(newDisks) < len(oldDisks) {
+			return diag.Errorf("removing disks is not supported yet, expected at least %d, got %d", len(oldDisks), len(newDisks))
 		}
 
-		disk.ID = info.DiskInfo[0].DiskID
-		disk.Type = d.Get("disk_type").(string)
-		disk.SizeGBs = d.Get("disk").(int)
+		changeDisks := make([]vm.Disk, 0, len(oldDisks))
+		addDisks := make([]vm.Disk, 0, len(newDisks))
+		for i := range newDisks {
+			if i >= len(oldDisks) {
+				addDisks = append(addDisks, newDisks[i])
+				continue
+			}
 
-		ch.ChangeDisks = append(ch.ChangeDisks, disk)
+			actualDisk := oldDisks[i]
+			expectedDisk := newDisks[i]
 
+			// TODO test what happens if we set "more" fields than necessary (e.g. type does not change")
+			if actualDisk.Type != expectedDisk.Type || actualDisk.SizeGBs != expectedDisk.SizeGBs {
+				changeDisks = append(changeDisks, expectedDisk)
+			}
+		}
+		log.Println("ChangeDisks: ", changeDisks)
+		log.Println("AddDisks: ", addDisks)
+		ch.ChangeDisks = changeDisks
+		ch.AddDisks = addDisks
 		requiresReboot = true
 	}
 
@@ -468,4 +554,78 @@ func getTagsDifferences(tagsA, tagsB []string) []string {
 	}
 
 	return out
+}
+
+func updateVirtualServerDisk(ctx context.Context, c client.Client, id string, expected []vm.Disk, current []vm.Disk) diag.Diagnostics {
+	changeDisks := make([]vm.Disk, 0, len(current))
+	addDisks := make([]vm.Disk, 0, len(expected))
+	log.Println("current: ", current)
+	log.Println("expected: ", expected)
+	log.Println("+++++++++++++ Begin +++++++++++++++++++++++++++")
+	for diskIndex := range current {
+		log.Printf("Iterating %d\n", diskIndex)
+		log.Printf("disk: %d\n", current[diskIndex].ID)
+		if diskIndex >= len(expected) {
+			break
+		}
+		expected[diskIndex].ID = current[diskIndex].ID
+		actualDisk := current[diskIndex]
+		expectedDisk := expected[diskIndex]
+
+		log.Printf("Changing disk, size: %d, type: %s\n", expectedDisk.SizeGBs, expectedDisk.Type)
+		// TODO test what happens if we set "more" fields than necessary (e.g. type does not change")
+		if actualDisk.Type != expectedDisk.Type || actualDisk.SizeGBs != expectedDisk.SizeGBs {
+			changeDisks = append(changeDisks, expectedDisk)
+		}
+	}
+	log.Println("++++++++++++++++++++ End ++++++++++++++++++==")
+
+	if len(expected) > len(current) {
+		log.Println("Adding disks")
+		for newDiskIndex := len(current); newDiskIndex < len(expected); newDiskIndex++ {
+			addDisks = append(addDisks, expected[newDiskIndex])
+		}
+	}
+
+	ch := vm.Change{
+		AddDisks:    addDisks,
+		ChangeDisks: changeDisks,
+	}
+	request, jErr := json.Marshal(ch)
+	if jErr != nil {
+		panic(jErr)
+	}
+	log.Println(string(request))
+
+	v := vsphere.NewAPI(c)
+	if _, err := v.Provisioning().VM().Update(ctx, id, ch); err != nil {
+		return diag.FromErr(err)
+	}
+
+	delay := 10 * time.Second
+
+	vmState := resource.StateChangeConf{
+		Delay:      delay,
+		Timeout:    10 * time.Minute,
+		MinTimeout: 10 * time.Second,
+		Pending: []string{
+			vmPoweredOff,
+		},
+		Target: []string{
+			vmPoweredOn,
+		},
+		Refresh: func() (interface{}, string, error) {
+			info, err := v.Info().Get(ctx, id)
+			if err != nil {
+				return "", "", err
+			}
+			return info, info.Status, nil
+		},
+	}
+	_, err := vmState.WaitForStateContext(ctx)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }
