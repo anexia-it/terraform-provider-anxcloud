@@ -21,7 +21,6 @@ resource "anxcloud_virtual_server" "example" {
   template_type = "templates"
 
   cpus     = 4
-  disk     = 50
   memory   = 4096
   password = "flatcar#1234$%"
 
@@ -38,6 +37,13 @@ resource "anxcloud_virtual_server" "example" {
     nic_type = "vmxnet3"
   }
 
+  disks {
+    disk: 100
+  }
+
+  disks {
+    disk: 200
+  }
 
   dns = ["8.8.8.8"]
 }
@@ -53,8 +59,6 @@ resource "anxcloud_virtual_server" "example" {
 - `cpu_performance_type` - (Optional) CPU type. Example: `best-effort`, `standard`, `enterprise`, `performance`, defaults to `standard`.
 - `sockets` - (Optional) Amount of CPU sockets Number of cores have to be a multiple of sockets, as they will be spread evenly across all sockets. Defaults to number of cores, i.e. one socket per CPU core.
 - `memory` - (Required) Memory in MB.
-- `disk` - (Required) Requested disk capacity in GB.
-- `disk_type` - (Optional) Requested disk category (limits disk performance, e.g. IOPS). Default as defined by data center.
 - `network` - (Optional) Network interface. See [network](#network) below for details. 
 - `dns` - (Optional) DNS configuration. Maximum items 4. Defaults to template settings.
 - `password` (Required) Plaintext password. Example: ('!anx123mySuperStrongPassword123anx!', 'go3ju0la1ro3', …). USE IT AT YOUR OWN RISK! (or SSH key instead).
@@ -71,6 +75,11 @@ resource "anxcloud_virtual_server" "example" {
 - `vlan_id` - (Required) VLAN identifier.
 - `nic_type` - (Required) Network interface card type.
 - `ips` - (Optional) Requested list of IPs and IPs identifiers. IPs are ignored when using template_type 'from_scratch'. Defaults to free IPs from IP pool attached to VLAN.
+
+### Disks
+
+- `disk` - (Required) Disk size in GB.
+- `disk_type` - (Optional) Storage type for this disk. Default as per datacenter.
 
 ## Attributes Reference
 
