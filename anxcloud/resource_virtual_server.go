@@ -193,7 +193,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 			if err != nil {
 				return resource.NonRetryableError(fmt.Errorf("unable to get vm progress by ID '%s', %w", provision.Identifier, err))
 			}
-			if p.VMIdentifier != "" {
+			if p.VMIdentifier != "" && p.Progress < 100 {
 				d.SetId(p.VMIdentifier)
 			} else {
 				return resource.RetryableError(fmt.Errorf("vm with provisioning ID '%s' is not ready yet: %d %%", provision.Identifier, p.Progress))
@@ -490,7 +490,6 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 	delay := 10 * time.Second
 	if requiresReboot {
 		delay = 3 * time.Minute
-
 	}
 
 	vmState := resource.StateChangeConf{
@@ -610,7 +609,14 @@ func updateVirtualServerDisk(ctx context.Context, c client.Client, id string, ex
 	log.Println(string(request))
 
 	v := vsphere.NewAPI(c)
-	if _, err := v.Provisioning().VM().Update(ctx, id, ch); err != nil {
+	var response vm.ProvisioningResponse
+	provisioning := v.Provisioning()
+	var err error
+	if response, err = provisioning.VM().Update(ctx, id, ch); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if _, err = provisioning.Progress().AwaitCompletion(ctx, response.Identifier); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -634,8 +640,7 @@ func updateVirtualServerDisk(ctx context.Context, c client.Client, id string, ex
 			return info, info.Status, nil
 		},
 	}
-	_, err := vmState.WaitForStateContext(ctx)
-	if err != nil {
+	if _, err = vmState.WaitForStateContext(ctx); err != nil {
 		return diag.FromErr(err)
 	}
 
