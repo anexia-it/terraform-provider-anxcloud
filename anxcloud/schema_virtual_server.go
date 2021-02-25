@@ -78,11 +78,11 @@ func schemaVirtualServer() map[string]*schema.Schema {
 						Optional:    true,
 						Description: "Requested disk category (limits disk performance, e.g. IOPS). Default as defined by data center.",
 					},
-					//"disk_id": {
-					//	Type:        schema.TypeInt,
-					//	Optional:    true,
-					//	Description: "Device ID of the disk on.",
-					//},
+					"disk_id": {
+						Type:        schema.TypeInt,
+						Computed:    true,
+						Description: "Device ID of the disk on.",
+					},
 				},
 			},
 		},
