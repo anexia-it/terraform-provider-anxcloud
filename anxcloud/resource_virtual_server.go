@@ -146,13 +146,20 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	disks = expandVirtualServerDisks(d.Get("disks").([]interface{}))
-	if len(disks) < 1 {
+
+	// We require at least one disk to be specified either via Disk or via Disks array
+	var primaryDisk int
+	if len(disks) < 1 && d.Get("disk") == nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity:      diag.Error,
 			Summary:       "No disk specified",
 			Detail:        "Minimum of one disk has to be specified",
 			AttributePath: cty.Path{cty.GetAttrStep{Name: "size_gb"}},
 		})
+	} else if len(disks) < 1 && d.Get("disk") != nil {
+		primaryDisk = d.Get("disk").(int)
+	} else {
+		primaryDisk = disks[0].SizeGBs
 	}
 
 	if len(diags) > 0 {
@@ -166,8 +173,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		Hostname:           d.Get("hostname").(string),
 		Memory:             d.Get("memory").(int),
 		CPUs:               d.Get("cpus").(int),
-		Disk:               disks[0].SizeGBs, //d.Get("disk").(int),
-		DiskType:           disks[0].Type,    //d.Get("disk_type").(string),
+		Disk:               primaryDisk, //Workaround until Create API supports multi disk
 		CPUPerformanceType: d.Get("cpu_performance_type").(string),
 		Sockets:            d.Get("sockets").(int),
 		Network:            networks,

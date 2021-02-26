@@ -101,6 +101,33 @@ func TestExpanderVirtualServerDNS(t *testing.T) {
 	}
 }
 
+func TestExpanderVirtualServerDisks(t *testing.T) {
+	cases := []struct {
+		Input          []interface{}
+		ExpectedOutput []vm.Disk
+	}{
+		{
+			[]interface{}{
+				map[string]interface{}{
+					"disk":      10,
+					"disk_id":   2000,
+					"disk_type": "STD1",
+				},
+			},
+			[]vm.Disk{
+				{ID: 2000, Type: "STD1", SizeGBs: 10},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		output := expandVirtualServerDisks(tc.Input)
+		if diff := cmp.Diff(tc.ExpectedOutput, output); diff != "" {
+			t.Fatalf("Unexpected output from expander: mismatch (-want +got):\n%s", diff)
+		}
+	}
+}
+
 func TestExpanderVirtualServerInfo(t *testing.T) {
 	cases := []struct {
 		Input          []interface{}
@@ -328,6 +355,37 @@ func TestFlattenVirtualServerInfo(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenVirtualServerInfo(&tc.Input)
+		if diff := cmp.Diff(tc.ExpectedOutput, output); diff != "" {
+			t.Fatalf("Unexpected output from expander: mismatch (-want +got):\n%s", diff)
+		}
+	}
+}
+
+func TestFlattenVirtualServerDisks(t *testing.T) {
+	cases := []struct {
+		Input          []vm.Disk
+		ExpectedOutput []interface{}
+	}{
+		{
+			[]vm.Disk{
+				{
+					ID:      2000,
+					Type:    "STD1",
+					SizeGBs: 10,
+				},
+			},
+			[]interface{}{
+				map[string]interface{}{
+					"disk_id":   2000,
+					"disk_type": "STD1",
+					"disk":      10,
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		output := flattenVirtualServerDisks(tc.Input)
 		if diff := cmp.Diff(tc.ExpectedOutput, output); diff != "" {
 			t.Fatalf("Unexpected output from expander: mismatch (-want +got):\n%s", diff)
 		}
