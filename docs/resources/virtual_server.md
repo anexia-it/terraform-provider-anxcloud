@@ -39,12 +39,12 @@ resource "anxcloud_virtual_server" "example" {
 
   # Disk 1
   disks {
-    disk_gb: 100
+    disk_gb = 100
   }
 
   # Disk 2
   disks {
-    disk_gb: 200
+    disk_gb = 200
   }
 
   dns = ["8.8.8.8"]
