@@ -49,7 +49,7 @@ func expandVirtualServerDisks(p []interface{}) []vm.Disk {
 		if v, ok := in["disk_type"]; ok {
 			disk.Type = v.(string)
 		}
-		if v, ok := in["disk"]; ok {
+		if v, ok := in["disk_gb"]; ok {
 			disk.SizeGBs = v.(int)
 		}
 		if v, ok := in["disk_id"]; ok {
@@ -280,7 +280,7 @@ func flattenVirtualServerDisks(in []vm.Disk) []interface{} {
 	for _, d := range in {
 		net := map[string]interface{}{}
 		net["disk_type"] = d.Type
-		net["disk"] = d.SizeGBs
+		net["disk_gb"] = d.SizeGBs
 		net["disk_id"] = d.ID
 		att = append(att, net)
 	}

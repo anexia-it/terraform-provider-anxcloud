@@ -109,7 +109,7 @@ func TestExpanderVirtualServerDisks(t *testing.T) {
 		{
 			[]interface{}{
 				map[string]interface{}{
-					"disk":      10,
+					"disk_gb":   10,
 					"disk_id":   2000,
 					"disk_type": "STD1",
 				},
@@ -378,7 +378,7 @@ func TestFlattenVirtualServerDisks(t *testing.T) {
 				map[string]interface{}{
 					"disk_id":   2000,
 					"disk_type": "STD1",
-					"disk":      10,
+					"disk_gb":   10,
 				},
 			},
 		},

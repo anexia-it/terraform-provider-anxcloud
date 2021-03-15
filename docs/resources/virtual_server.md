@@ -78,7 +78,7 @@ resource "anxcloud_virtual_server" "example" {
 
 ### Disks
 
-- `disk` - (Required) Disk size in GB.
+- `disk_gb` - (Required) Disk size in GB.
 - `disk_type` - (Optional) Storage type for this disk. Default as per datacenter.
 
 ## Attributes Reference

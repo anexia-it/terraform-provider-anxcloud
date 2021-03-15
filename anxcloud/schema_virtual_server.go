@@ -68,7 +68,7 @@ func schemaVirtualServer() map[string]*schema.Schema {
 			Description: "Virtual Server Disks",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"disk": {
+					"disk_gb": {
 						Type:        schema.TypeInt,
 						Required:    true,
 						Description: "Requested disk capacity in GB.",

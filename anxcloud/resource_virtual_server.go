@@ -302,8 +302,6 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
-	log.Println("Updated Disks from Info: ", fDisks)
-
 	specNetworks := expandVirtualServerNetworks(d.Get("network").([]interface{}))
 	var networks []vm.Network
 	for i, net := range info.Network {
