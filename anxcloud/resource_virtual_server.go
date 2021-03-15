@@ -2,7 +2,6 @@ package anxcloud
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -227,13 +226,15 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		}
 	}
 
-	if read := resourceVirtualServerRead(ctx, d, m); read.HasError() {
-		return read
-	}
+	if len(disks) > 1 {
+		if read := resourceVirtualServerRead(ctx, d, m); read.HasError() {
+			return read
+		}
 
-	initialDisks := expandVirtualServerDisks(d.Get("disks").([]interface{}))
-	if update := updateVirtualServerDisk(ctx, c, d.Id(), disks, initialDisks); update != nil {
-		return update
+		initialDisks := expandVirtualServerDisks(d.Get("disks").([]interface{}))
+		if update := updateVirtualServerDisk(ctx, c, d.Id(), disks, initialDisks); update != nil {
+			return update
+		}
 	}
 
 	diags = resourceVirtualServerRead(ctx, d, m)
@@ -545,11 +546,6 @@ func updateVirtualServerDisk(ctx context.Context, c client.Client, id string, ex
 		AddDisks:    addDisks,
 		ChangeDisks: changeDisks,
 	}
-	request, jErr := json.Marshal(ch)
-	if jErr != nil {
-		panic(jErr)
-	}
-	log.Println(string(request))
 
 	v := vsphere.NewAPI(c)
 	var response vm.ProvisioningResponse
