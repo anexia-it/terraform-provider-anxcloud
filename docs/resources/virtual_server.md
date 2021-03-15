@@ -59,6 +59,8 @@ resource "anxcloud_virtual_server" "example" {
 - `cpu_performance_type` - (Optional) CPU type. Example: `best-effort`, `standard`, `enterprise`, `performance`, defaults to `standard`.
 - `sockets` - (Optional) Amount of CPU sockets Number of cores have to be a multiple of sockets, as they will be spread evenly across all sockets. Defaults to number of cores, i.e. one socket per CPU core.
 - `memory` - (Required) Memory in MB.
+- `disk` - (Optional) Requested disk capacity in GB. (This will be overwritten if at least one disk is supplied via `disks`)
+- `disk_type` - (Optional) Requested disk category (limits disk performance, e.g. IOPS). Default as defined by data center.
 - `network` - (Optional) Network interface. See [network](#network) below for details. 
 - `dns` - (Optional) DNS configuration. Maximum items 4. Defaults to template settings.
 - `password` (Required) Plaintext password. Example: ('!anx123mySuperStrongPassword123anx!', 'go3ju0la1ro3', …). USE IT AT YOUR OWN RISK! (or SSH key instead).
