@@ -37,10 +37,12 @@ resource "anxcloud_virtual_server" "example" {
     nic_type = "vmxnet3"
   }
 
+  # Disk 1
   disks {
     disk_gb: 100
   }
 
+  # Disk 2
   disks {
     disk_gb: 200
   }
