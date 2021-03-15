@@ -333,7 +333,7 @@ func generateNetworkSubResourceString(networks []vm.Network) string {
 
 func generateDisksSubResourceString(disks []vm.Disk) string {
 	var output string
-	template := "\ndisks {\n\tdisk = %d\n\tdisk_type = \"%s\"\n}\n"
+	template := "\ndisks {\n\tdisk_gb = %d\n\tdisk_type = \"%s\"\n}\n"
 
 	for _, d := range disks {
 		output += fmt.Sprintf(template, d.SizeGBs, d.Type)
