@@ -105,8 +105,8 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 	)
 
 	c := m.(client.Client)
-	v := vsphere.NewAPI(c)
-	a := address.NewAPI(c)
+	vsphereAPI := vsphere.NewAPI(c)
+	addressAPI := address.NewAPI(c)
 	locationID := d.Get("location_id").(string)
 
 	networks = expandVirtualServerNetworks(d.Get("network").([]interface{}))
@@ -115,7 +115,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 			continue
 		}
 
-		res, err := a.ReserveRandom(ctx, address.ReserveRandom{
+		res, err := addressAPI.ReserveRandom(ctx, address.ReserveRandom{
 			LocationID: locationID,
 			VlanID:     n.VLAN,
 			Count:      1,
@@ -147,18 +147,13 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 	disks = expandVirtualServerDisks(d.Get("disks").([]interface{}))
 
 	// We require at least one disk to be specified either via Disk or via Disks array
-	var primaryDisk int
-	if len(disks) < 1 && d.Get("disk") == nil {
+	if len(disks) < 1 {
 		diags = append(diags, diag.Diagnostic{
 			Severity:      diag.Error,
 			Summary:       "No disk specified",
 			Detail:        "Minimum of one disk has to be specified",
 			AttributePath: cty.Path{cty.GetAttrStep{Name: "size_gb"}},
 		})
-	} else if len(disks) < 1 && d.Get("disk") != nil {
-		primaryDisk = d.Get("disk").(int)
-	} else {
-		primaryDisk = disks[0].SizeGBs
 	}
 
 	if len(diags) > 0 {
@@ -172,7 +167,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		Hostname:           d.Get("hostname").(string),
 		Memory:             d.Get("memory").(int),
 		CPUs:               d.Get("cpus").(int),
-		Disk:               primaryDisk, //Workaround until Create API supports multi disk
+		Disk:               disks[0].ID, //Workaround until Create API supports multi disk
 		CPUPerformanceType: d.Get("cpu_performance_type").(string),
 		Sockets:            d.Get("sockets").(int),
 		Network:            networks,
@@ -188,13 +183,13 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	base64Encoding := true
-	provision, err := v.Provisioning().VM().Provision(ctx, def, base64Encoding)
+	provision, err := vsphereAPI.Provisioning().VM().Provision(ctx, def, base64Encoding)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		if d.Id() == "" {
-			p, err := v.Provisioning().Progress().Get(ctx, provision.Identifier)
+			p, err := vsphereAPI.Provisioning().Progress().Get(ctx, provision.Identifier)
 			if err != nil {
 				return resource.NonRetryableError(fmt.Errorf("unable to get vm progress by ID '%s', %w", provision.Identifier, err))
 			}
@@ -205,7 +200,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 			}
 		}
 
-		vmInfo, err := v.Info().Get(ctx, d.Id())
+		vmInfo, err := vsphereAPI.Info().Get(ctx, d.Id())
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("unable to get vm  by ID '%s', %w", d.Id(), err))
 		}
@@ -245,10 +240,10 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 	var diags diag.Diagnostics
 
 	c := m.(client.Client)
-	v := vsphere.NewAPI(c)
-	n := nictype.NewAPI(c)
+	vsphereAPI := vsphere.NewAPI(c)
+	nicAPI := nictype.NewAPI(c)
 
-	info, err := v.Info().Get(ctx, d.Id())
+	info, err := vsphereAPI.Info().Get(ctx, d.Id())
 	if err != nil {
 		if err := handleNotFoundError(err); err != nil {
 			return diag.FromErr(err)
@@ -257,7 +252,7 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		return nil
 	}
 
-	nicTypes, err := n.List(ctx)
+	nicTypes, err := nicAPI.List(ctx)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -288,7 +283,7 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
-	var disks []vm.Disk
+	disks := make([]vm.Disk, len(info.DiskInfo))
 	for _, diskInfo := range info.DiskInfo {
 		disk := vm.Disk{
 			ID:      diskInfo.DiskID,
@@ -298,13 +293,13 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		disks = append(disks, disk)
 	}
 
-	fDisks := flattenVirtualServerDisks(disks)
-	if err = d.Set("disks", fDisks); err != nil {
+	flattenedDisks := flattenVirtualServerDisks(disks)
+	if err = d.Set("disks", flattenedDisks); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
 	specNetworks := expandVirtualServerNetworks(d.Get("network").([]interface{}))
-	var networks []vm.Network
+	networks := make([]vm.Network, len(info.Network))
 	for i, net := range info.Network {
 		if len(nicTypes) < net.NIC {
 			diags = append(diags, diag.Diagnostic{
@@ -329,13 +324,13 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		networks = append(networks, network)
 	}
 
-	fNetworks := flattenVirtualServerNetwork(networks)
-	if err = d.Set("network", fNetworks); err != nil {
+	flattenedNetworks := flattenVirtualServerNetwork(networks)
+	if err = d.Set("network", flattenedNetworks); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
-	fInfo := flattenVirtualServerInfo(&info)
-	if err = d.Set("info", fInfo); err != nil {
+	flattenedInfo := flattenVirtualServerInfo(&info)
+	if err = d.Set("info", flattenedInfo); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
@@ -344,7 +339,7 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 
 func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(client.Client)
-	v := vsphere.NewAPI(c)
+	vsphereAPI := vsphere.NewAPI(c)
 	ch := vm.Change{
 		Reboot:          d.Get("force_restart_if_needed").(bool),
 		EnableDangerous: d.Get("critical_operation_confirmed").(bool),
@@ -429,14 +424,14 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	var response vm.ProvisioningResponse
-	provisioning := v.Provisioning()
+	provisioningAPI := vsphereAPI.Provisioning()
 
 	var err error
-	if response, err = provisioning.VM().Update(ctx, d.Id(), ch); err != nil {
+	if response, err = provisioningAPI.VM().Update(ctx, d.Id(), ch); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if _, err = provisioning.Progress().AwaitCompletion(ctx, response.Identifier); err != nil {
+	if _, err = provisioningAPI.Progress().AwaitCompletion(ctx, response.Identifier); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -456,7 +451,7 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 			vmPoweredOn,
 		},
 		Refresh: func() (interface{}, string, error) {
-			info, err := v.Info().Get(ctx, d.Id())
+			info, err := vsphereAPI.Info().Get(ctx, d.Id())
 			if err != nil {
 				return "", "", err
 			}
@@ -472,10 +467,10 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 
 func resourceVirtualServerDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(client.Client)
-	v := vsphere.NewAPI(c)
+	vsphereAPI := vsphere.NewAPI(c)
 
 	delayedDeprovision := false
-	err := v.Provisioning().VM().Deprovision(ctx, d.Id(), delayedDeprovision)
+	err := vsphereAPI.Provisioning().VM().Deprovision(ctx, d.Id(), delayedDeprovision)
 	if err != nil {
 		if err := handleNotFoundError(err); err != nil {
 			return diag.FromErr(err)
@@ -485,7 +480,7 @@ func resourceVirtualServerDelete(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := v.Info().Get(ctx, d.Id())
+		_, err := vsphereAPI.Info().Get(ctx, d.Id())
 		if err != nil {
 			if err := handleNotFoundError(err); err != nil {
 				return resource.NonRetryableError(fmt.Errorf("unable to get vm with id '%s': %w", d.Id(), err))
@@ -559,10 +554,8 @@ func updateVirtualServerDisk(ctx context.Context, c client.Client, id string, ex
 		return diag.FromErr(err)
 	}
 
-	delay := 10 * time.Second
-
 	vmState := resource.StateChangeConf{
-		Delay:      delay,
+		Delay:      10 * time.Second,
 		Timeout:    10 * time.Minute,
 		MinTimeout: 10 * time.Second,
 		Pending: []string{

@@ -6,7 +6,7 @@ HOSTNAME=hashicorp.com
 NAMESPACE=anexia-it
 NAME=anxcloud
 BINARY=terraform-provider-${NAME}
-VERSION=0.2.5
+VERSION=0.2.3
 OS_ARCH=linux_amd64
 
 TEST?=$$(go list ./... | grep -v 'vendor')
