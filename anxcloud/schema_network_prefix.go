@@ -38,18 +38,18 @@ func schemaNetworkPrefix() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"identifier": {
-						Type:             schema.TypeString,
-						Optional: true,
+						Type:        schema.TypeString,
+						Optional:    true,
 						Description: "Network prefix identifier",
 					},
 					"name": {
-						Type: schema.TypeString,
-						Required: true,
+						Type:        schema.TypeString,
+						Required:    true,
 						Description: "Network prefix name",
 					},
 					"description_customer": {
-						Type: schema.TypeString,
-						Optional: true,
+						Type:        schema.TypeString,
+						Optional:    true,
 						Description: "Network prefix customer description",
 					},
 				},

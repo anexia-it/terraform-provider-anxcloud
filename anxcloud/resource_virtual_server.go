@@ -90,8 +90,29 @@ func resourceVirtualServer() *schema.Resource {
 
 				return false
 			}),
-			customdiff.ForceNewIfChange("disk", func(ctx context.Context, old, new, meta interface{}) bool {
-				return old.(int) > new.(int)
+			customdiff.ForceNewIf("disk", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				old, new := d.GetChange("disk")
+				oldDisks := expandVirtualServerDisks(old.([]interface{}))
+				newDisks := expandVirtualServerDisks(new.([]interface{}))
+
+				if len(oldDisks) > len(newDisks) {
+					return true
+				}
+
+				for i, disk := range newDisks {
+					if i+1 > len(oldDisks) {
+						// new disks were added
+						break
+					}
+
+					if disk.SizeGBs < oldDisks[i].SizeGBs {
+						key := fmt.Sprintf("disk.%d.disk_gb", i)
+						if err := d.ForceNew(key); err != nil {
+							log.Fatalf("[ERROR] unable to force new '%s': %v", key, err)
+						}
+					}
+				}
+				return false
 			}),
 		),
 	}
@@ -144,7 +165,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		})
 	}
 
-	disks = expandVirtualServerDisks(d.Get("disks").([]interface{}))
+	disks = expandVirtualServerDisks(d.Get("disk").([]interface{}))
 
 	// We require at least one disk to be specified either via Disk or via Disks array
 	if len(disks) < 1 {
@@ -160,6 +181,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		return diags
 	}
 
+	fmt.Println(disks)
 	def := vm.Definition{
 		Location:           locationID,
 		TemplateType:       d.Get("template_type").(string),
@@ -167,7 +189,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		Hostname:           d.Get("hostname").(string),
 		Memory:             d.Get("memory").(int),
 		CPUs:               d.Get("cpus").(int),
-		Disk:               disks[0].ID, //Workaround until Create API supports multi disk
+		Disk:               disks[0].SizeGBs, //Workaround until Create API supports multi disk
 		CPUPerformanceType: d.Get("cpu_performance_type").(string),
 		Sockets:            d.Get("sockets").(int),
 		Network:            networks,
@@ -221,12 +243,13 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		}
 	}
 
+	fmt.Println(d.Get("location_id"))
 	if len(disks) > 1 {
 		if read := resourceVirtualServerRead(ctx, d, m); read.HasError() {
 			return read
 		}
 
-		initialDisks := expandVirtualServerDisks(d.Get("disks").([]interface{}))
+		initialDisks := expandVirtualServerDisks(d.Get("disk").([]interface{}))
 		if update := updateVirtualServerDisk(ctx, c, d.Id(), disks, initialDisks); update != nil {
 			return update
 		}
@@ -252,6 +275,7 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		return nil
 	}
 
+	fmt.Println("network", info.Network[0])
 	nicTypes, err := nicAPI.List(ctx)
 	if err != nil {
 		return diag.FromErr(err)
@@ -260,9 +284,11 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 	// TODO: we miss information about:
 	// * cpu_performance_type
 
+	fmt.Println(info.LocationID)
 	if err = d.Set("location_id", info.LocationID); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
+	fmt.Println(d.Get("location_id"))
 	if err = d.Set("template_id", info.TemplateID); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
@@ -294,7 +320,7 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 	}
 
 	flattenedDisks := flattenVirtualServerDisks(disks)
-	if err = d.Set("disks", flattenedDisks); err != nil {
+	if err = d.Set("disk", flattenedDisks); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
@@ -374,8 +400,8 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 		}
 	}
 
-	if d.HasChange("disks") {
-		old, new := d.GetChange("disks")
+	if d.HasChange("disk") {
+		old, new := d.GetChange("disk")
 		oldDisks := expandVirtualServerDisks(old.([]interface{}))
 		newDisks := expandVirtualServerDisks(new.([]interface{}))
 
