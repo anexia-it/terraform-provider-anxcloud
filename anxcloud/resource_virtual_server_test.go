@@ -61,7 +61,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDef),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDef),
-					//resource.TestCheckResourceAttr(resourcePath, "location_id", vmDef.Location),
+					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDef.Location),
 					resource.TestCheckResourceAttr(resourcePath, "template_id", vmDef.TemplateID),
 					resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDef.CPUs)),
 					resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDef.Memory)),
@@ -72,7 +72,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDefUpscale),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefUpscale),
-					//resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefUpscale.Location),
+					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefUpscale.Location),
 					resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefUpscale.TemplateID),
 					resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefUpscale.CPUs)),
 					resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefUpscale.Memory)),
@@ -188,7 +188,7 @@ func testAccCheckAnxCloudVirtualServerDestroy(s *terraform.State) error {
 }
 
 func testAccConfigAnxCloudVirtualServer(resourceName string, def *vm.Definition) string {
-	return fmt.Sprintf(`
+	x := fmt.Sprintf(`
 	resource "anxcloud_virtual_server" "%s" {
 		location_id   = "%s"
 		template_id   = "%s"
@@ -213,6 +213,8 @@ func testAccConfigAnxCloudVirtualServer(resourceName string, def *vm.Definition)
 				SizeGBs: def.Disk,
 			},
 		}))
+	fmt.Println(x)
+	return x
 }
 
 func testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName string, def *vm.Definition, disks []vm.Disk) string {

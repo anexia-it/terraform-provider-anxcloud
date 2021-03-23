@@ -44,6 +44,8 @@ github.com/anexia-it/go-anxcloud v0.3.16 h1:zFYNqdYoQlgCGOMOnkC3mi/owvM/z+fUxfzp
 github.com/anexia-it/go-anxcloud v0.3.16/go.mod h1:g78/+Db9XeiVS+aKqJaq9j7XfxhyXWM8PHY5JRbK9RY=
 github.com/anexia-it/go-anxcloud v0.3.17 h1:iFvWI5WaDsOpRIQQZ9JUjYQCrjFNxe4asvfAieiPmIM=
 github.com/anexia-it/go-anxcloud v0.3.17/go.mod h1:g78/+Db9XeiVS+aKqJaq9j7XfxhyXWM8PHY5JRbK9RY=
+github.com/anexia-it/go-anxcloud v0.3.18 h1:Gcd+6rGe5/eNFAIl4SmMBNXFJJXEVv82dSdSqvzAeOM=
+github.com/anexia-it/go-anxcloud v0.3.18/go.mod h1:g78/+Db9XeiVS+aKqJaq9j7XfxhyXWM8PHY5JRbK9RY=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 h1:kFOfPq6dUM1hTo4JG6LR5AXSUEsOjtdm0kw0FtQtMJA=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239/go.mod h1:2FmKhYUyUczH0OGQWaF5ceTx0UBShxjsH6f8oGKYe2c=
 github.com/apparentlymart/go-cidr v1.0.1/go.mod h1:EBcsNrHc3zQeuaeCeCtQruQm+n9/YjEn/vI25Lg7Gwc=

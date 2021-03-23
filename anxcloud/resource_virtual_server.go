@@ -181,7 +181,6 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		return diags
 	}
 
-	fmt.Println(disks)
 	def := vm.Definition{
 		Location:           locationID,
 		TemplateType:       d.Get("template_type").(string),
@@ -243,7 +242,6 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		}
 	}
 
-	fmt.Println(d.Get("location_id"))
 	if len(disks) > 1 {
 		if read := resourceVirtualServerRead(ctx, d, m); read.HasError() {
 			return read
@@ -275,7 +273,6 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		return nil
 	}
 
-	fmt.Println("network", info.Network[0])
 	nicTypes, err := nicAPI.List(ctx)
 	if err != nil {
 		return diag.FromErr(err)
@@ -284,7 +281,6 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 	// TODO: we miss information about:
 	// * cpu_performance_type
 
-	fmt.Println(info.LocationID)
 	if err = d.Set("location_id", info.LocationID); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
@@ -310,13 +306,12 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 	}
 
 	disks := make([]vm.Disk, len(info.DiskInfo))
-	for _, diskInfo := range info.DiskInfo {
-		disk := vm.Disk{
+	for i, diskInfo := range info.DiskInfo {
+		disks[i] = vm.Disk{
 			ID:      diskInfo.DiskID,
 			Type:    diskInfo.DiskType,
 			SizeGBs: diskInfo.DiskGB,
 		}
-		disks = append(disks, disk)
 	}
 
 	flattenedDisks := flattenVirtualServerDisks(disks)
@@ -325,7 +320,7 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 	}
 
 	specNetworks := expandVirtualServerNetworks(d.Get("network").([]interface{}))
-	networks := make([]vm.Network, len(info.Network))
+	networks := make([]vm.Network, 0, len(info.Network))
 	for i, net := range info.Network {
 		if len(nicTypes) < net.NIC {
 			diags = append(diags, diag.Diagnostic{
@@ -344,6 +339,7 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		// in spec it's not required to set an IP address
 		// however when it's set we have to reflect that in the state
 		if i+1 < len(specNetworks) && len(specNetworks[i].IPs) > 0 {
+			fmt.Println("add IPs to network")
 			network.IPs = append(net.IPv4, net.IPv6...)
 		}
 

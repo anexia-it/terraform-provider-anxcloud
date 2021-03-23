@@ -122,7 +122,7 @@ func resourceNetworkPrefixRead(ctx context.Context, d *schema.ResourceData, m in
 	if err := d.Set("router_redundancy", info.RouterRedundancy); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	if err := d.Set("vlan_id", info.VLANID); err != nil {
+	if err := d.Set("vlan_id", info.Vlans[0].ID); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
