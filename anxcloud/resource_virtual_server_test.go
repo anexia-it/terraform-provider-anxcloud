@@ -27,6 +27,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 		CPUs:               1,
 		CPUPerformanceType: "performance",
 		Disk:               50,
+		DiskType:           "ENT6",
 		Network: []vm.Network{
 			{
 				VLAN:    "02f39d20ca0f4adfb5032f88dbc26c39",
@@ -192,13 +193,14 @@ func testAccCheckAnxCloudVirtualServerDestroy(s *terraform.State) error {
 func testAccConfigAnxCloudVirtualServer(resourceName string, def *vm.Definition) string {
 	return fmt.Sprintf(`
 	resource "anxcloud_virtual_server" "%s" {
-		location_id   = "%s"
-		template_id   = "%s"
-		template_type = "%s"
-		hostname      = "%s"
-		cpus          = %d
-		memory        = %d
-		password      = "%s"
+		location_id          = "%s"
+		template_id          = "%s"
+		template_type        = "%s"
+		hostname             = "%s"
+		cpus                 = %d
+		cpu_performance_type = "%s"
+		memory               = %d
+		password             = "%s"
 
 		// generated network string
 		%s
@@ -209,10 +211,11 @@ func testAccConfigAnxCloudVirtualServer(resourceName string, def *vm.Definition)
 		force_restart_if_needed = true
 		critical_operation_confirmed = true
 	}
-	`, resourceName, def.Location, def.TemplateID, def.TemplateType, def.Hostname, def.CPUs, def.Memory,
+	`, resourceName, def.Location, def.TemplateID, def.TemplateType, def.Hostname, def.CPUs, def.CPUPerformanceType, def.Memory,
 		def.Password, generateNetworkSubResourceString(def.Network), generateDisksSubResourceString([]vm.Disk{
 			{
 				SizeGBs: def.Disk,
+				Type:    def.DiskType,
 			},
 		}))
 }
