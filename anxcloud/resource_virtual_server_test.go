@@ -19,14 +19,14 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 	resourcePath := "anxcloud_virtual_server." + resourceName
 
 	vmDef := vm.Definition{
-		Location:     "52b5f6b2fd3a4a7eaaedf1a7c019e9ea",
-		TemplateType: "templates",
-		TemplateID:   "12c28aa7-604d-47e9-83fb-5f1d1f1837b3",
-		Hostname:     "acc-test-" + shortuuid.New(),
-		Memory:       2048,
-		CPUs:         1,
+		Location:           "52b5f6b2fd3a4a7eaaedf1a7c019e9ea",
+		TemplateType:       "templates",
+		TemplateID:         "12c28aa7-604d-47e9-83fb-5f1d1f1837b3",
+		Hostname:           "acc-test-" + shortuuid.New(),
+		Memory:             2048,
+		CPUs:               1,
 		CPUPerformanceType: "performance",
-		Disk:         50,
+		Disk:               50,
 		Network: []vm.Network{
 			{
 				VLAN:    "02f39d20ca0f4adfb5032f88dbc26c39",
@@ -105,12 +105,12 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 	resourcePath := "anxcloud_virtual_server." + resourceName
 
 	vmDef := vm.Definition{
-		Location:     "52b5f6b2fd3a4a7eaaedf1a7c019e9ea",
-		TemplateType: "templates",
-		TemplateID:   "12c28aa7-604d-47e9-83fb-5f1d1f1837b3",
-		Hostname:     "acc-test-" + shortuuid.New(),
-		Memory:       2048,
-		CPUs:         2,
+		Location:           "52b5f6b2fd3a4a7eaaedf1a7c019e9ea",
+		TemplateType:       "templates",
+		TemplateID:         "12c28aa7-604d-47e9-83fb-5f1d1f1837b3",
+		Hostname:           "acc-test-" + shortuuid.New(),
+		Memory:             2048,
+		CPUs:               2,
 		CPUPerformanceType: "performance",
 		Network: []vm.Network{
 			{

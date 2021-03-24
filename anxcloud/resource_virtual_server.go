@@ -189,6 +189,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		Memory:             d.Get("memory").(int),
 		CPUs:               d.Get("cpus").(int),
 		Disk:               disks[0].SizeGBs, //Workaround until Create API supports multi disk
+		DiskType:           disks[0].Type,
 		CPUPerformanceType: d.Get("cpu_performance_type").(string),
 		Sockets:            d.Get("sockets").(int),
 		Network:            networks,
