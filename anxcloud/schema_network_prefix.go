@@ -30,30 +30,10 @@ func schemaNetworkPrefix() map[string]*schema.Schema {
 			ForceNew:    true,
 			Description: "The Prefix type: 0 = Public, 1 = Private.",
 		},
-		"vlans": {
-			Type:        schema.TypeList,
+		"vlan_id": {
+			Type:        schema.TypeString,
 			Optional:    true,
-			ForceNew:    true,
-			Description: "Identifier for the related VLAN.",
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"identifier": {
-						Type:        schema.TypeString,
-						Optional:    true,
-						Description: "Network prefix identifier",
-					},
-					"name": {
-						Type:        schema.TypeString,
-						Required:    true,
-						Description: "Network prefix name",
-					},
-					"description_customer": {
-						Type:        schema.TypeString,
-						Optional:    true,
-						Description: "Network prefix customer description",
-					},
-				},
-			},
+			Description: "The corresponding VLAN ID",
 		},
 		"router_redundancy": {
 			Type:        schema.TypeBool,

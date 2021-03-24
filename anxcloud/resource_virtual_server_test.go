@@ -42,7 +42,6 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 	// upscale resources
 	vmDefUpscale := vmDef
 	vmDefUpscale.CPUs = 2
-	vmDefUpscale.Disk = 80
 	vmDefUpscale.Memory = 4096
 	vmDefUpscale.Network = append(vmDefUpscale.Network, vm.Network{
 		VLAN:    "02f39d20ca0f4adfb5032f88dbc26c39",
@@ -51,7 +50,6 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 
 	// down scale resources which does not require recreation of the VM
 	vmDefDownscale := vmDefUpscale
-	vmDefDownscale.CPUs = 2
 	vmDefDownscale.Memory = 2096
 
 	resource.Test(t, resource.TestCase{
@@ -67,7 +65,6 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 					resource.TestCheckResourceAttr(resourcePath, "template_id", vmDef.TemplateID),
 					resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDef.CPUs)),
 					resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDef.Memory)),
-					//resource.TestCheckResourceAttr(resourcePath, "disk", strconv.Itoa(vmDef.Disk)),
 				),
 			},
 			{
@@ -78,7 +75,6 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 					resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefUpscale.TemplateID),
 					resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefUpscale.CPUs)),
 					resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefUpscale.Memory)),
-					//resource.TestCheckResourceAttr(resourcePath, "disk", strconv.Itoa(vmDefUpscale.Disk)),
 				),
 			},
 			{
@@ -89,13 +85,13 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 					resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefDownscale.TemplateID),
 					resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefDownscale.CPUs)),
 					resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefDownscale.Memory)),
-					//resource.TestCheckResourceAttr(resourcePath, "disk", strconv.Itoa(vmDefDownscale.Disk)),
 				),
 			},
 			{
-				ResourceName:      resourcePath,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourcePath,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"cpu_performance_type", "critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template_type"},
 			},
 		},
 	})
@@ -147,14 +143,12 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 				Config: testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName, &vmDef, disks),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnxCloudVirtualServerDisks(resourcePath, disks),
-					resource.TestCheckResourceAttr(resourcePath, "disk", strconv.Itoa(vmDef.Disk)),
 				),
 			},
 			{
 				Config: testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName, &vmDef, disksUpscale),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnxCloudVirtualServerDisks(resourcePath, disksUpscale),
-					resource.TestCheckResourceAttr(resourcePath, "disk", strconv.Itoa(vmDef.Disk)),
 				),
 			},
 		},
@@ -229,7 +223,6 @@ func testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName string, def
 		hostname      = "%s"
 		cpus          = %d
 		memory        = %d
-		disk          = %d
 		password      = "%s"
 
 		// generated network string
@@ -241,7 +234,7 @@ func testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName string, def
 		force_restart_if_needed = true
 		critical_operation_confirmed = true
 	}
-	`, resourceName, def.Location, def.TemplateID, def.TemplateType, def.Hostname, def.CPUs, def.Memory, def.Disk,
+	`, resourceName, def.Location, def.TemplateID, def.TemplateType, def.Hostname, def.CPUs, def.Memory,
 		def.Password, generateNetworkSubResourceString(def.Network), generateDisksSubResourceString(disks))
 }
 
