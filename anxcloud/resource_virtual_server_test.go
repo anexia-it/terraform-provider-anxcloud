@@ -24,7 +24,8 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 		TemplateID:   "12c28aa7-604d-47e9-83fb-5f1d1f1837b3",
 		Hostname:     "acc-test-" + shortuuid.New(),
 		Memory:       2048,
-		CPUs:         2,
+		CPUs:         1,
+		CPUPerformanceType: "performance",
 		Disk:         50,
 		Network: []vm.Network{
 			{
@@ -39,7 +40,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 
 	// upscale resources
 	vmDefUpscale := vmDef
-	vmDefUpscale.CPUs = 4
+	vmDefUpscale.CPUs = 2
 	vmDefUpscale.Disk = 80
 	vmDefUpscale.Memory = 4096
 	vmDefUpscale.Network = append(vmDefUpscale.Network, vm.Network{
@@ -110,6 +111,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 		Hostname:     "acc-test-" + shortuuid.New(),
 		Memory:       2048,
 		CPUs:         2,
+		CPUPerformanceType: "performance",
 		Network: []vm.Network{
 			{
 				VLAN:    "02f39d20ca0f4adfb5032f88dbc26c39",
@@ -122,17 +124,17 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 
 	disks := []vm.Disk{
 		{
-			Type:    "STD1",
+			Type:    "ENT1",
 			SizeGBs: 40,
 		},
 		{
-			Type:    "STD1",
+			Type:    "ENT1",
 			SizeGBs: 40,
 		},
 	}
 
 	disksUpscale := disks
-	disksUpscale[1].Type = "ENT1"
+	disksUpscale[1].Type = "ENT6"
 	disksUpscale[1].SizeGBs = 50
 
 	resource.Test(t, resource.TestCase{
@@ -188,7 +190,7 @@ func testAccCheckAnxCloudVirtualServerDestroy(s *terraform.State) error {
 }
 
 func testAccConfigAnxCloudVirtualServer(resourceName string, def *vm.Definition) string {
-	x := fmt.Sprintf(`
+	return fmt.Sprintf(`
 	resource "anxcloud_virtual_server" "%s" {
 		location_id   = "%s"
 		template_id   = "%s"
@@ -213,8 +215,6 @@ func testAccConfigAnxCloudVirtualServer(resourceName string, def *vm.Definition)
 				SizeGBs: def.Disk,
 			},
 		}))
-	fmt.Println(x)
-	return x
 }
 
 func testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName string, def *vm.Definition, disks []vm.Disk) string {

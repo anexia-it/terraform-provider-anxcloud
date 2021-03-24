@@ -284,13 +284,12 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 	if err = d.Set("location_id", info.LocationID); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	fmt.Println(d.Get("location_id"))
 	if err = d.Set("template_id", info.TemplateID); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	if err = d.Set("template_type", info.TemplateType); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
+	//if err = d.Set("template_type", info.TemplateType); err != nil {
+	//	diags = append(diags, diag.FromErr(err)...)
+	//}
 	if err = d.Set("cpus", info.CPU); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}

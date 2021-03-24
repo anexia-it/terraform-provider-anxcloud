@@ -283,7 +283,7 @@ func schemaVirtualServer() map[string]*schema.Schema {
 					},
 					"network": {
 						Type:        schema.TypeList,
-						Optional:    true,
+						Computed:    true,
 						Description: "Network interfaces",
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
