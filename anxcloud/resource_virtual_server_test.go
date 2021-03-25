@@ -127,7 +127,6 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 	}
 
 	t.Run("AddDisk", func(t *testing.T) {
-		t.Parallel()
 		addDiskDef := vmDef
 		addDiskDef.Hostname = "acc-test-" + shortuuid.New()
 
@@ -149,7 +148,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 					),
 				},
 				{
-					Config: testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName, &vmDef, disksAdd),
+					Config: testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName, &addDiskDef, disksAdd),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckAnxCloudVirtualServerDisks(resourcePath, disksAdd),
 					),
@@ -159,7 +158,6 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 	})
 
 	t.Run("ChangeAddDisk", func(t *testing.T) {
-		t.Parallel()
 		changeDiskDef := vmDef
 		changeDiskDef.Hostname = "acc-test-" + shortuuid.New()
 
@@ -183,7 +181,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 					),
 				},
 				{
-					Config: testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName, &vmDef, disksChange),
+					Config: testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName, &changeDiskDef, disksChange),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckAnxCloudVirtualServerDisks(resourcePath, disksChange),
 					),
@@ -193,7 +191,6 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 	})
 
 	t.Run("MultiDiskTemplateChange", func(t *testing.T) {
-		t.Parallel()
 		changeDiskDef := vmDef
 		changeDiskDef.Hostname = "acc-test-" + shortuuid.New()
 		changeDiskDef.TemplateID = "44eeae8b-fc8d-4e0f-a4ad-c16db54976a3"
