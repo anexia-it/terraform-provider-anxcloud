@@ -167,7 +167,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 		})
 
 		disksChange[0].SizeGBs = 70
-		disksChange[0].Type = "Ent1"
+		disksChange[0].Type = "ENT1"
 
 		resource.Test(t, resource.TestCase{
 			PreCheck:          func() { testAccPreCheck(t) },
@@ -201,7 +201,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 				SizeGBs: 50,
 			},
 			{
-				Type:    "Ent6",
+				Type:    "ENT6",
 				SizeGBs: 50,
 			},
 		}
