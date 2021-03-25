@@ -90,8 +90,29 @@ func resourceVirtualServer() *schema.Resource {
 
 				return false
 			}),
-			customdiff.ForceNewIfChange("disk", func(ctx context.Context, old, new, meta interface{}) bool {
-				return old.(int) > new.(int)
+			customdiff.ForceNewIf("disk", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				old, new := d.GetChange("disk")
+				oldDisks := expandVirtualServerDisks(old.([]interface{}))
+				newDisks := expandVirtualServerDisks(new.([]interface{}))
+
+				if len(oldDisks) > len(newDisks) {
+					return true
+				}
+
+				for i, disk := range newDisks {
+					if i+1 > len(oldDisks) {
+						// new disks were added
+						break
+					}
+
+					if disk.SizeGBs < oldDisks[i].SizeGBs {
+						key := fmt.Sprintf("disk.%d.disk_gb", i)
+						if err := d.ForceNew(key); err != nil {
+							log.Fatalf("[ERROR] unable to force new '%s': %v", key, err)
+						}
+					}
+				}
+				return false
 			}),
 		),
 	}
@@ -101,11 +122,12 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 	var (
 		diags    diag.Diagnostics
 		networks []vm.Network
+		disks    []vm.Disk
 	)
 
 	c := m.(client.Client)
-	v := vsphere.NewAPI(c)
-	a := address.NewAPI(c)
+	vsphereAPI := vsphere.NewAPI(c)
+	addressAPI := address.NewAPI(c)
 	locationID := d.Get("location_id").(string)
 
 	networks = expandVirtualServerNetworks(d.Get("network").([]interface{}))
@@ -114,7 +136,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 			continue
 		}
 
-		res, err := a.ReserveRandom(ctx, address.ReserveRandom{
+		res, err := addressAPI.ReserveRandom(ctx, address.ReserveRandom{
 			LocationID: locationID,
 			VlanID:     n.VLAN,
 			Count:      1,
@@ -143,6 +165,18 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		})
 	}
 
+	disks = expandVirtualServerDisks(d.Get("disk").([]interface{}))
+
+	// We require at least one disk to be specified either via Disk or via Disks array
+	if len(disks) < 1 {
+		diags = append(diags, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "No disk specified",
+			Detail:        "Minimum of one disk has to be specified",
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "size_gb"}},
+		})
+	}
+
 	if len(diags) > 0 {
 		return diags
 	}
@@ -154,8 +188,8 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		Hostname:           d.Get("hostname").(string),
 		Memory:             d.Get("memory").(int),
 		CPUs:               d.Get("cpus").(int),
-		Disk:               d.Get("disk").(int),
-		DiskType:           d.Get("disk_type").(string),
+		Disk:               disks[0].SizeGBs, //Workaround until Create API supports multi disk
+		DiskType:           disks[0].Type,
 		CPUPerformanceType: d.Get("cpu_performance_type").(string),
 		Sockets:            d.Get("sockets").(int),
 		Network:            networks,
@@ -171,31 +205,31 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	base64Encoding := true
-	provision, err := v.Provisioning().VM().Provision(ctx, def, base64Encoding)
+	provision, err := vsphereAPI.Provisioning().VM().Provision(ctx, def, base64Encoding)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		if d.Id() == "" {
-			p, err := v.Provisioning().Progress().Get(ctx, provision.Identifier)
+			p, err := vsphereAPI.Provisioning().Progress().Get(ctx, provision.Identifier)
 			if err != nil {
 				return resource.NonRetryableError(fmt.Errorf("unable to get vm progress by ID '%s', %w", provision.Identifier, err))
 			}
-			if p.VMIdentifier != "" {
+			if p.VMIdentifier != "" && p.Progress < 100 {
 				d.SetId(p.VMIdentifier)
 			} else {
 				return resource.RetryableError(fmt.Errorf("vm with provisioning ID '%s' is not ready yet: %d %%", provision.Identifier, p.Progress))
 			}
 		}
 
-		info, err := v.Info().Get(ctx, d.Id())
+		vmInfo, err := vsphereAPI.Info().Get(ctx, d.Id())
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("unable to get vm  by ID '%s', %w", d.Id(), err))
 		}
-		if info.Status == vmPoweredOn {
+		if vmInfo.Status == vmPoweredOn {
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf("vm with id '%s' is not %s yet: %s", d.Id(), vmPoweredOn, info.Status))
+		return resource.RetryableError(fmt.Errorf("vm with id '%s' is not %s yet: %s", d.Id(), vmPoweredOn, vmInfo.Status))
 	})
 
 	if err != nil {
@@ -209,17 +243,29 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		}
 	}
 
-	return resourceVirtualServerRead(ctx, d, m)
+	if len(disks) > 1 {
+		if read := resourceVirtualServerRead(ctx, d, m); read.HasError() {
+			return read
+		}
+
+		initialDisks := expandVirtualServerDisks(d.Get("disk").([]interface{}))
+		if update := updateVirtualServerDisk(ctx, c, d.Id(), disks, initialDisks); update != nil {
+			return update
+		}
+	}
+
+	diags = resourceVirtualServerRead(ctx, d, m)
+	return diags
 }
 
 func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	c := m.(client.Client)
-	v := vsphere.NewAPI(c)
-	n := nictype.NewAPI(c)
+	vsphereAPI := vsphere.NewAPI(c)
+	nicAPI := nictype.NewAPI(c)
 
-	info, err := v.Info().Get(ctx, d.Id())
+	info, err := vsphereAPI.Info().Get(ctx, d.Id())
 	if err != nil {
 		if err := handleNotFoundError(err); err != nil {
 			return diag.FromErr(err)
@@ -228,7 +274,7 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		return nil
 	}
 
-	nicTypes, err := n.List(ctx)
+	nicTypes, err := nicAPI.List(ctx)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -242,9 +288,9 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 	if err = d.Set("template_id", info.TemplateID); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	if err = d.Set("template_type", info.TemplateType); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
+	//if err = d.Set("template_type", info.TemplateType); err != nil {
+	//	diags = append(diags, diag.FromErr(err)...)
+	//}
 	if err = d.Set("cpus", info.CPU); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
@@ -259,20 +305,22 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
-	if len(info.DiskInfo) != 1 {
-		return diag.Errorf("unsupported number of disks, currently only 1 disk is allowed, got %d", len(info.DiskInfo))
-	}
-	if err = d.Set("disk", info.DiskInfo[0].DiskGB); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
-	if v := d.Get("disk_type").(string); v != "" {
-		if err = d.Set("disk_type", info.DiskInfo[0].DiskType); err != nil {
-			diags = append(diags, diag.FromErr(err)...)
+	disks := make([]vm.Disk, len(info.DiskInfo))
+	for i, diskInfo := range info.DiskInfo {
+		disks[i] = vm.Disk{
+			ID:      diskInfo.DiskID,
+			Type:    diskInfo.DiskType,
+			SizeGBs: diskInfo.DiskGB,
 		}
 	}
 
+	flattenedDisks := flattenVirtualServerDisks(disks)
+	if err = d.Set("disk", flattenedDisks); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+
 	specNetworks := expandVirtualServerNetworks(d.Get("network").([]interface{}))
-	var networks []vm.Network
+	networks := make([]vm.Network, 0, len(info.Network))
 	for i, net := range info.Network {
 		if len(nicTypes) < net.NIC {
 			diags = append(diags, diag.Diagnostic{
@@ -291,19 +339,20 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		// in spec it's not required to set an IP address
 		// however when it's set we have to reflect that in the state
 		if i+1 < len(specNetworks) && len(specNetworks[i].IPs) > 0 {
+			fmt.Println("add IPs to network")
 			network.IPs = append(net.IPv4, net.IPv6...)
 		}
 
 		networks = append(networks, network)
 	}
 
-	fNetworks := flattenVirtualServerNetwork(networks)
-	if err = d.Set("network", fNetworks); err != nil {
+	flattenedNetworks := flattenVirtualServerNetwork(networks)
+	if err = d.Set("network", flattenedNetworks); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
-	fInfo := flattenVirtualServerInfo(&info)
-	if err = d.Set("info", fInfo); err != nil {
+	flattenedInfo := flattenVirtualServerInfo(&info)
+	if err = d.Set("info", flattenedInfo); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
@@ -312,7 +361,7 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 
 func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(client.Client)
-	v := vsphere.NewAPI(c)
+	vsphereAPI := vsphere.NewAPI(c)
 	ch := vm.Change{
 		Reboot:          d.Get("force_restart_if_needed").(bool),
 		EnableDangerous: d.Get("critical_operation_confirmed").(bool),
@@ -347,21 +396,32 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 		}
 	}
 
-	if d.HasChanges("disk_type", "disk") {
-		var disk vm.Disk
+	if d.HasChange("disk") {
+		old, new := d.GetChange("disk")
+		oldDisks := expandVirtualServerDisks(old.([]interface{}))
+		newDisks := expandVirtualServerDisks(new.([]interface{}))
 
-		info := expandVirtualServerInfo(d.Get("info").([]interface{}))
-		if len(info.DiskInfo) != 1 {
-			return diag.Errorf("unsupported number of disks, currently only 1 disk is allowed, got %d", len(info.DiskInfo))
+		if len(newDisks) < len(oldDisks) {
+			return diag.Errorf("removing disks is not supported yet, expected at least %d, got %d", len(oldDisks), len(newDisks))
 		}
 
-		disk.ID = info.DiskInfo[0].DiskID
-		disk.Type = d.Get("disk_type").(string)
-		disk.SizeGBs = d.Get("disk").(int)
+		changeDisks := make([]vm.Disk, 0, len(oldDisks))
+		addDisks := make([]vm.Disk, 0, len(newDisks))
+		for i := range newDisks {
+			if i >= len(oldDisks) {
+				addDisks = append(addDisks, newDisks[i])
+				continue
+			}
 
-		ch.ChangeDisks = append(ch.ChangeDisks, disk)
+			actualDisk := oldDisks[i]
+			expectedDisk := newDisks[i]
 
-		requiresReboot = true
+			if actualDisk.Type != expectedDisk.Type || actualDisk.SizeGBs != expectedDisk.SizeGBs {
+				changeDisks = append(changeDisks, expectedDisk)
+			}
+		}
+		ch.ChangeDisks = changeDisks
+		ch.AddDisks = addDisks
 	}
 
 	if d.HasChange("tags") {
@@ -385,7 +445,15 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 		}
 	}
 
-	if _, err := v.Provisioning().VM().Update(ctx, d.Id(), ch); err != nil {
+	var response vm.ProvisioningResponse
+	provisioningAPI := vsphereAPI.Provisioning()
+
+	var err error
+	if response, err = provisioningAPI.VM().Update(ctx, d.Id(), ch); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if _, err = provisioningAPI.Progress().AwaitCompletion(ctx, response.Identifier); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -405,15 +473,14 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 			vmPoweredOn,
 		},
 		Refresh: func() (interface{}, string, error) {
-			info, err := v.Info().Get(ctx, d.Id())
+			info, err := vsphereAPI.Info().Get(ctx, d.Id())
 			if err != nil {
 				return "", "", err
 			}
 			return info, info.Status, nil
 		},
 	}
-	_, err := vmState.WaitForStateContext(ctx)
-	if err != nil {
+	if _, err = vmState.WaitForStateContext(ctx); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -422,10 +489,10 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 
 func resourceVirtualServerDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(client.Client)
-	v := vsphere.NewAPI(c)
+	vsphereAPI := vsphere.NewAPI(c)
 
 	delayedDeprovision := false
-	err := v.Provisioning().VM().Deprovision(ctx, d.Id(), delayedDeprovision)
+	err := vsphereAPI.Provisioning().VM().Deprovision(ctx, d.Id(), delayedDeprovision)
 	if err != nil {
 		if err := handleNotFoundError(err); err != nil {
 			return diag.FromErr(err)
@@ -435,7 +502,7 @@ func resourceVirtualServerDelete(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := v.Info().Get(ctx, d.Id())
+		_, err := vsphereAPI.Info().Get(ctx, d.Id())
 		if err != nil {
 			if err := handleNotFoundError(err); err != nil {
 				return resource.NonRetryableError(fmt.Errorf("unable to get vm with id '%s': %w", d.Id(), err))
@@ -468,4 +535,68 @@ func getTagsDifferences(tagsA, tagsB []string) []string {
 	}
 
 	return out
+}
+
+func updateVirtualServerDisk(ctx context.Context, c client.Client, id string, expected []vm.Disk, current []vm.Disk) diag.Diagnostics {
+	changeDisks := make([]vm.Disk, 0, len(current))
+	addDisks := make([]vm.Disk, 0, len(expected))
+	for diskIndex := range current {
+		if diskIndex >= len(expected) {
+			break
+		}
+		expected[diskIndex].ID = current[diskIndex].ID
+		actualDisk := current[diskIndex]
+		expectedDisk := expected[diskIndex]
+
+		if actualDisk.Type != expectedDisk.Type || actualDisk.SizeGBs != expectedDisk.SizeGBs {
+			changeDisks = append(changeDisks, expectedDisk)
+		}
+	}
+
+	if len(expected) > len(current) {
+		for newDiskIndex := len(current); newDiskIndex < len(expected); newDiskIndex++ {
+			addDisks = append(addDisks, expected[newDiskIndex])
+		}
+	}
+
+	ch := vm.Change{
+		AddDisks:    addDisks,
+		ChangeDisks: changeDisks,
+	}
+
+	v := vsphere.NewAPI(c)
+	var response vm.ProvisioningResponse
+	provisioning := v.Provisioning()
+	var err error
+	if response, err = provisioning.VM().Update(ctx, id, ch); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if _, err = provisioning.Progress().AwaitCompletion(ctx, response.Identifier); err != nil {
+		return diag.FromErr(err)
+	}
+
+	vmState := resource.StateChangeConf{
+		Delay:      10 * time.Second,
+		Timeout:    10 * time.Minute,
+		MinTimeout: 10 * time.Second,
+		Pending: []string{
+			vmPoweredOff,
+		},
+		Target: []string{
+			vmPoweredOn,
+		},
+		Refresh: func() (interface{}, string, error) {
+			info, err := v.Info().Get(ctx, id)
+			if err != nil {
+				return "", "", err
+			}
+			return info, info.Status, nil
+		},
+	}
+	if _, err = vmState.WaitForStateContext(ctx); err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }

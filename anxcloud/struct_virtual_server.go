@@ -36,6 +36,29 @@ func expandVirtualServerNetworks(p []interface{}) []vm.Network {
 	return networks
 }
 
+func expandVirtualServerDisks(p []interface{}) []vm.Disk {
+	disks := make([]vm.Disk, len(p))
+
+	for i, elem := range p {
+		in := elem.(map[string]interface{})
+		disk := vm.Disk{}
+
+		if v, ok := in["disk_type"]; ok {
+			disk.Type = v.(string)
+		}
+		if v, ok := in["disk_gb"]; ok {
+			disk.SizeGBs = v.(int)
+		}
+		if v, ok := in["disk_id"]; ok {
+			disk.ID = v.(int)
+		}
+
+		disks[i] = disk
+	}
+
+	return disks
+}
+
 func expandVirtualServerDNS(p []interface{}) (dns [maxDNSEntries]string) {
 	if len(p) < 1 {
 		return dns
@@ -243,4 +266,18 @@ func flattenVirtualServerInfo(in *info.Info) []interface{} {
 	att["network"] = networkInfo
 
 	return []interface{}{att}
+}
+
+func flattenVirtualServerDisks(in []vm.Disk) []interface{} {
+	att := make([]interface{}, len(in))
+
+	for i, d := range in {
+		net := map[string]interface{}{}
+		net["disk_type"] = d.Type
+		net["disk_gb"] = d.SizeGBs
+		net["disk_id"] = d.ID
+		att[i] = net
+	}
+
+	return att
 }

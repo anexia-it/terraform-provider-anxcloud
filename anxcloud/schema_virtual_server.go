@@ -53,14 +53,28 @@ func schemaVirtualServer() map[string]*schema.Schema {
 			Description: "Memory in MB.",
 		},
 		"disk": {
-			Type:        schema.TypeInt,
+			Type:        schema.TypeList,
 			Required:    true,
-			Description: "Requested disk capacity in GB.",
-		},
-		"disk_type": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Requested disk category (limits disk performance, e.g. IOPS). Default as defined by data center.",
+			Description: "Virtual Server Disks",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"disk_gb": {
+						Type:        schema.TypeInt,
+						Required:    true,
+						Description: "Requested disk capacity in GB.",
+					},
+					"disk_type": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "Requested disk category (limits disk performance, e.g. IOPS). Default as defined by data center.",
+					},
+					"disk_id": {
+						Type:        schema.TypeInt,
+						Computed:    true,
+						Description: "Device ID of the disk on.",
+					},
+				},
+			},
 		},
 		"network": {
 			Type:        schema.TypeList,
@@ -269,7 +283,7 @@ func schemaVirtualServer() map[string]*schema.Schema {
 					},
 					"network": {
 						Type:        schema.TypeList,
-						Optional:    true,
+						Computed:    true,
 						Description: "Network interfaces",
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{

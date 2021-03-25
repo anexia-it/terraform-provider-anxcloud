@@ -33,8 +33,7 @@ func schemaNetworkPrefix() map[string]*schema.Schema {
 		"vlan_id": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			ForceNew:    true,
-			Description: "Identifier for the related VLAN.",
+			Description: "The corresponding VLAN ID",
 		},
 		"router_redundancy": {
 			Type:        schema.TypeBool,
