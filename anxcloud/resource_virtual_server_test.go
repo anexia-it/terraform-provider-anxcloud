@@ -124,34 +124,116 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 			Type:    "ENT1",
 			SizeGBs: 40,
 		},
-		{
-			Type:    "ENT1",
-			SizeGBs: 40,
-		},
 	}
 
-	disksUpscale := disks
-	disksUpscale[1].Type = "ENT6"
-	disksUpscale[1].SizeGBs = 50
+	t.Run("AddDisk", func(t *testing.T) {
+		t.Parallel()
+		addDiskDef := vmDef
+		addDiskDef.Hostname = "acc-test-" + shortuuid.New()
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckAnxCloudVirtualServerDestroy,
-		Steps: []resource.TestStep{
+		disksAdd := append(disks, vm.Disk{
+
+			Type:    "ENT6",
+			SizeGBs: 50,
+		})
+
+		resource.Test(t, resource.TestCase{
+			PreCheck:          func() { testAccPreCheck(t) },
+			ProviderFactories: testAccProviders,
+			CheckDestroy:      testAccCheckAnxCloudVirtualServerDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName, &addDiskDef, disks),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckAnxCloudVirtualServerDisks(resourcePath, disks),
+					),
+				},
+				{
+					Config: testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName, &vmDef, disksAdd),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckAnxCloudVirtualServerDisks(resourcePath, disksAdd),
+					),
+				},
+			},
+		})
+	})
+
+	t.Run("ChangeAddDisk", func(t *testing.T) {
+		t.Parallel()
+		changeDiskDef := vmDef
+		changeDiskDef.Hostname = "acc-test-" + shortuuid.New()
+
+		disksChange := append(disks, vm.Disk{
+			SizeGBs: 50,
+			Type:    "ENT6",
+		})
+
+		disksChange[0].SizeGBs = 70
+		disksChange[0].Type = "Ent1"
+
+		resource.Test(t, resource.TestCase{
+			PreCheck:          func() { testAccPreCheck(t) },
+			ProviderFactories: testAccProviders,
+			CheckDestroy:      testAccCheckAnxCloudVirtualServerDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName, &changeDiskDef, disks),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckAnxCloudVirtualServerDisks(resourcePath, disks),
+					),
+				},
+				{
+					Config: testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName, &vmDef, disksChange),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckAnxCloudVirtualServerDisks(resourcePath, disksChange),
+					),
+				},
+			},
+		})
+	})
+
+	t.Run("MultiDiskTemplateChange", func(t *testing.T) {
+		t.Parallel()
+		changeDiskDef := vmDef
+		changeDiskDef.Hostname = "acc-test-" + shortuuid.New()
+		changeDiskDef.TemplateID = "44eeae8b-fc8d-4e0f-a4ad-c16db54976a3"
+
+		templateDisks := []vm.Disk{
 			{
-				Config: testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName, &vmDef, disks),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnxCloudVirtualServerDisks(resourcePath, disks),
-				),
+				Type:    "ENT6",
+				SizeGBs: 50,
 			},
 			{
-				Config: testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName, &vmDef, disksUpscale),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnxCloudVirtualServerDisks(resourcePath, disksUpscale),
-				),
+				Type:    "Ent6",
+				SizeGBs: 50,
 			},
-		},
+		}
+
+		templateDisksChanged := append(templateDisks, vm.Disk{
+			SizeGBs: 70,
+			Type:    "ENT1",
+		})
+		templateDisksChanged[1].SizeGBs = 60
+
+		resource.Test(t, resource.TestCase{
+			PreCheck:          func() { testAccPreCheck(t) },
+			ProviderFactories: testAccProviders,
+			CheckDestroy:      testAccCheckAnxCloudVirtualServerDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName, &changeDiskDef, templateDisks),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckAnxCloudVirtualServerDisks(resourcePath, templateDisks),
+					),
+				},
+				{
+					Config: testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName, &changeDiskDef, templateDisksChanged),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckAnxCloudVirtualServerDisks(resourcePath, templateDisksChanged),
+					),
+				},
+			},
+		})
 	})
 }
 
