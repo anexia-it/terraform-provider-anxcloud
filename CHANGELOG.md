@@ -1,7 +1,10 @@
-## 0.2.5
-ENHANCEMENTS
+## 0.3.0
+FEATURES
 
 * resource/anxcloud_virtual_server - support for configuring multiple disks when creating virtual server ([#40](https://github.com/anexia-it/terraform-provider-anxcloud/pull/40))
+
+ENHANCEMENTS
+
 * resource/anxcloud_virtual_server - fixed some bugs with the import logic ([40](https://github.com/anexia-it/terraform-provider-anxcloud/pull/40))
 
 ## 0.2.4
