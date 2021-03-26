@@ -2,6 +2,7 @@
 FEATURES
 
 * resource/anxcloud_virtual_server - support for configuring multiple disks when creating virtual server ([#40](https://github.com/anexia-it/terraform-provider-anxcloud/pull/40))
+* documentation/anxcloud_virtual_server - Updated `disk` documentation ([43](https://github.com/anexia-it/terraform-provider-anxcloud/pull/43))
 
 ENHANCEMENTS
 
