@@ -1,12 +1,17 @@
+## 0.2.5
+ENHANCEMENTS
+
+* resource/anxcloud_virtual_server - support for configuring multiple disks when creating virtual server ([#40](https://github.com/anexia-it/terraform-provider-anxcloud/pull/40))
+* resource/anxcloud_virtual_server - fixed some bugs with the import logic ([40](https://github.com/anexia-it/terraform-provider-anxcloud/pull/40))
+
 ## 0.2.4
 
 FEATURES
 
-* resource/vlan, resource/ip_address resource/virtual_server - support for importing existing resources ([#36])
-* resource/tag, resource/network_prefix - support for importing existing resources ([#35])
-* **New Data Source** `anxcloud_cpu_performance_types, anxcloud_tags, anxcloud_vsphere_locations` ([#29])
-* **New Data Source** `anxcloud_nic_type, anxcloud_vlan, anxcloud_ip_address` ([#28])
-
+* resource/vlan, resource/ip_address resource/virtual_server - support for importing existing resources ([#36](https://github.com/anexia-it/terraform-provider-anxcloud/pull/36))
+* resource/tag, resource/network_prefix - support for importing existing resources ([#35](https://github.com/anexia-it/terraform-provider-anxcloud/pull/35))
+* **New Data Source** `anxcloud_cpu_performance_types, anxcloud_tags, anxcloud_vsphere_locations` ([#29](https://github.com/anexia-it/terraform-provider-anxcloud/pull/29))
+* **New Data Source** `anxcloud_nic_type, anxcloud_vlan, anxcloud_ip_address` ([#28](https://github.com/anexia-it/terraform-provider-anxcloud/pull/28))
 
 ## 0.2.3
 
