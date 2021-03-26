@@ -59,8 +59,6 @@ resource "anxcloud_virtual_server" "example" {
   template_type = "templates"
   hostname      = "example-terraform9"
   cpus          = 2
-  disk          = 70
-  disk_type     = local.disk_types.STD6.id
   memory        = 2048
   password      = "flatcar#1234$%"
   cpu_performance_type = "standard"
@@ -68,6 +66,11 @@ resource "anxcloud_virtual_server" "example" {
   network {
     vlan_id  = anxcloud_vlan.example.id
     nic_type = "vmxnet3"
+  }
+
+  disk {
+    disk_gb       = 70
+    disk_type     = local.disk_types.STD6.id
   }
 
   dns = ["8.8.8.8"]
