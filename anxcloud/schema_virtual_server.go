@@ -95,6 +95,7 @@ func schemaVirtualServer() map[string]*schema.Schema {
 					"ips": {
 						Type:     schema.TypeList,
 						Optional: true,
+						ForceNew: true,
 						Description: "Requested list of IPs and IPs identifiers. IPs are ignored when using template_type 'from_scratch'. " +
 							"Defaults to free IPs from IP pool attached to VLAN.",
 						Elem: &schema.Schema{
