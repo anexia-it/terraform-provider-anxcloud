@@ -104,18 +104,19 @@ func TestExpanderVirtualServerDNS(t *testing.T) {
 func TestExpanderVirtualServerDisks(t *testing.T) {
 	cases := []struct {
 		Input          []interface{}
-		ExpectedOutput []vm.Disk
+		ExpectedOutput []Disk
 	}{
 		{
 			[]interface{}{
 				map[string]interface{}{
-					"disk_gb":   10,
-					"disk_id":   2000,
-					"disk_type": "STD1",
+					"disk_gb":    10,
+					"disk_id":    2000,
+					"disk_type":  "STD1",
+					"disk_exact": float32(10.10),
 				},
 			},
-			[]vm.Disk{
-				{ID: 2000, Type: "STD1", SizeGBs: 10},
+			[]Disk{
+				{Disk: &vm.Disk{ID: 2000, Type: "STD1", SizeGBs: 10}, ExactDiskSize: 10.10},
 			},
 		},
 	}
@@ -164,7 +165,7 @@ func TestExpanderVirtualServerInfo(t *testing.T) {
 							"storage_type":   "SSD",
 							"bus_type":       "SCSI",
 							"bus_type_label": "SCSI(0:0) Hard disk 1",
-							"disk_gb":        90,
+							"disk_gb":        float32(90),
 							"disk_id":        2000,
 							"iops":           150000,
 							"latency":        7,
@@ -301,7 +302,7 @@ func TestFlattenVirtualServerInfo(t *testing.T) {
 						StorageType:  "SSD",
 						BusType:      "SCSI",
 						BusTypeLabel: "SCSI(0:0) Hard disk 1",
-						DiskGB:       90,
+						DiskGB:       float32(90),
 						DiskID:       2000,
 						IOPS:         150000,
 						Latency:      7,
@@ -340,7 +341,7 @@ func TestFlattenVirtualServerInfo(t *testing.T) {
 							"storage_type":   "SSD",
 							"bus_type":       "SCSI",
 							"bus_type_label": "SCSI(0:0) Hard disk 1",
-							"disk_gb":        90,
+							"disk_gb":        float32(90.00),
 							"disk_id":        2000,
 							"iops":           150000,
 							"latency":        7,
@@ -363,22 +364,26 @@ func TestFlattenVirtualServerInfo(t *testing.T) {
 
 func TestFlattenVirtualServerDisks(t *testing.T) {
 	cases := []struct {
-		Input          []vm.Disk
+		Input          []Disk
 		ExpectedOutput []interface{}
 	}{
 		{
-			[]vm.Disk{
+			[]Disk{
 				{
-					ID:      2000,
-					Type:    "STD1",
-					SizeGBs: 10,
+					Disk: &vm.Disk{
+						ID:      2000,
+						Type:    "STD1",
+						SizeGBs: 10,
+					},
+					ExactDiskSize: 10.10,
 				},
 			},
 			[]interface{}{
 				map[string]interface{}{
-					"disk_id":   2000,
-					"disk_type": "STD1",
-					"disk_gb":   10,
+					"disk_id":    2000,
+					"disk_type":  "STD1",
+					"disk_gb":    10,
+					"disk_exact": float32(10.10),
 				},
 			},
 		},

@@ -122,7 +122,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 	var (
 		diags    diag.Diagnostics
 		networks []vm.Network
-		disks    []vm.Disk
+		disks    []Disk
 	)
 
 	c := m.(client.Client)
@@ -305,12 +305,16 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
-	disks := make([]vm.Disk, len(info.DiskInfo))
+	disks := make([]Disk, len(info.DiskInfo))
 	for i, diskInfo := range info.DiskInfo {
-		disks[i] = vm.Disk{
-			ID:      diskInfo.DiskID,
-			Type:    diskInfo.DiskType,
-			SizeGBs: diskInfo.DiskGB,
+		diskGB := roundDiskSize(diskInfo.DiskGB)
+		disks[i] = Disk{
+			Disk: &vm.Disk{
+				ID:      diskInfo.DiskID,
+				Type:    diskInfo.DiskType,
+				SizeGBs: diskGB,
+			},
+			ExactDiskSize: diskInfo.DiskGB,
 		}
 	}
 
@@ -409,15 +413,15 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 		addDisks := make([]vm.Disk, 0, len(newDisks))
 		for i := range newDisks {
 			if i >= len(oldDisks) {
-				addDisks = append(addDisks, newDisks[i])
+				addDisks = append(addDisks, *newDisks[i].Disk)
 				continue
 			}
 
 			actualDisk := oldDisks[i]
 			expectedDisk := newDisks[i]
 
-			if actualDisk.Type != expectedDisk.Type || actualDisk.SizeGBs != expectedDisk.SizeGBs {
-				changeDisks = append(changeDisks, expectedDisk)
+			if actualDisk.Type != expectedDisk.Type || actualDisk.ExactDiskSize < float32(expectedDisk.SizeGBs) {
+				changeDisks = append(changeDisks, *expectedDisk.Disk)
 			}
 		}
 		ch.ChangeDisks = changeDisks
@@ -537,7 +541,7 @@ func getTagsDifferences(tagsA, tagsB []string) []string {
 	return out
 }
 
-func updateVirtualServerDisk(ctx context.Context, c client.Client, id string, expected []vm.Disk, current []vm.Disk) diag.Diagnostics {
+func updateVirtualServerDisk(ctx context.Context, c client.Client, id string, expected []Disk, current []Disk) diag.Diagnostics {
 	changeDisks := make([]vm.Disk, 0, len(current))
 	addDisks := make([]vm.Disk, 0, len(expected))
 	for diskIndex := range current {
@@ -548,14 +552,17 @@ func updateVirtualServerDisk(ctx context.Context, c client.Client, id string, ex
 		actualDisk := current[diskIndex]
 		expectedDisk := expected[diskIndex]
 
-		if actualDisk.Type != expectedDisk.Type || actualDisk.SizeGBs != expectedDisk.SizeGBs {
-			changeDisks = append(changeDisks, expectedDisk)
+		if actualDisk.ExactDiskSize > float32(expectedDisk.SizeGBs) {
+			log.Println(fmt.Sprintf("Skipping disk %d because expected disk size to small! Expected: %d  -  got: %f", actualDisk.ID, expectedDisk.SizeGBs, actualDisk.ExactDiskSize))
+		}
+		if actualDisk.Type != expectedDisk.Type || actualDisk.ExactDiskSize < float32(expectedDisk.SizeGBs) {
+			changeDisks = append(changeDisks, *expectedDisk.Disk)
 		}
 	}
 
 	if len(expected) > len(current) {
 		for newDiskIndex := len(current); newDiskIndex < len(expected); newDiskIndex++ {
-			addDisks = append(addDisks, expected[newDiskIndex])
+			addDisks = append(addDisks, *expected[newDiskIndex].Disk)
 		}
 	}
 
