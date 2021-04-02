@@ -53,7 +53,7 @@ func expandVirtualServerDisks(p []interface{}) []Disk {
 			disk.ID = v.(int)
 		}
 		if v, ok := in["disk_exact"]; ok {
-			disk.ExactDiskSize = v.(float32)
+			disk.ExactDiskSize = float32(v.(float64))
 		}
 
 		disks[i] = disk
