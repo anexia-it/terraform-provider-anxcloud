@@ -39,13 +39,13 @@ resource "anxcloud_virtual_server" "example" {
 
   # Disk 1
   disk {
-    disk_gb = 100
+    disk_gb   = 100
     disk_type = "STD1"
   }
 
   # Disk 2
   disk {
-    disk_gb = 200
+    disk_gb   = 200
     disk_type = "STD1"
   }
 
