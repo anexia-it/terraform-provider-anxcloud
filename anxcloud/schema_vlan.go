@@ -62,7 +62,6 @@ func schemaVLAN() map[string]*schema.Schema {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			ForceNew:    true,
 			Description: "True if VM provisioning shall be enabled. Defaults to false.",
 		},
 		"description_customer": {
