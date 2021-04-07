@@ -118,12 +118,16 @@ func resourceVLANUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	c := m.(client.Client)
 	v := vlan.NewAPI(c)
 
-	if !d.HasChange("description_customer") {
+	if !d.HasChange("description_customer") && !d.HasChange("vm_provisioning") {
 		return nil
 	}
 
-	def := vlan.UpdateDefinition{
-		CustomerDescription: d.Get("description_customer").(string),
+	def := vlan.UpdateDefinition{}
+	if d.HasChange("description_customer") {
+		def.CustomerDescription = d.Get("description_customer").(string)
+	}
+	if d.HasChange("vm_provisioning") {
+		def.VMProvisioning = d.Get("vm_provisioning").(bool)
 	}
 	if err := v.Update(ctx, d.Id(), def); err != nil {
 		return diag.FromErr(err)
