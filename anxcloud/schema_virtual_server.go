@@ -76,7 +76,7 @@ func schemaVirtualServer() map[string]*schema.Schema {
 					"disk_exact": {
 						Type:        schema.TypeFloat,
 						Computed:    true,
-						Description: "Exact floating point disk size. Not configurable; just for comparison",
+						Description: "Exact floating point disk size. Not configurable; just for comparison.",
 					},
 				},
 			},
