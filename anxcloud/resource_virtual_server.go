@@ -420,7 +420,7 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 			actualDisk := oldDisks[i]
 			expectedDisk := newDisks[i]
 
-			if actualDisk.Type != expectedDisk.Type || actualDisk.ExactDiskSize < float32(expectedDisk.SizeGBs) {
+			if actualDisk.Type != expectedDisk.Type || actualDisk.ExactDiskSize < float64(expectedDisk.SizeGBs) {
 				changeDisks = append(changeDisks, *expectedDisk.Disk)
 			}
 		}
@@ -552,10 +552,10 @@ func updateVirtualServerDisk(ctx context.Context, c client.Client, id string, ex
 		actualDisk := current[diskIndex]
 		expectedDisk := expected[diskIndex]
 
-		if actualDisk.ExactDiskSize > float32(expectedDisk.SizeGBs) {
+		if actualDisk.ExactDiskSize > float64(expectedDisk.SizeGBs) {
 			log.Println(fmt.Sprintf("Skipping disk %d because expected disk size to small! Expected: %d  -  got: %f", actualDisk.ID, expectedDisk.SizeGBs, actualDisk.ExactDiskSize))
 		}
-		if actualDisk.Type != expectedDisk.Type || actualDisk.ExactDiskSize < float32(expectedDisk.SizeGBs) {
+		if actualDisk.Type != expectedDisk.Type || actualDisk.ExactDiskSize < float64(expectedDisk.SizeGBs) {
 			changeDisks = append(changeDisks, *expectedDisk.Disk)
 		}
 	}

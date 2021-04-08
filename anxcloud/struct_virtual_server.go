@@ -53,7 +53,7 @@ func expandVirtualServerDisks(p []interface{}) []Disk {
 			disk.ID = v.(int)
 		}
 		if v, ok := in["disk_exact"]; ok {
-			disk.ExactDiskSize = float32(v.(float64))
+			disk.ExactDiskSize = v.(float64)
 		}
 
 		disks[i] = disk
@@ -138,7 +138,7 @@ func expandVirtualServerInfo(p []interface{}) info.Info {
 				disk.DiskID = v.(int)
 			}
 			if v, ok := d["disk_gb"]; ok {
-				disk.DiskGB = v.(float32)
+				disk.DiskGB = v.(float64)
 			}
 			if v, ok := d["disk_type"]; ok {
 				disk.DiskType = v.(string)
@@ -286,6 +286,6 @@ func flattenVirtualServerDisks(in []Disk) []interface{} {
 	return att
 }
 
-func roundDiskSize(size float32) int {
+func roundDiskSize(size float64) int {
 	return int(size)
 }
