@@ -414,6 +414,8 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 			actualDisk := oldDisks[i]
 			expectedDisk := newDisks[i]
 
+			// Compare the floating point disk size with the changed disk size from the configuration.
+			// This ensures that scaling operations are not reliant on rounding the disk size to integers.
 			if actualDisk.Type != expectedDisk.Type || actualDisk.ExactDiskSize < float64(expectedDisk.SizeGBs) {
 				changeDisks = append(changeDisks, *expectedDisk.Disk)
 			}
