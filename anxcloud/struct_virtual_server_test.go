@@ -396,3 +396,30 @@ func TestFlattenVirtualServerDisks(t *testing.T) {
 		}
 	}
 }
+
+func TestRoundDiskSize(t *testing.T) {
+	cases := []struct {
+		Input          float64
+		ExpectedOutput int
+	}{
+		{
+			0.9,
+			1,
+		},
+		{
+			5.4,
+			5,
+		},
+		{
+			5.5,
+			6,
+		},
+	}
+
+	for _, tc := range cases {
+		output := roundDiskSize(tc.Input)
+		if diff := cmp.Diff(tc.ExpectedOutput, output); diff != "" {
+			t.Fatalf("Unexpected output from rounding: mismatch (-want +got):\n%s", diff)
+		}
+	}
+}

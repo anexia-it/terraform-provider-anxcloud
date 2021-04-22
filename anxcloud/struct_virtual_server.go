@@ -275,17 +275,17 @@ func flattenVirtualServerDisks(in []Disk) []interface{} {
 	att := make([]interface{}, len(in))
 
 	for i, d := range in {
-		net := map[string]interface{}{}
-		net["disk_type"] = d.Type
-		net["disk_gb"] = d.SizeGBs
-		net["disk_id"] = d.ID
-		net["disk_exact"] = d.ExactDiskSize
-		att[i] = net
+		disk := map[string]interface{}{}
+		disk["disk_type"] = d.Type
+		disk["disk_gb"] = d.SizeGBs
+		disk["disk_id"] = d.ID
+		disk["disk_exact"] = d.ExactDiskSize
+		att[i] = disk
 	}
 
 	return att
 }
 
 func roundDiskSize(size float64) int {
-	return int(size)
+	return int(size+0.5)
 }

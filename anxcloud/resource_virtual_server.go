@@ -323,9 +323,9 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
-	specNetworks := expandVirtualServerNetworks(d.Get("network").([]interface{}))
+	//specNetworks := expandVirtualServerNetworks(d.Get("network").([]interface{}))
 	networks := make([]vm.Network, 0, len(info.Network))
-	for i, net := range info.Network {
+	for _, net := range info.Network {
 		if len(nicTypes) < net.NIC {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
@@ -338,13 +338,7 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		network := vm.Network{
 			NICType: nicTypes[net.NIC-1],
 			VLAN:    net.VLAN,
-		}
-
-		// in spec it's not required to set an IP address
-		// however when it's set we have to reflect that in the state
-		if i+1 < len(specNetworks) && len(specNetworks[i].IPs) > 0 {
-			fmt.Println("add IPs to network")
-			network.IPs = append(net.IPv4, net.IPv6...)
+			IPs:     append(net.IPv4, net.IPv6...),
 		}
 
 		networks = append(networks, network)

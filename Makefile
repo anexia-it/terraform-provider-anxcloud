@@ -2,11 +2,11 @@ export GOPATH?=$(shell go env GOPATH)
 export GOPROXY=https://proxy.golang.org
 export GO111MODULE=on
 
-HOSTNAME=hashicorp.com
+HOSTNAME=hashicorp.local
 NAMESPACE=anexia-it
 NAME=anxcloud
 BINARY=terraform-provider-${NAME}
-VERSION=0.2.3
+VERSION=0.2.33
 OS_ARCH=linux_amd64
 
 TEST?=$$(go list ./... | grep -v 'vendor')
