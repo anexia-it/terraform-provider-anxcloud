@@ -287,5 +287,5 @@ func flattenVirtualServerDisks(in []Disk) []interface{} {
 }
 
 func roundDiskSize(size float64) int {
-	return int(size+0.5)
+	return int(size + 0.5)
 }
