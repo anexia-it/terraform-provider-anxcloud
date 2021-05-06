@@ -42,9 +42,9 @@ func resourceVirtualServer() *schema.Resource {
 		Schema: schemaVirtualServer(),
 		CustomizeDiff: customdiff.All(
 			customdiff.ForceNewIf("network", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
-				old, new := d.GetChange("network")
+				old, newNetworks := d.GetChange("network")
 				oldNets := expandVirtualServerNetworks(old.([]interface{}))
-				newNets := expandVirtualServerNetworks(new.([]interface{}))
+				newNets := expandVirtualServerNetworks(newNetworks.([]interface{}))
 
 				if len(oldNets) > len(newNets) {
 					// some network has been deleted
@@ -71,13 +71,18 @@ func resourceVirtualServer() *schema.Resource {
 						}
 					}
 
-					if len(n.IPs) != len(oldNets[i].IPs) {
+					if len(n.IPs) < len(oldNets[i].IPs) {
+						// IPs are missing
 						key := fmt.Sprintf("network.%d.ips", i)
 						if err := d.ForceNew(key); err != nil {
 							log.Fatalf("[ERROR] unable to force new '%s': %v", key, err)
 						}
 					} else {
 						for j, ip := range n.IPs {
+							// skip additional IPs
+							if j >= len(oldNets[i].IPs) {
+								continue
+							}
 							if ip != oldNets[i].IPs[j] {
 								key := fmt.Sprintf("network.%d.ips", i)
 								if err := d.ForceNew(key); err != nil {
@@ -247,7 +252,6 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		if read := resourceVirtualServerRead(ctx, d, m); read.HasError() {
 			return read
 		}
-
 		initialDisks := expandVirtualServerDisks(d.Get("disk").([]interface{}))
 		if update := updateVirtualServerDisk(ctx, c, d.Id(), disks, initialDisks); update != nil {
 			return update
@@ -321,7 +325,9 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 
 	specNetworks := expandVirtualServerNetworks(d.Get("network").([]interface{}))
 	networks := make([]vm.Network, 0, len(info.Network))
+	//networks := specNetworks
 	for i, net := range info.Network {
+		log.Println("looping VM network: ", i, net)
 		if len(nicTypes) < net.NIC {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
@@ -331,22 +337,43 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 			continue
 		}
 
-		network := vm.Network{
-			NICType: nicTypes[net.NIC-1],
-			VLAN:    net.VLAN,
-		}
+		log.Println("VM networks: ", net)
+		if len(specNetworks) > i {
+			log.Println("TF networks: ", specNetworks[i])
+			expectedIPMap := make(map[string]struct{}, len(specNetworks[i].IPs))
+			for _, ip := range specNetworks[i].IPs {
+				expectedIPMap[ip] = struct{}{}
+			}
 
-		// in spec it's not required to set an IP address
-		// however when it's set we have to reflect that in the state
-		if i+1 < len(specNetworks) && len(specNetworks[i].IPs) > 0 {
-			fmt.Println("add IPs to network")
-			network.IPs = append(net.IPv4, net.IPv6...)
-		}
+			network := vm.Network{
+				NICType: nicTypes[net.NIC-1],
+				VLAN:    net.VLAN,
+			}
 
-		networks = append(networks, network)
+			for _, ipv4 := range net.IPv4 {
+				if _, ok := expectedIPMap[ipv4]; ok {
+					log.Println("Adding: ", ipv4)
+					network.IPs = append(network.IPs, ipv4)
+					delete(expectedIPMap, ipv4)
+				}
+			}
+
+			for _, ipv6 := range net.IPv6 {
+				if _, ok := expectedIPMap[ipv6]; ok {
+					log.Println("Adding: ", ipv6)
+					network.IPs = append(network.IPs, ipv6)
+					delete(expectedIPMap, ipv6)
+				}
+			}
+			networks = append(networks, network)
+
+			log.Println("remaining expectd networks: ", expectedIPMap)
+			log.Println("updated network[i]: ", network.IPs)
+		}
 	}
 
 	flattenedNetworks := flattenVirtualServerNetwork(networks)
+	log.Println("flattened networks: ", flattenedNetworks)
 	if err = d.Set("network", flattenedNetworks); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
@@ -356,6 +383,7 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
+	log.Println("=====================================")
 	return diags
 }
 
