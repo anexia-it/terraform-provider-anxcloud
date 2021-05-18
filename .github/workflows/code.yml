@@ -14,11 +14,11 @@ env:
 jobs:
   go-lint:
     runs-on: ubuntu-latest
-    container: golang:1.14-stretch
+    container: golang:1.16-stretch
     steps:
       - uses: actions/checkout@v2
       - name: run linters
         run: |
-          go install github.com/golangci/golangci-lint/cmd/golangci-lint
+          go get github.com/golangci/golangci-lint/cmd/golangci-lint
           golangci-lint run --config .golangci.yml
           make fmtcheck
