@@ -22,7 +22,7 @@ jobs:
         args: 'docs'
   terraform-fmt:
     runs-on: ubuntu-latest
-    container: golang:1.14-stretch
+    container: golang:1.16-stretch
     steps:
     - uses: actions/checkout@v2
     - run: |
@@ -30,7 +30,7 @@ jobs:
         terrafmt diff docs/ --check --pattern '*.md'
   misspell:
     runs-on: ubuntu-latest
-    container: golang:1.14-stretch
+    container: golang:1.16-stretch
     steps:
     - uses: actions/checkout@v2
     - run: |
