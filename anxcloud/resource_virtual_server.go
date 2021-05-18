@@ -3,6 +3,7 @@ package anxcloud
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/go-multierror"
 	"log"
 	"time"
 
@@ -93,7 +94,7 @@ func resourceVirtualServer() *schema.Resource {
 
 						for j, ip := range newNet.IPs {
 							// skip additional IPs
-							if j >= len(oldNets[i].IPs)  || ip != oldNets[i].IPs[j] {
+							if j >= len(oldNets[i].IPs) || ip != oldNets[i].IPs[j] {
 								// TODO check if new IP is in the VM info
 								if _, ipExpected := vmIPMap[ip]; ipExpected {
 									continue
@@ -293,6 +294,32 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		return nil
 	}
 
+	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		//networks = make([]vm.Network, 0, len(info.Network))
+
+		info, infoErr := vsphereAPI.Info().Get(ctx, d.Id())
+		if infoErr != nil {
+			if err := handleNotFoundError(infoErr); err != nil {
+				return resource.NonRetryableError(fmt.Errorf("unable to get vm with id '%s': %w", d.Id(), err))
+			}
+			d.SetId("")
+			return nil
+		}
+		var nicErr error
+		for _, nic := range info.Network {
+			if len(nic.IPv4) == 0 && len(nic.IPv6) == 0 {
+				nicErr = multierror.Append(nicErr, fmt.Errorf("missing IPs for NIC"))
+			}
+		}
+		if nicErr != nil {
+			return resource.RetryableError(nicErr)
+		}
+		return nil
+	})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	nicTypes, err := nicAPI.List(ctx)
 	if err != nil {
 		return diag.FromErr(err)
@@ -340,9 +367,9 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 
 	specNetworks := expandVirtualServerNetworks(d.Get("network").([]interface{}))
 	//networks := specNetworks
-	//networks := make([]vm.Network, 0, len(info.Network))
+	networks := make([]vm.Network, 0, len(info.Network))
 	//log.Println("Spec Networks", specNetworks)
-	for _, net := range info.Network {
+	for i, net := range info.Network {
 	//	log.Println("looping VM network: ", i, net)
 		if len(nicTypes) < net.NIC {
 			diags = append(diags, diag.Diagnostic{
@@ -352,44 +379,44 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 			})
 			continue
 		}
-	//
-	//	log.Println("VM networks: ", net)
-	//	if len(specNetworks) > i {
-	//		log.Println("TF networks: ", specNetworks[i])
-	//		expectedIPMap := make(map[string]struct{}, len(specNetworks[i].IPs))
-	//		for _, ip := range specNetworks[i].IPs {
-	//			expectedIPMap[ip] = struct{}{}
-	//		}
-	//
-	//		network := vm.Network{
-	//			NICType: nicTypes[net.NIC-1],
-	//			VLAN:    net.VLAN,
-	//		}
-	//
-	//		for _, ipv4 := range net.IPv4 {
-	//			if _, ok := expectedIPMap[ipv4]; ok {
-	//				log.Println("Adding: ", ipv4)
-	//				network.IPs = append(network.IPs, ipv4)
-	//				delete(expectedIPMap, ipv4)
-	//			}
-	//		}
-	//
-	//		for _, ipv6 := range net.IPv6 {
-	//			if _, ok := expectedIPMap[ipv6]; ok {
-	//				log.Println("Adding: ", ipv6)
-	//				network.IPs = append(network.IPs, ipv6)
-	//				delete(expectedIPMap, ipv6)
-	//			}
-	//		}
-	//
-	//		log.Println("remaining expectd networks: ", expectedIPMap)
-	//		for ip := range expectedIPMap {
-	//			network.IPs = append(network.IPs, ip)
-	//		}
-	//		log.Println("updated network[i]: ", network.IPs)
-	//
-	//		networks = append(networks, network)
-	//	}
+
+		log.Println("VM networks: ", net)
+		if len(specNetworks) > i {
+			log.Println("TF networks: ", specNetworks[i])
+			expectedIPMap := make(map[string]struct{}, len(specNetworks[i].IPs))
+			for _, ip := range specNetworks[i].IPs {
+				expectedIPMap[ip] = struct{}{}
+			}
+
+			network := vm.Network{
+				NICType: nicTypes[net.NIC-1],
+				VLAN:    net.VLAN,
+			}
+
+			for _, ipv4 := range net.IPv4 {
+				if _, ok := expectedIPMap[ipv4]; ok {
+					log.Println("Adding: ", ipv4)
+					network.IPs = append(network.IPs, ipv4)
+					delete(expectedIPMap, ipv4)
+				}
+			}
+
+			for _, ipv6 := range net.IPv6 {
+				if _, ok := expectedIPMap[ipv6]; ok {
+					log.Println("Adding: ", ipv6)
+					network.IPs = append(network.IPs, ipv6)
+					delete(expectedIPMap, ipv6)
+				}
+			}
+
+			log.Println("remaining expectd networks: ", expectedIPMap)
+			for ip := range expectedIPMap {
+				network.IPs = append(network.IPs, ip)
+			}
+			log.Println("updated network[i]: ", network.IPs)
+
+			networks = append(networks, network)
+		}
 	}
 
 	flattenedNetworks := flattenVirtualServerNetwork(specNetworks)
