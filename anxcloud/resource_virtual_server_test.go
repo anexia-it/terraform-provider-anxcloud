@@ -193,8 +193,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 	t.Run("MultiDiskTemplateChange", func(t *testing.T) {
 		changeDiskDef := vmDef
 		changeDiskDef.Hostname = "acc-test-" + shortuuid.New()
-		changeDiskDef.TemplateID = "44eeae8b-fc8d-4e0f-a4ad-c16db54976a3"
-
+		changeDiskDef.TemplateID = "659b35b5-0060-44de-9f9e-a069ec5f1bca"
 		templateDisks := []vm.Disk{
 			{
 				Type:    "ENT6",
