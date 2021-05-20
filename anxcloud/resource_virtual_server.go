@@ -42,7 +42,6 @@ func resourceVirtualServer() *schema.Resource {
 		},
 		Schema: schemaVirtualServer(),
 		CustomizeDiff: customdiff.All(
-			customdiff.ValidateChange(),
 			customdiff.ForceNewIf("network", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				old, newNetworks := d.GetChange("network")
 				oldNets := expandVirtualServerNetworks(old.([]interface{}))
@@ -291,8 +290,6 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 	}
 
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		//networks = make([]vm.Network, 0, len(info.Network))
-
 		info, infoErr := vsphereAPI.Info().Get(ctx, d.Id())
 		if infoErr != nil {
 			if err := handleNotFoundError(infoErr); err != nil {
