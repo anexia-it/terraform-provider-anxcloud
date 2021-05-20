@@ -362,11 +362,8 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 	}
 
 	specNetworks := expandVirtualServerNetworks(d.Get("network").([]interface{}))
-	//networks := specNetworks
 	networks := make([]vm.Network, 0, len(info.Network))
-	//log.Println("Spec Networks", specNetworks)
 	for i, net := range info.Network {
-		//	log.Println("looping VM network: ", i, net)
 		if len(nicTypes) < net.NIC {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
