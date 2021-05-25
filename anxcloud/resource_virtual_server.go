@@ -3,6 +3,7 @@ package anxcloud
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/go-multierror"
 	"log"
 	"time"
 
@@ -42,43 +43,58 @@ func resourceVirtualServer() *schema.Resource {
 		Schema: schemaVirtualServer(),
 		CustomizeDiff: customdiff.All(
 			customdiff.ForceNewIf("network", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
-				old, new := d.GetChange("network")
+				old, newNetworks := d.GetChange("network")
 				oldNets := expandVirtualServerNetworks(old.([]interface{}))
-				newNets := expandVirtualServerNetworks(new.([]interface{}))
+				newNets := expandVirtualServerNetworks(newNetworks.([]interface{}))
 
 				if len(oldNets) > len(newNets) {
 					// some network has been deleted
 					return true
 				}
 
-				for i, n := range newNets {
+				// Get the IPs which are associated with the VM from info.network key
+				vmInfoState := d.Get("info").([]interface{})
+				infoObject := expandVirtualServerInfo(vmInfoState)
+				vmIPMap := make(map[string]struct{})
+				for _, vmNet := range infoObject.Network {
+					for _, ip := range append(vmNet.IPv4, vmNet.IPv6...) {
+						vmIPMap[ip] = struct{}{}
+					}
+				}
+
+				for i, newNet := range newNets {
 					if i+1 > len(oldNets) {
 						// new networks were added
 						break
 					}
 
-					if n.VLAN != oldNets[i].VLAN {
+					if newNet.VLAN != oldNets[i].VLAN {
 						key := fmt.Sprintf("network.%d.vlan_id", i)
 						if err := d.ForceNew(key); err != nil {
 							log.Fatalf("[ERROR] unable to force new '%s': %v", key, err)
 						}
 					}
 
-					if n.NICType != oldNets[i].NICType {
+					if newNet.NICType != oldNets[i].NICType {
 						key := fmt.Sprintf("network.%d.nic_type", i)
 						if err := d.ForceNew(key); err != nil {
 							log.Fatalf("[ERROR] unable to force new '%s': %v", key, err)
 						}
 					}
 
-					if len(n.IPs) != len(oldNets[i].IPs) {
+					if len(newNet.IPs) < len(oldNets[i].IPs) {
+						// IPs are missing
 						key := fmt.Sprintf("network.%d.ips", i)
 						if err := d.ForceNew(key); err != nil {
 							log.Fatalf("[ERROR] unable to force new '%s': %v", key, err)
 						}
 					} else {
-						for j, ip := range n.IPs {
-							if ip != oldNets[i].IPs[j] {
+						for j, ip := range newNet.IPs {
+							if j >= len(oldNets[i].IPs) || ip != oldNets[i].IPs[j] {
+								if _, ipExpected := vmIPMap[ip]; ipExpected {
+									continue
+								}
+
 								key := fmt.Sprintf("network.%d.ips", i)
 								if err := d.ForceNew(key); err != nil {
 									log.Fatalf("[ERROR] unable to force new '%s': %v", key, err)
@@ -247,7 +263,6 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		if read := resourceVirtualServerRead(ctx, d, m); read.HasError() {
 			return read
 		}
-
 		initialDisks := expandVirtualServerDisks(d.Get("disk").([]interface{}))
 		if update := updateVirtualServerDisk(ctx, c, d.Id(), disks, initialDisks); update != nil {
 			return update
@@ -272,6 +287,30 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		}
 		d.SetId("")
 		return nil
+	}
+
+	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		info, infoErr := vsphereAPI.Info().Get(ctx, d.Id())
+		if infoErr != nil {
+			if err := handleNotFoundError(infoErr); err != nil {
+				return resource.NonRetryableError(fmt.Errorf("unable to get vm with id '%s': %w", d.Id(), err))
+			}
+			d.SetId("")
+			return nil
+		}
+		var nicErr error
+		for _, nic := range info.Network {
+			if len(nic.IPv4) == 0 && len(nic.IPv6) == 0 {
+				nicErr = multierror.Append(nicErr, fmt.Errorf("missing IPs for NIC"))
+			}
+		}
+		if nicErr != nil {
+			return resource.RetryableError(nicErr)
+		}
+		return nil
+	})
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	nicTypes, err := nicAPI.List(ctx)
@@ -331,19 +370,37 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 			continue
 		}
 
-		network := vm.Network{
-			NICType: nicTypes[net.NIC-1],
-			VLAN:    net.VLAN,
-		}
+		if len(specNetworks) > i {
+			expectedIPMap := make(map[string]struct{}, len(specNetworks[i].IPs))
+			for _, ip := range specNetworks[i].IPs {
+				expectedIPMap[ip] = struct{}{}
+			}
 
-		// in spec it's not required to set an IP address
-		// however when it's set we have to reflect that in the state
-		if i+1 < len(specNetworks) && len(specNetworks[i].IPs) > 0 {
-			fmt.Println("add IPs to network")
-			network.IPs = append(net.IPv4, net.IPv6...)
-		}
+			network := vm.Network{
+				NICType: nicTypes[net.NIC-1],
+				VLAN:    net.VLAN,
+			}
 
-		networks = append(networks, network)
+			for _, ipv4 := range net.IPv4 {
+				if _, ok := expectedIPMap[ipv4]; ok {
+					network.IPs = append(network.IPs, ipv4)
+					delete(expectedIPMap, ipv4)
+				}
+			}
+
+			for _, ipv6 := range net.IPv6 {
+				if _, ok := expectedIPMap[ipv6]; ok {
+					network.IPs = append(network.IPs, ipv6)
+					delete(expectedIPMap, ipv6)
+				}
+			}
+
+			for ip := range expectedIPMap {
+				network.IPs = append(network.IPs, ip)
+			}
+
+			networks = append(networks, network)
+		}
 	}
 
 	flattenedNetworks := flattenVirtualServerNetwork(networks)
