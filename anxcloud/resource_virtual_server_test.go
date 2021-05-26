@@ -91,7 +91,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 				ResourceName:            resourcePath,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"cpu_performance_type", "critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template_type"},
+				ImportStateVerifyIgnore: []string{"cpu_performance_type", "critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template_type", "network"},
 			},
 		},
 	})
