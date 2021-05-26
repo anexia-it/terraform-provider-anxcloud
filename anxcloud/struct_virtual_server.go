@@ -138,11 +138,11 @@ func expandVirtualServerInfo(p []interface{}) info.Info {
 				disk.DiskID = v.(int)
 			}
 			if v, ok := d["disk_gb"]; ok {
-				switch v.(type) {
+				switch t := v.(type) {
 				case int:
-					disk.DiskGB = float64(v.(int))
+					disk.DiskGB = float64(t)
 				case float64:
-					disk.DiskGB = v.(float64)
+					disk.DiskGB = t
 				}
 			}
 			if v, ok := d["disk_type"]; ok {

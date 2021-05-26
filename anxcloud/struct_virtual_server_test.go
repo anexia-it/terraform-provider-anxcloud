@@ -220,7 +220,7 @@ func TestExpanderVirtualServerInfo(t *testing.T) {
 					"disks_number": 1,
 					"disks_info": []interface{}{
 						map[string]interface{}{
-							"disk_gb":        90.00,
+							"disk_gb": 90.00,
 						},
 					},
 					"version_tools":      "guestToolsUnmanaged",
@@ -231,7 +231,7 @@ func TestExpanderVirtualServerInfo(t *testing.T) {
 				Disks: 1,
 				DiskInfo: []info.DiskInfo{
 					{
-						DiskGB:       90.00,
+						DiskGB: 90.00,
 					},
 				},
 				VersionTools:     "guestToolsUnmanaged",
@@ -244,7 +244,7 @@ func TestExpanderVirtualServerInfo(t *testing.T) {
 					"disks_number": 1,
 					"disks_info": []interface{}{
 						map[string]interface{}{
-							"disk_gb":        90,
+							"disk_gb": 90,
 						},
 					},
 					"version_tools":      "guestToolsUnmanaged",
@@ -255,7 +255,7 @@ func TestExpanderVirtualServerInfo(t *testing.T) {
 				Disks: 1,
 				DiskInfo: []info.DiskInfo{
 					{
-						DiskGB:       90.00,
+						DiskGB: 90.00,
 					},
 				},
 				VersionTools:     "guestToolsUnmanaged",
