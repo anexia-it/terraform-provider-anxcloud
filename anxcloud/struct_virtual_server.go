@@ -36,12 +36,12 @@ func expandVirtualServerNetworks(p []interface{}) []vm.Network {
 	return networks
 }
 
-func expandVirtualServerDisks(p []interface{}) []vm.Disk {
-	disks := make([]vm.Disk, len(p))
+func expandVirtualServerDisks(p []interface{}) []Disk {
+	disks := make([]Disk, len(p))
 
 	for i, elem := range p {
 		in := elem.(map[string]interface{})
-		disk := vm.Disk{}
+		disk := Disk{Disk: &vm.Disk{}}
 
 		if v, ok := in["disk_type"]; ok {
 			disk.Type = v.(string)
@@ -51,6 +51,9 @@ func expandVirtualServerDisks(p []interface{}) []vm.Disk {
 		}
 		if v, ok := in["disk_id"]; ok {
 			disk.ID = v.(int)
+		}
+		if v, ok := in["disk_exact"]; ok {
+			disk.ExactDiskSize = v.(float64)
 		}
 
 		disks[i] = disk
@@ -135,7 +138,12 @@ func expandVirtualServerInfo(p []interface{}) info.Info {
 				disk.DiskID = v.(int)
 			}
 			if v, ok := d["disk_gb"]; ok {
-				disk.DiskGB = v.(int)
+				switch t := v.(type) {
+				case int:
+					disk.DiskGB = float64(t)
+				case float64:
+					disk.DiskGB = t
+				}
 			}
 			if v, ok := d["disk_type"]; ok {
 				disk.DiskType = v.(string)
@@ -268,16 +276,21 @@ func flattenVirtualServerInfo(in *info.Info) []interface{} {
 	return []interface{}{att}
 }
 
-func flattenVirtualServerDisks(in []vm.Disk) []interface{} {
+func flattenVirtualServerDisks(in []Disk) []interface{} {
 	att := make([]interface{}, len(in))
 
 	for i, d := range in {
-		net := map[string]interface{}{}
-		net["disk_type"] = d.Type
-		net["disk_gb"] = d.SizeGBs
-		net["disk_id"] = d.ID
-		att[i] = net
+		disk := map[string]interface{}{}
+		disk["disk_type"] = d.Type
+		disk["disk_gb"] = d.SizeGBs
+		disk["disk_id"] = d.ID
+		disk["disk_exact"] = d.ExactDiskSize
+		att[i] = disk
 	}
 
 	return att
+}
+
+func roundDiskSize(size float64) int {
+	return int(size + 0.5)
 }

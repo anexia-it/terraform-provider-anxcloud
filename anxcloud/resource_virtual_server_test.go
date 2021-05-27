@@ -350,7 +350,8 @@ func testAccCheckAnxCloudVirtualServerExists(n string, def *vm.Definition) resou
 		if len(info.DiskInfo) != 1 {
 			return fmt.Errorf("unspported number of attached disks, got %d - expected 1", len(info.DiskInfo))
 		}
-		if infoDiskGB := info.DiskInfo[0].DiskGB; infoDiskGB != def.Disk {
+		infoDiskGB := roundDiskSize(info.DiskInfo[0].DiskGB)
+		if infoDiskGB != def.Disk {
 			return fmt.Errorf("virtual machine disk size does not match, got %d - expected %d", infoDiskGB, def.Disk)
 		}
 
@@ -391,11 +392,11 @@ func testAccCheckAnxCloudVirtualServerDisks(n string, expectedDisks []vm.Disk) r
 			return fmt.Errorf("virtual machine disk count do not match, got %d - expected %d", len(info.DiskInfo), len(expectedDisks))
 		}
 
-		for i, d := range info.DiskInfo {
-			if d.DiskType != expectedDisks[i].Type {
-				return fmt.Errorf("virtual machine disk with ID %d has incorrect type, got %s - expected %s", d.DiskID, d.DiskType, expectedDisks[i].Type)
-			} else if d.DiskGB != expectedDisks[i].SizeGBs {
-				return fmt.Errorf("virtual machine disk with ID %d has incorrect size, got %d - expected %d", d.DiskID, d.DiskGB, expectedDisks[i].SizeGBs)
+		for i, disk := range info.DiskInfo {
+			if disk.DiskType != expectedDisks[i].Type {
+				return fmt.Errorf("virtual machine disk with ID %d has incorrect type, got %s - expected %s", disk.DiskID, disk.DiskType, expectedDisks[i].Type)
+			} else if roundDiskSize(disk.DiskGB) != expectedDisks[i].SizeGBs {
+				return fmt.Errorf("virtual machine disk with ID %d has incorrect size, got %f - expected %d", disk.DiskID, disk.DiskGB, expectedDisks[i].SizeGBs)
 			}
 		}
 

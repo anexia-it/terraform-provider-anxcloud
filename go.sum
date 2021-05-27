@@ -49,8 +49,8 @@ github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 h1:uSoVVbwJiQipAclBb
 github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7/go.mod h1:6zEj6s6u/ghQa61ZWa/C2Aw3RkjiTBOix7dkqa1VLIs=
 github.com/andybalholm/crlf v0.0.0-20171020200849-670099aa064f h1:NNJE6p4LchkmNfNskDUaSbrwxZzr7t2/lj2aS+q4oF0=
 github.com/andybalholm/crlf v0.0.0-20171020200849-670099aa064f/go.mod h1:k8feO4+kXDxro6ErPXBRTJ/ro2mf0SsFG8s7doP9kJE=
-github.com/anexia-it/go-anxcloud v0.3.18 h1:Gcd+6rGe5/eNFAIl4SmMBNXFJJXEVv82dSdSqvzAeOM=
-github.com/anexia-it/go-anxcloud v0.3.18/go.mod h1:g78/+Db9XeiVS+aKqJaq9j7XfxhyXWM8PHY5JRbK9RY=
+github.com/anexia-it/go-anxcloud v0.3.20 h1:SFS7SB8L8oFGAC4TXjNTMKqQGtY7AmwNPd56wE/3AzY=
+github.com/anexia-it/go-anxcloud v0.3.20/go.mod h1:g78/+Db9XeiVS+aKqJaq9j7XfxhyXWM8PHY5JRbK9RY=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 h1:kFOfPq6dUM1hTo4JG6LR5AXSUEsOjtdm0kw0FtQtMJA=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239/go.mod h1:2FmKhYUyUczH0OGQWaF5ceTx0UBShxjsH6f8oGKYe2c=
 github.com/apparentlymart/go-cidr v1.0.1 h1:NmIwLZ/KdsjIUlhf+/Np40atNXm/+lZ5txfTJ/SpF+U=
