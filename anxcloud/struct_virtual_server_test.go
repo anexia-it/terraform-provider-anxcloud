@@ -204,10 +204,58 @@ func TestExpanderVirtualServerInfo(t *testing.T) {
 						StorageType:  "SSD",
 						BusType:      "SCSI",
 						BusTypeLabel: "SCSI(0:0) Hard disk 1",
-						DiskGB:       90,
+						DiskGB:       90.00,
 						DiskID:       2000,
 						IOPS:         150000,
 						Latency:      7,
+					},
+				},
+				VersionTools:     "guestToolsUnmanaged",
+				GuestToolsStatus: "Active",
+			},
+		},
+		{
+			[]interface{}{
+				map[string]interface{}{
+					"disks_number": 1,
+					"disks_info": []interface{}{
+						map[string]interface{}{
+							"disk_gb": 90.00,
+						},
+					},
+					"version_tools":      "guestToolsUnmanaged",
+					"guest_tools_status": "Active",
+				},
+			},
+			info.Info{
+				Disks: 1,
+				DiskInfo: []info.DiskInfo{
+					{
+						DiskGB: 90.00,
+					},
+				},
+				VersionTools:     "guestToolsUnmanaged",
+				GuestToolsStatus: "Active",
+			},
+		},
+		{
+			[]interface{}{
+				map[string]interface{}{
+					"disks_number": 1,
+					"disks_info": []interface{}{
+						map[string]interface{}{
+							"disk_gb": 90,
+						},
+					},
+					"version_tools":      "guestToolsUnmanaged",
+					"guest_tools_status": "Active",
+				},
+			},
+			info.Info{
+				Disks: 1,
+				DiskInfo: []info.DiskInfo{
+					{
+						DiskGB: 90.00,
 					},
 				},
 				VersionTools:     "guestToolsUnmanaged",
