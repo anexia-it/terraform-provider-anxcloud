@@ -25,21 +25,21 @@ func TestAccAnxCloudVLAN(t *testing.T) {
 		CheckDestroy:      testAccCheckAnxCloudVLANDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAnxCloudVLAN(resourceName, locationID, customerDescription),
+				Config: testAccCheckAnxCloudVLAN(resourceName, locationID, customerDescription, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
 					resource.TestCheckResourceAttr(resourcePath, "vm_provisioning", "false"),
 					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescription),
-					testAccCheckAnxCloudVLANExists(resourcePath, customerDescription),
+					testAccCheckAnxCloudVLANExists(resourcePath, customerDescription, false),
 				),
 			},
 			{
-				Config: testAccCheckAnxCloudVLAN(resourceName, locationID, customerDescriptionUpdate),
+				Config: testAccCheckAnxCloudVLAN(resourceName, locationID, customerDescriptionUpdate, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
-					resource.TestCheckResourceAttr(resourcePath, "vm_provisioning", "false"),
 					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescriptionUpdate),
-					testAccCheckAnxCloudVLANExists(resourcePath, customerDescriptionUpdate),
+					testAccCheckAnxCloudVLANExists(resourcePath, customerDescriptionUpdate, true),
+					resource.TestCheckResourceAttr(resourcePath, "vm_provisioning", "true"),
 				),
 			},
 			{
@@ -79,17 +79,17 @@ func testAccCheckAnxCloudVLANDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAnxCloudVLAN(resourceName, locationID, customerDescription string) string {
+func testAccCheckAnxCloudVLAN(resourceName, locationID, customerDescription string, vmProvisioning bool) string {
 	return fmt.Sprintf(`
 	resource "anxcloud_vlan" "%s" {
 		location_id   = "%s"
-		vm_provisioning = false
+		vm_provisioning = %t
 		description_customer = "%s"
 	}
-	`, resourceName, locationID, customerDescription)
+	`, resourceName, locationID, vmProvisioning, customerDescription)
 }
 
-func testAccCheckAnxCloudVLANExists(n string, expectedCustomerDescription string) resource.TestCheckFunc {
+func testAccCheckAnxCloudVLANExists(n string, expectedCustomerDescription string, expectedVMProvisioning bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		c := testAccProvider.Meta().(client.Client)
@@ -115,6 +115,9 @@ func testAccCheckAnxCloudVLANExists(n string, expectedCustomerDescription string
 
 		if i.CustomerDescription != expectedCustomerDescription {
 			return fmt.Errorf("customer description is different than expected '%s': '%s'", i.CustomerDescription, expectedCustomerDescription)
+		}
+		if i.VMProvisioning != expectedVMProvisioning {
+			return fmt.Errorf("vm_provisioning is different than expected '%t': '%t'", i.VMProvisioning, expectedVMProvisioning)
 		}
 
 		return nil

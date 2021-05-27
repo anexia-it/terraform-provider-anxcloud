@@ -116,16 +116,38 @@ func resourceVLANRead(ctx context.Context, d *schema.ResourceData, m interface{}
 
 func resourceVLANUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(client.Client)
-	v := vlan.NewAPI(c)
+	vlanAPI := vlan.NewAPI(c)
 
-	if !d.HasChange("description_customer") {
+	if !d.HasChange("description_customer") && !d.HasChange("vm_provisioning") {
 		return nil
 	}
 
-	def := vlan.UpdateDefinition{
-		CustomerDescription: d.Get("description_customer").(string),
+	def := vlan.UpdateDefinition{}
+	if d.HasChange("description_customer") {
+		def.CustomerDescription = d.Get("description_customer").(string)
 	}
-	if err := v.Update(ctx, d.Id(), def); err != nil {
+	if d.HasChange("vm_provisioning") {
+		def.VMProvisioning = d.Get("vm_provisioning").(bool)
+	}
+	if err := vlanAPI.Update(ctx, d.Id(), def); err != nil {
+		return diag.FromErr(err)
+	}
+
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+		vlanInfo, err := vlanAPI.Get(ctx, d.Id())
+		if err != nil {
+			if err := handleNotFoundError(err); err != nil {
+				return resource.NonRetryableError(fmt.Errorf("unable to get vlan with id '%s': %w", d.Id(), err))
+			}
+			d.SetId("")
+			return nil
+		}
+		if vlanInfo.VMProvisioning == d.Get("vm_provisioning").(bool) && vlanInfo.CustomerDescription == d.Get("description_customer").(string) {
+			return nil
+		}
+		return resource.RetryableError(fmt.Errorf("waiting for vlan with id '%s' to be updated", d.Id()))
+	})
+	if err != nil {
 		return diag.FromErr(err)
 	}
 
