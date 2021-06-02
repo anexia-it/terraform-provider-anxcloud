@@ -1,3 +1,18 @@
+## 0.3.1
+ENHANCEMENTS
+
+* resource/virtual_server - network IP changes require resource recreation ([#45](https://github.com/anexia-it/terraform-provider-anxcloud/pull/45))
+* resource/virtual_server - fixed bug with disk sizing ([#46](https://github.com/anexia-it/terraform-provider-anxcloud/pull/46))
+* resource/vlan - Allow `vm_provisioning` to be updated inplace ([#48](https://github.com/anexia-it/terraform-provider-anxcloud/pull/48))
+* resource/virtual_server - andle incomplete network informations to avoid drift ([#51](https://github.com/anexia-it/terraform-provider-anxcloud/pull/51))
+
+
+* Upgraded to golang-1.16 build pipeline ([#49](https://github.com/anexia-it/terraform-provider-anxcloud/pull/49))
+
+
+DOCUMENTATION
+* resource/virtual_server - updated example and `disk` attribute documentation ([#47](https://github.com/anexia-it/terraform-provider-anxcloud/pull/47))
+
 ## 0.3.0
 FEATURES
 
