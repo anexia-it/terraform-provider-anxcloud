@@ -68,7 +68,7 @@ resource "anxcloud_virtual_server" "example" {
 - `dns` - (Optional) DNS configuration. Maximum items 4. Defaults to template settings.
 - `password` (Required) Plaintext password. Example: ('!anx123mySuperStrongPassword123anx!', 'go3ju0la1ro3', …). USE IT AT YOUR OWN RISK! (or SSH key instead).
 - `ssh_key` - (Required) Public key (instead of password, only for Linux systems). Recommended over providing a plaintext password.
-- `script` - (Optional) Script to be executed after provisioning. Should be base64 encoded. Consider the corresponding shebang at the beginning of your script. If you want to use PowerShell, the first line should be: #ps1_sysnative.
+- `script` - (Optional) Script to be executed after provisioning. Consider the corresponding shebang at the beginning of your script. If you want to use PowerShell, the first line should be: #ps1_sysnative.
 - `boot_delay` - (Optional) Boot delay in seconds. Example: (0, 1, …).
 - `enter_bios_setup` - (Optional) Start the VM into BIOS setup on next boot. Defaults to false.
 - `force_restart_if_needed` - (Optional) Certain operations may only be performed in powered off stat. Such as: shrinking memory, shrinking/adding cpu, removing disk, scale a disk beyond 2 GB. Passing this value as true will always execute a power offand reboot request after completing all other operations. Without this flag set to true scaling operations requiring a reboot will fail. Defaults to false.
