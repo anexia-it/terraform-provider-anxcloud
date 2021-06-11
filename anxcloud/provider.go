@@ -3,6 +3,8 @@ package anxcloud
 import (
 	"context"
 	"errors"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
+	"log"
 	"net/http"
 
 	"github.com/anexia-it/go-anxcloud/pkg/client"
@@ -48,8 +50,20 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	var diags diag.Diagnostics
 
 	token := d.Get("token").(string)
-	tokenOpt := client.TokenFromString(token)
-	c, err := client.New(tokenOpt)
+	opts := []client.Option{
+		client.TokenFromString(token),
+	}
+
+	// TODO make this somehow usage of function type implementing io.Writer interface
+	// and call client.LogWriter(anxLogger.WithDebugPrefix()) => returns a function implementing io.Writer or so
+	// dont set the prefix globally.
+	// the Debug, info, error funcs can also return this kind of function or so....
+	anxLogger := NewAnxLogger(debugPrefix, log.Writer())
+	if logging.LogLevel() != "" {
+		logOpt := client.LogWriter(anxLogger)
+		opts = append(opts, logOpt)
+	}
+	c, err := client.New(opts...)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
