@@ -54,13 +54,11 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		client.TokenFromString(token),
 	}
 
-	// TODO make this somehow usage of function type implementing io.Writer interface
-	// and call client.LogWriter(anxLogger.WithDebugPrefix()) => returns a function implementing io.Writer or so
-	// dont set the prefix globally.
-	// the Debug, info, error funcs can also return this kind of function or so....
-	anxLogger := NewAnxLogger(debugPrefix, log.Writer())
+	debugLogWriter := debugWriter{
+		writer: log.Writer(),
+	}
 	if logging.LogLevel() != "" {
-		logOpt := client.LogWriter(anxLogger)
+		logOpt := client.LogWriter(debugLogWriter)
 		opts = append(opts, logOpt)
 	}
 	c, err := client.New(opts...)

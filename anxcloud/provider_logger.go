@@ -7,37 +7,28 @@ import (
 )
 
 const (
-	debugPrefix = "[DEBUG]"
+	debugPrefix = "[DEBUG] "
 	infoPrefix  = "[INFO]"
 	errorPrefix = "[ERROR]"
 )
 
 func Debug(i ...interface{}) {
-	fmt.Fprint(log.Writer(), debugPrefix, i)
+	fmt.Fprint(log.Writer(), append([]interface{}{debugPrefix}, i...)...)
 }
 
 func Info(i ...interface{}) {
-	fmt.Fprint(log.Writer(), infoPrefix, i)
+	fmt.Fprint(log.Writer(), append([]interface{}{infoPrefix}, i...)...)
 }
 
 func Error(i ...interface{}) {
-	fmt.Fprint(log.Writer(), errorPrefix, i)
+	fmt.Fprint(log.Writer(), append([]interface{}{errorPrefix}, i...)...)
 }
 
-
-type AnxLogger struct {
-	prefix string
+type debugWriter struct {
 	writer io.Writer
 }
 
-func (a AnxLogger) Write(p []byte) (int, error) {
-	msg := append([]byte(a.prefix), p...)
+func (a debugWriter) Write(p []byte) (int, error) {
+	msg := append([]byte("[DEBUG]"), p...)
 	return a.writer.Write(msg)
-}
-
-func NewAnxLogger(prefix string, writer io.Writer) AnxLogger {
-	return AnxLogger{
-		prefix: prefix,
-		writer: writer,
-	}
 }
