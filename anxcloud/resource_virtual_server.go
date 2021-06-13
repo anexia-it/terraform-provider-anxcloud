@@ -281,7 +281,6 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 	vsphereAPI := vsphere.NewAPI(c)
 	nicAPI := nictype.NewAPI(c)
 
-	log.Println("[INFO] Retrieving virtual server info")
 	info, err := vsphereAPI.Info().Get(ctx, d.Id())
 	if err != nil {
 		if err := handleNotFoundError(err); err != nil {
@@ -614,7 +613,7 @@ func updateVirtualServerDisk(ctx context.Context, c client.Client, id string, ex
 		expectedDisk := expected[diskIndex]
 
 		if actualDisk.ExactDiskSize > float64(expectedDisk.SizeGBs) {
-			log.Println(fmt.Sprintf("Skipping disk %d because expected disk size to small! Expected: %d  -  got: %f", actualDisk.ID, expectedDisk.SizeGBs, actualDisk.ExactDiskSize))
+			Error(fmt.Sprintf("Skipping disk %d because expected disk size to small! Expected: %d  -  got: %f", actualDisk.ID, expectedDisk.SizeGBs, actualDisk.ExactDiskSize))
 		}
 		if actualDisk.Type != expectedDisk.Type || actualDisk.ExactDiskSize < float64(expectedDisk.SizeGBs) {
 			changeDisks = append(changeDisks, *expectedDisk.Disk)
