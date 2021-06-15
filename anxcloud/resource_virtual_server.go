@@ -613,7 +613,7 @@ func updateVirtualServerDisk(ctx context.Context, c client.Client, id string, ex
 		expectedDisk := expected[diskIndex]
 
 		if actualDisk.ExactDiskSize > float64(expectedDisk.SizeGBs) {
-			Error(fmt.Sprintf("Skipping disk %d because expected disk size to small! Expected: %d  -  got: %f", actualDisk.ID, expectedDisk.SizeGBs, actualDisk.ExactDiskSize))
+			LogError("Skipping disk %d because expected disk size to small! Expected: %d  -  got: %f", actualDisk.ID, expectedDisk.SizeGBs, actualDisk.ExactDiskSize)
 		}
 		if actualDisk.Type != expectedDisk.Type || actualDisk.ExactDiskSize < float64(expectedDisk.SizeGBs) {
 			changeDisks = append(changeDisks, *expectedDisk.Disk)

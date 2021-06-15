@@ -7,28 +7,30 @@ import (
 )
 
 const (
-	debugPrefix = "[DEBUG] "
+	debugPrefix = "[DEBUG]"
 	infoPrefix  = "[INFO]"
 	errorPrefix = "[ERROR]"
 )
 
-func Debug(i ...interface{}) {
-	fmt.Fprint(log.Writer(), append([]interface{}{debugPrefix}, i...)...)
+func LogDebug(msg string, args ...interface{}) {
+	fmt.Fprintf(log.Writer(), debugPrefix+msg, args...)
 }
 
-func Info(i ...interface{}) {
-	fmt.Fprint(log.Writer(), append([]interface{}{infoPrefix}, i...)...)
+func LogInfo(msg string, args ...interface{}) {
+	fmt.Fprintf(log.Writer(), infoPrefix+msg, args...)
 }
 
-func Error(i ...interface{}) {
-	fmt.Fprint(log.Writer(), append([]interface{}{errorPrefix}, i...)...)
+func LogError(msg string, args ...interface{}) {
+	fmt.Fprintf(log.Writer(), errorPrefix+msg, args...)
 }
 
 type debugWriter struct {
 	writer io.Writer
 }
 
-func (a debugWriter) Write(p []byte) (int, error) {
-	msg := append([]byte("[DEBUG]"), p...)
-	return a.writer.Write(msg)
+func (w debugWriter) Write(p []byte) (int, error) {
+	LogDebug(string(p))
+	//msg := append([]byte("[DEBUG]"), p...)
+	//return a.writer.Write(msg)
+	return 0, nil
 }
