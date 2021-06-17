@@ -1,6 +1,6 @@
 module github.com/anexia-it/terraform-provider-anxcloud
 
-go 1.16
+go 1.15
 
 require (
 	github.com/anexia-it/go-anxcloud v0.3.21
