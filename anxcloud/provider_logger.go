@@ -30,7 +30,5 @@ type debugWriter struct {
 
 func (w debugWriter) Write(p []byte) (int, error) {
 	LogDebug(string(p))
-	//msg := append([]byte("[DEBUG]"), p...)
-	//return a.writer.Write(msg)
 	return 0, nil
 }
