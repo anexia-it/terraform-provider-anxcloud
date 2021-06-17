@@ -1,3 +1,8 @@
+## 0.3.2
+ENHANCEMENTS
+
+* provider: Configure client logging and Add logging helper functions
+
 ## 0.3.1
 ENHANCEMENTS
 
