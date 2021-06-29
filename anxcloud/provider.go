@@ -3,7 +3,6 @@ package anxcloud
 import (
 	"context"
 	"errors"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	"log"
 	"net/http"
 
@@ -50,17 +49,15 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	var diags diag.Diagnostics
 
 	token := d.Get("token").(string)
-	opts := []client.Option{
-		client.TokenFromString(token),
-	}
-
 	debugLogWriter := debugWriter{
 		writer: log.Writer(),
 	}
-	if logging.LogLevel() != "" {
-		logOpt := client.LogWriter(debugLogWriter)
-		opts = append(opts, logOpt)
+
+	opts := []client.Option{
+		client.TokenFromString(token),
+		client.LogWriter(debugLogWriter),
 	}
+
 	c, err := client.New(opts...)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
