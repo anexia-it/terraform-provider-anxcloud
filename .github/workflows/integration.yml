@@ -22,6 +22,9 @@ jobs:
   # Repo owner has commented /ok-to-test on a (fork-based) pull request
   integration-fork:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        terraform_version: [ "0.15.x" ]
     if:
       github.event_name == 'repository_dispatch' &&
       github.event.client_payload.slash_command.sha != '' &&
