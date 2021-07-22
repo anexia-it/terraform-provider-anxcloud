@@ -10,6 +10,9 @@ jobs:
   # Branch-based pull request
   integration-trusted:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        terraform_version: [ "0.15.x" ]
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - name: Branch based PR checkout
