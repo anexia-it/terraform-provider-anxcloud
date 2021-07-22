@@ -17,6 +17,7 @@ func TestAccAnxCloudIPAddress(t *testing.T) {
 
 	prefixID := "b015c18f84234885b8a7d0338db39e65"
 	ipAddress := "10.244.2.18"
+	role := "Default"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -24,7 +25,7 @@ func TestAccAnxCloudIPAddress(t *testing.T) {
 		CheckDestroy:      testAccAnxCloudIPAddressDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnxCloudIPAddress(resourceName, prefixID, ipAddress),
+				Config: testAccAnxCloudIPAddress(resourceName, prefixID, ipAddress, role),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "network_prefix_id", prefixID),
 				),
@@ -38,14 +39,43 @@ func TestAccAnxCloudIPAddress(t *testing.T) {
 	})
 }
 
-func testAccAnxCloudIPAddress(resourceName, prefixID, ipAddress string) string {
+func TestAccAnxCloudIPAddressReserved(t *testing.T) {
+	resourceName := "acc_test"
+	resourcePath := "anxcloud_ip_address." + resourceName
+
+	prefixID := "b015c18f84234885b8a7d0338db39e65"
+	ipAddress := "10.244.2.18"
+	role := "Reserved"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccAnxCloudIPAddressDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnxCloudIPAddress(resourceName, prefixID, ipAddress, role),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourcePath, "network_prefix_id", prefixID),
+					resource.TestCheckResourceAttr(resourcePath, "role", role),
+				),
+			},
+			{
+				ResourceName:      resourcePath,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAnxCloudIPAddress(resourceName, prefixID, ipAddress, role string) string {
 	return fmt.Sprintf(`
 	resource "anxcloud_ip_address" "%s" {
 		network_prefix_id   = "%s"
 		address = "%s"
-		role = "Default"
+		role = "%s"
 	}
-	`, resourceName, prefixID, ipAddress)
+	`, resourceName, prefixID, ipAddress, role)
 }
 
 func testAccAnxCloudIPAddressDestroy(s *terraform.State) error {

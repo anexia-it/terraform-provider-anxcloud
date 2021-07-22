@@ -14,6 +14,7 @@ import (
 
 const (
 	ipAddressStatusInactive = "Inactive"
+	ipAddressStatusActive   = "Active"
 	ipAddressStatusDeleted  = "Marked for deletion"
 )
 
@@ -59,7 +60,7 @@ func resourceIPAddressCreate(ctx context.Context, d *schema.ResourceData, m inte
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("unable to get ip address with '%s' id: %w", d.Id(), err))
 		}
-		if info.Status == ipAddressStatusInactive {
+		if info.Status == ipAddressStatusInactive || info.Status == ipAddressStatusActive {
 			return nil
 		}
 		return resource.RetryableError(fmt.Errorf("waiting for ip address with '%s' id to be ready", d.Id()))
