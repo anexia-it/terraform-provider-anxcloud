@@ -44,7 +44,7 @@ func TestAccAnxCloudIPAddressReserved(t *testing.T) {
 	resourcePath := "anxcloud_ip_address." + resourceName
 
 	prefixID := "b015c18f84234885b8a7d0338db39e65"
-	ipAddress := "10.244.2.18"
+	ipAddress := "10.244.2.19"
 	role := "Reserved"
 
 	resource.Test(t, resource.TestCase{
