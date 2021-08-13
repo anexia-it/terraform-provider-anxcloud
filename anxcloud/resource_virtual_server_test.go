@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/anexia-it/go-anxcloud/pkg/client"
@@ -52,6 +53,8 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 	vmDefDownscale := vmDefUpscale
 	vmDefDownscale.Memory = 2096
 
+	vmAddTag := vmDef
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
@@ -88,10 +91,17 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDef, "newTag"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmAddTag),
+					resource.TestCheckResourceAttr(resourcePath, "tags.0", "newTag"),
+				),
+			},
+			{
 				ResourceName:            resourcePath,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"cpu_performance_type", "critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template_type", "network"},
+				ImportStateVerifyIgnore: []string{"cpu_performance_type", "tags.#", "tags.0", "critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template_type", "network"},
 			},
 		},
 	})
@@ -262,7 +272,8 @@ func testAccCheckAnxCloudVirtualServerDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccConfigAnxCloudVirtualServer(resourceName string, def *vm.Definition) string {
+//nolint:unparam
+func testAccConfigAnxCloudVirtualServer(resourceName string, def *vm.Definition, tags ...string) string {
 	return fmt.Sprintf(`
 	resource "anxcloud_virtual_server" "%s" {
 		location_id          = "%s"
@@ -280,6 +291,9 @@ func testAccConfigAnxCloudVirtualServer(resourceName string, def *vm.Definition)
 		// generated disk string
 		%s
 
+		// generated tags
+		%s
+
 		force_restart_if_needed = true
 		critical_operation_confirmed = true
 	}
@@ -289,7 +303,7 @@ func testAccConfigAnxCloudVirtualServer(resourceName string, def *vm.Definition)
 				SizeGBs: def.Disk,
 				Type:    def.DiskType,
 			},
-		}))
+		}), generateTagsString(tags...))
 }
 
 func testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName string, def *vm.Definition, disks []vm.Disk) string {
@@ -424,4 +438,15 @@ func generateDisksSubResourceString(disks []vm.Disk) string {
 	}
 
 	return output
+}
+
+func generateTagsString(tags ...string) string {
+	if len(tags) == 0 {
+		return ""
+	}
+
+	for i, tag := range tags {
+		tags[i] = fmt.Sprintf("\"%s\",", tag)
+	}
+	return fmt.Sprintf("tags = [\n%s\n]", strings.Join(tags, "\n"))
 }
