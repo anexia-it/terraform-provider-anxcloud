@@ -91,7 +91,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDef, "newTag"),
+				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmAddTag, "newTag"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmAddTag),
 					resource.TestCheckResourceAttr(resourcePath, "tags.0", "newTag"),
