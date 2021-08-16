@@ -71,6 +71,13 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmAddTag, "newTag"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmAddTag),
+					resource.TestCheckResourceAttr(resourcePath, "tags.0", "newTag"),
+				),
+			},
+			{
 				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDefUpscale),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefUpscale),
@@ -88,13 +95,6 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 					resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefDownscale.TemplateID),
 					resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefDownscale.CPUs)),
 					resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefDownscale.Memory)),
-				),
-			},
-			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmAddTag, "newTag"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmAddTag),
-					resource.TestCheckResourceAttr(resourcePath, "tags.0", "newTag"),
 				),
 			},
 			{
