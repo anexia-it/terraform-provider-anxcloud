@@ -17,7 +17,7 @@ func main() {
 	flag.Parse()
 
 	if debugMode {
-		err := plugin.Debug(context.Background(), "hashicorp.com/anexia-it/anxcloud",
+		err := plugin.Debug(context.Background(), "registry.terraform.io/hashicorp/anxcloud",
 			&plugin.ServeOpts{
 				ProviderFunc: anxcloud.Provider,
 			})
