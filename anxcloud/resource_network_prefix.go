@@ -14,6 +14,7 @@ import (
 
 const (
 	prefixStatusActive  = "Active"
+	prefixStatusFailure = "Failed"
 	prefixStatusDeleted = "Marked for deletion"
 )
 
@@ -62,7 +63,7 @@ func resourceNetworkPrefixCreate(ctx context.Context, d *schema.ResourceData, m 
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("unable to get network prefix with '%s' id", d.Id()))
 		}
-		if pref.Status == prefixStatusActive {
+		if pref.Status == prefixStatusActive || pref.Status == prefixStatusFailure {
 			return nil
 		}
 		return resource.RetryableError(fmt.Errorf("waiting for network prefix with '%s' id to be: %s", d.Id(), prefixStatusActive))
