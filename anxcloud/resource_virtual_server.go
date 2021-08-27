@@ -517,8 +517,10 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 
-	if _, err = provisioningAPI.Progress().AwaitCompletion(ctx, response.Identifier); err != nil {
-		return diag.FromErr(err)
+	if response.Progress != 100 {
+		if _, err = provisioningAPI.Progress().AwaitCompletion(ctx, response.Identifier); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	delay := 10 * time.Second

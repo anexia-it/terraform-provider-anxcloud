@@ -1,3 +1,8 @@
+## 0.3.3
+ENHANCEMENTS
+
+* provider: Fix a bug where updating tags hangs until timeout
+
 ## 0.3.2
 ENHANCEMENTS
 
