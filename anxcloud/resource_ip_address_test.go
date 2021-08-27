@@ -15,7 +15,7 @@ func TestAccAnxCloudIPAddress(t *testing.T) {
 	resourceName := "acc_test"
 	resourcePath := "anxcloud_ip_address." + resourceName
 
-	prefixID := "b015c18f84234885b8a7d0338db39e65"
+	prefixID := "0d82d7fdbb804e7fab445c3f85ce7e90"
 	ipAddress := "10.244.2.18"
 	role := "Default"
 
@@ -43,7 +43,7 @@ func TestAccAnxCloudIPAddressReserved(t *testing.T) {
 	resourceName := "acc_test"
 	resourcePath := "anxcloud_ip_address." + resourceName
 
-	prefixID := "b015c18f84234885b8a7d0338db39e65"
+	prefixID := "0d82d7fdbb804e7fab445c3f85ce7e90"
 	ipAddress := "10.244.2.19"
 	role := "Reserved"
 
