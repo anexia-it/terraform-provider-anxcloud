@@ -123,7 +123,10 @@ func resourceNetworkPrefixRead(ctx context.Context, d *schema.ResourceData, m in
 	if err := d.Set("router_redundancy", info.RouterRedundancy); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	if err := d.Set("vlan_id", info.Vlans[0].ID); err != nil {
+
+	if len(info.Vlans) == 0 {
+		diags = append(diags, diag.Errorf("no VLAN seems to be attached to prefix '%s'", info.ID)...)
+	} else if err := d.Set("vlan_id", info.Vlans[0].ID); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
