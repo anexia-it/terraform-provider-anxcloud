@@ -3,13 +3,17 @@ package anxcloud
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
+	"runtime"
 
 	"github.com/anexia-it/go-anxcloud/pkg/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+var providerVersion = "development"
 
 // Provider Anexia
 func Provider() *schema.Provider {
@@ -56,6 +60,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	opts := []client.Option{
 		client.TokenFromString(token),
 		client.LogWriter(debugLogWriter),
+		client.UserAgent(fmt.Sprintf("%s/%s (%s)", "terraform-provider-anxcloud", providerVersion, runtime.GOOS)),
 	}
 
 	c, err := client.New(opts...)
