@@ -22,6 +22,7 @@ build: fmtcheck go-lint
 .PHONY: release
 release: fmtcheck lint test testacc
 	GOOS=darwin GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_darwin_amd64 -ldflags "$(GOLDFLAGS)"
+	GOOS=darwin GOARCH=arm64 go build -o ./bin/${BINARY}_${VERSION}_darwin_arm64 -ldflags "$(GOLDFLAGS)"
 	GOOS=freebsd GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_freebsd_386 -ldflags "$(GOLDFLAGS)"
 	GOOS=freebsd GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_freebsd_amd64 -ldflags "$(GOLDFLAGS)"
 	GOOS=freebsd GOARCH=arm go build -o ./bin/${BINARY}_${VERSION}_freebsd_arm -ldflags "$(GOLDFLAGS)"
