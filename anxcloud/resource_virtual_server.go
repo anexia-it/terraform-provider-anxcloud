@@ -558,7 +558,7 @@ func resourceVirtualServerDelete(ctx context.Context, d *schema.ResourceData, m 
 	vsphereAPI := vsphere.NewAPI(c)
 
 	delayedDeprovision := false
-	err := vsphereAPI.Provisioning().VM().Deprovision(ctx, d.Id(), delayedDeprovision)
+	_, err := vsphereAPI.Provisioning().VM().Deprovision(ctx, d.Id(), delayedDeprovision)
 	if err != nil {
 		if err := handleNotFoundError(err); err != nil {
 			return diag.FromErr(err)

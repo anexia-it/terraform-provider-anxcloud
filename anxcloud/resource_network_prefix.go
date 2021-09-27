@@ -112,6 +112,9 @@ func resourceNetworkPrefixRead(ctx context.Context, d *schema.ResourceData, m in
 	if err := d.Set("status", info.Status); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
+	if err := d.Set("type", info.PrefixType); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
 	if err := d.Set("locations", flattenNetworkPrefixLocations(info.Locations)); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
