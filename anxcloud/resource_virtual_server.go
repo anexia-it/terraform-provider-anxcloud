@@ -3,8 +3,10 @@ package anxcloud
 import (
 	"context"
 	"fmt"
+	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/progress"
 	"github.com/hashicorp/go-multierror"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/anexia-it/go-anxcloud/pkg/client"
@@ -556,9 +558,10 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 func resourceVirtualServerDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(client.Client)
 	vsphereAPI := vsphere.NewAPI(c)
+	progressAPI := progress.NewAPI(c)
 
 	delayedDeprovision := false
-	err := vsphereAPI.Provisioning().VM().Deprovision(ctx, d.Id(), delayedDeprovision)
+	response, err := vsphereAPI.Provisioning().VM().Deprovision(ctx, d.Id(), delayedDeprovision)
 	if err != nil {
 		if err := handleNotFoundError(err); err != nil {
 			return diag.FromErr(err)
@@ -568,14 +571,21 @@ func resourceVirtualServerDelete(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := vsphereAPI.Info().Get(ctx, d.Id())
+		response, err := progressAPI.Get(ctx, response.Identifier)
 		if err != nil {
-			if err := handleNotFoundError(err); err != nil {
-				return resource.NonRetryableError(fmt.Errorf("unable to get vm with id '%s': %w", d.Id(), err))
-			}
+			return resource.NonRetryableError(fmt.Errorf("failed to fetch deprovison progress: %w", err))
+		}
+
+		if len(response.Errors) > 0 {
+			joinedErrors := strings.Join(response.Errors, ",")
+			return resource.NonRetryableError(fmt.Errorf("errors during deprovision: [%s]", joinedErrors))
+		}
+
+		if response.Progress == 100 {
 			d.SetId("")
 			return nil
 		}
+
 		return resource.RetryableError(fmt.Errorf("waiting for vm with id '%s' to be deleted", d.Id()))
 	})
 	if err != nil {
