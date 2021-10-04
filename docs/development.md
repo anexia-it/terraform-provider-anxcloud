@@ -1,14 +1,14 @@
-# Terraform Provider Anexia
+# Terraform Provider Anxcloud
 
 ## Build provider
 
 Run the following command to build the provider
 
 ```shell
-go build -o terraform-provider-anexia
+go build -o terraform-provider-anxcloud
 ```
 
-or 
+or
 
 ```shell
 make build
