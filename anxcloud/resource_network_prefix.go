@@ -51,6 +51,7 @@ func resourceNetworkPrefixCreate(ctx context.Context, d *schema.ResourceData, m 
 		EnableRedundancy:    d.Get("router_redundancy").(bool),
 		CustomerDescription: d.Get("description_customer").(string),
 		Organization:        d.Get("organization").(string),
+		CreateEmpty:         d.Get("create_empty").(bool),
 	}
 	res, err := p.Create(ctx, createParams)
 	if err != nil {

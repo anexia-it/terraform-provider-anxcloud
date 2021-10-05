@@ -66,6 +66,12 @@ func schemaNetworkPrefix() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Role of the prefix.",
 		},
+		"create_empty": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "whether the prefix should be created with inactive IPs",
+		},
 		"description_internal": {
 			Type:        schema.TypeString,
 			Computed:    true,
