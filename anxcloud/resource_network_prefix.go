@@ -91,6 +91,11 @@ func resourceNetworkPrefixRead(ctx context.Context, d *schema.ResourceData, m in
 		return nil
 	}
 
+	createEmpty := d.Get("create_empty")
+	if err := d.Set("create_empty", createEmpty); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+
 	// CIDR value is set in the 'name' field, this should be changed
 	if err := d.Set("cidr", info.Name); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
