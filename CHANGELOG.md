@@ -1,7 +1,10 @@
 ## 0.3.3
 ENHANCEMENTS
 
-* provider: Fix a bug where updating tags hangs until timeout
+* provider - Fix a bug where updating tags hangs until timeout (#59)
+* resource/vlan - Fix a bug where permission issue lead to a crash (#61)
+* provider - Add user agent to go client and cross compile for darwin/arm64 (#62)
+* resource/virtual_server use deprovision progress instead of polling vmware API (#64)
 
 ## 0.3.2
 ENHANCEMENTS
