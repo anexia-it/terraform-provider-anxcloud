@@ -2,33 +2,29 @@ package anxcloud
 
 import (
 	"fmt"
-	"io"
 	"log"
+
+	"github.com/go-logr/logr"
 )
 
-const (
-	debugPrefix = "[DEBUG]"
-	infoPrefix  = "[INFO]"
-	errorPrefix = "[ERROR]"
-)
+var logger logr.Logger
+
+func setupLogger() {
+	logger = NewTerraformr(log.Default().Writer())
+}
 
 func LogDebug(msg string, args ...interface{}) {
-	fmt.Fprintf(log.Writer(), debugPrefix+msg, args...)
+	logger.V(2).Info(fmt.Sprintf(msg, args...))
 }
 
 func LogInfo(msg string, args ...interface{}) {
-	fmt.Fprintf(log.Writer(), infoPrefix+msg, args...)
+	logger.V(1).Info(fmt.Sprintf(msg, args...))
+}
+
+func LogWarn(msg string, args ...interface{}) {
+	logger.Info(fmt.Sprintf(msg, args...))
 }
 
 func LogError(msg string, args ...interface{}) {
-	fmt.Fprintf(log.Writer(), errorPrefix+msg, args...)
-}
-
-type debugWriter struct {
-	writer io.Writer
-}
-
-func (w debugWriter) Write(p []byte) (int, error) {
-	LogDebug(string(p))
-	return 0, nil
+	logger.Error(nil, fmt.Sprintf(msg, args...))
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"runtime"
 
@@ -52,16 +51,14 @@ func Provider() *schema.Provider {
 }
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	setupLogger()
 	var diags diag.Diagnostics
 
 	token := d.Get("token").(string)
-	debugLogWriter := debugWriter{
-		writer: log.Writer(),
-	}
 
 	opts := []client.Option{
 		client.TokenFromString(token),
-		client.LogWriter(debugLogWriter),
+		client.Logger(logger.WithName("client")),
 		client.UserAgent(fmt.Sprintf("%s/%s (%s)", "terraform-provider-anxcloud", providerVersion, runtime.GOOS)),
 	}
 
