@@ -8,9 +8,9 @@ import (
 	"testing"
 )
 
-func TestAccAnxCloudDnsZonessDataSource(t *testing.T) {
+func TestAccAnxCloudDnsZonesDataSource(t *testing.T) {
 	resourceName := "acc_test"
-	resourcePath := "data.anxcloud_zones_records." + resourceName
+	resourcePath := "data.anxcloud_dns_zones." + resourceName
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -19,7 +19,6 @@ func TestAccAnxCloudDnsZonessDataSource(t *testing.T) {
 			{
 				Config: testAccAnxCloudDnsZonesDataSource(resourceName),
 				Check: resource.ComposeTestCheckFunc(
-					//resource.TestCheckResourceAttr(resourcePath, "zone_name", zoneName),
 					testAccAnxCloudDnsZonesDataSourceExists(resourcePath),
 				),
 			},
