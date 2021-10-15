@@ -43,11 +43,7 @@ func schemaDNSRecords() map[string]*schema.Schema {
 					"ttl": {
 						Type:        schema.TypeInt,
 						Computed:    true,
-<<<<<<< HEAD
 						Description: "The region specific TTL. If nil the zone TTL will be used",
-=======
-						Description: "The region specific TTL. If null the zone TTL will be used",
->>>>>>> Added datasource for DNS records
 					},
 					"immutable": {
 						Type:        schema.TypeBool,
