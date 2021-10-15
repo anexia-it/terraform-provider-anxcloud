@@ -19,7 +19,10 @@ func dataSourceDNSRecordsRead(ctx context.Context, d *schema.ResourceData, m int
 	c := m.(client.Client)
 	a := zone.NewAPI(c)
 
-	zoneName := d.Get("zone_name").(string)
+	zoneName, ok := d.Get("zone_name").(string)
+	if !ok {
+		return diag.Errorf("%v is not in string format", zoneName)
+	}
 	records, err := a.ListRecords(ctx, zoneName)
 	if err != nil {
 		return diag.FromErr(err)

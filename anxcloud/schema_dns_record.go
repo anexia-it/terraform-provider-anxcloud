@@ -9,21 +9,6 @@ func schemaDNSRecords() map[string]*schema.Schema {
 			Required:    true,
 			Description: "The parent zone",
 		},
-		"name": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "TBD",
-		},
-		"data": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "TBD",
-		},
-		"type": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "TBD",
-		},
 		"records": {
 			Type:        schema.TypeList,
 			Computed:    true,
@@ -58,7 +43,7 @@ func schemaDNSRecords() map[string]*schema.Schema {
 					"ttl": {
 						Type:        schema.TypeInt,
 						Computed:    true,
-						Description: "The region specific TTL. If null the zone TTL will be used",
+						Description: "The region specific TTL. If nil the zone TTL will be used",
 					},
 					"immutable": {
 						Type:        schema.TypeBool,
