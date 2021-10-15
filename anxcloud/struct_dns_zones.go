@@ -9,7 +9,7 @@ func flattenDnsZones(dnsZones []zone.Zone) []interface{} {
 	}
 
 	for _, zone := range dnsZones {
-		
+
 		dnsServers := make([]interface{}, 0, len(zone.DNSServers))
 		for _, dnsServer := range zone.DNSServers {
 			d := map[string]interface{}{
