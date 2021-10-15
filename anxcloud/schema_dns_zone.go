@@ -91,8 +91,8 @@ func schemaDNSZones() map[string]*schema.Schema {
 						Description: "Zone validation level",
 					},
 					"deployment_level": {
-						Type: schema.TypeInt,
-						Computed: true,
+						Type:        schema.TypeInt,
+						Computed:    true,
 						Description: "Zone deployment level",
 					},
 				},

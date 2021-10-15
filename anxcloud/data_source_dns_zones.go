@@ -11,7 +11,7 @@ import (
 func datasourceDNSZones() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceDNSZonesRead,
-		Schema: schemaDNSZones(),
+		Schema:      schemaDNSZones(),
 	}
 }
 

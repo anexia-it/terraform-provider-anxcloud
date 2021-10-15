@@ -45,6 +45,7 @@ func Provider() *schema.Provider {
 			"anxcloud_cpu_performance_types": dataSourceCPUPerformanceTypes(),
 			"anxcloud_vsphere_locations":     dataSourceVSphereLocations(),
 			"anxcloud_dns_records":           dataSourceDNSRecords(),
+			"anxcloud_dns_zones":             datasourceDNSZones(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
