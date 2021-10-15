@@ -6,6 +6,8 @@ import (
 	"github.com/anexia-it/go-anxcloud/pkg/clouddns/zone"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"strconv"
+	"time"
 )
 
 func datasourceDNSZones() *schema.Resource {
@@ -28,6 +30,7 @@ func dataSourceDNSZonesRead(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.FromErr(err)
 	}
 
-	d.SetId("?") // TODO what ID
+	id := strconv.FormatInt(time.Now().Round(time.Hour).Unix(), 10)
+	d.SetId(id)
 	return nil
 }
