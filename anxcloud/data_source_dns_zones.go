@@ -8,28 +8,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceDNSRecords() *schema.Resource {
+func datasourceDNSZones() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceDNSRecordsRead,
-		Schema:      schemaDNSRecords(),
+		ReadContext: dataSourceDNSZonesRead,
+		Schema: schemaDNSZones(),
 	}
 }
 
-func dataSourceDNSRecordsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceDNSZonesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(client.Client)
 	a := zone.NewAPI(c)
 
-	zoneName := d.Get("zone_name").(string)
-
-	records, err := a.ListRecords(ctx, zoneName)
+	zones, err := a.List(ctx)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("records", flattenDnsRecords(records)); err != nil {
+	if err = d.Set("zones", flattenDnsZones(zones)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(zoneName)
+	d.SetId("?") // TODO what ID
 	return nil
 }
