@@ -23,7 +23,7 @@ func schemaDNSZones() map[string]*schema.Schema {
 					"dns_sec_mode": {
 						Type:        schema.TypeString,
 						Computed:    true,
-						Description: "DNSSec mode for master zones",
+						Description: `DNSSec mode value for master zones. ["managed" or "unvalidated"]`,
 					},
 					"admin_email": {
 						Type:        schema.TypeString,
@@ -48,7 +48,7 @@ func schemaDNSZones() map[string]*schema.Schema {
 					"ttl": {
 						Type:        schema.TypeInt,
 						Computed:    true,
-						Description: "Retry value",
+						Description: "TTL value of a zone",
 					},
 					"master_nameserver": {
 						Type:        schema.TypeString,
@@ -83,17 +83,17 @@ func schemaDNSZones() map[string]*schema.Schema {
 					"is_editable": {
 						Type:        schema.TypeBool,
 						Computed:    true,
-						Description: "Idicator if zone is editable",
+						Description: "Indicator if zone is editable",
 					},
 					"validation_level": {
 						Type:        schema.TypeInt,
 						Computed:    true,
-						Description: "Zone validation level",
+						Description: "Current validation level in percent",
 					},
 					"deployment_level": {
 						Type:        schema.TypeInt,
 						Computed:    true,
-						Description: "Zone deployment level",
+						Description: "Current state of deployment progress in percent",
 					},
 				},
 			},
