@@ -19,7 +19,7 @@ func flattenDnsRecords(records []zone.Record) []interface{} {
 		}
 
 		if record.TTL != nil {
-			m["ttl"] = record.TTL
+			m["ttl"] = *record.TTL
 		}
 
 		zoneRecords = append(zoneRecords, m)
