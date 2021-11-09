@@ -33,6 +33,7 @@ resource "anxcloud_network_prefix" "example" {
 - `router_redundancy` - (Optional) If router Redundancy shall be enabled.
 - `description_customer` - (Optional) Additional customer description.
 - `organization` - (Optional) Customer of yours. Reseller only.
+- `create_empty` - (Optional) specify whether the prefix is prefilled with inactive IPs. (Default: `true` no IPs are created in advance)
 
 
 ## Attributes Reference

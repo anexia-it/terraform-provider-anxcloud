@@ -25,20 +25,32 @@ func TestAccAnxCloudNetworkPrefix(t *testing.T) {
 		CheckDestroy:      testAccCheckAnxCloudNetworkPrefixDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescription),
+				Config: testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescription, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
 					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescription),
 					resource.TestCheckResourceAttr(resourcePath, "type", "0"),
+					resource.TestCheckResourceAttr(resourcePath, "create_empty", "true"),
 					testAccAnxCloudNetworkPrefixExists(resourcePath, customerDescription),
 				),
 			},
 			{
-				Config: testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescriptionUpdate),
+				Config: testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescriptionUpdate, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
 					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescriptionUpdate),
 					resource.TestCheckResourceAttr(resourcePath, "type", "0"),
+					resource.TestCheckResourceAttr(resourcePath, "create_empty", "true"),
+					testAccAnxCloudNetworkPrefixExists(resourcePath, customerDescriptionUpdate),
+				),
+			},
+			{
+				Config: testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescriptionUpdate, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
+					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescriptionUpdate),
+					resource.TestCheckResourceAttr(resourcePath, "type", "0"),
+					resource.TestCheckResourceAttr(resourcePath, "create_empty", "false"),
 					testAccAnxCloudNetworkPrefixExists(resourcePath, customerDescriptionUpdate),
 				),
 			},
@@ -79,7 +91,7 @@ func testAccCheckAnxCloudNetworkPrefixDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescription string) string {
+func testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescription string, createEmpty bool) string {
 	return fmt.Sprintf(`
 	resource "anxcloud_network_prefix" "%s" {
 		location_id   = "%s"
@@ -88,8 +100,9 @@ func testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescription 
 		netmask = 30
     type = 0
 		description_customer = "%s"
+    create_empty = %v
 	}
-	`, resourceName, locationID, customerDescription)
+	`, resourceName, locationID, customerDescription, createEmpty)
 }
 
 func testAccAnxCloudNetworkPrefixExists(n string, expectedCustomerDescription string) resource.TestCheckFunc {

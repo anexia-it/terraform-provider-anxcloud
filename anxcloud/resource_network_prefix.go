@@ -51,6 +51,7 @@ func resourceNetworkPrefixCreate(ctx context.Context, d *schema.ResourceData, m 
 		EnableRedundancy:    d.Get("router_redundancy").(bool),
 		CustomerDescription: d.Get("description_customer").(string),
 		Organization:        d.Get("organization").(string),
+		CreateEmpty:         d.Get("create_empty").(bool),
 	}
 	res, err := p.Create(ctx, createParams)
 	if err != nil {
@@ -88,6 +89,11 @@ func resourceNetworkPrefixRead(ctx context.Context, d *schema.ResourceData, m in
 		}
 		d.SetId("")
 		return nil
+	}
+
+	createEmpty := d.Get("create_empty")
+	if err := d.Set("create_empty", createEmpty); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
 	}
 
 	// CIDR value is set in the 'name' field, this should be changed
