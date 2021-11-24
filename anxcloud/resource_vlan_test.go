@@ -28,12 +28,11 @@ func TestAccAnxCloudVLAN(t *testing.T) {
 		CheckDestroy:      testAccCheckAnxCloudVLANDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAnxCloudVLAN(resourceName, locationID, customerDescription, false),
+				Config: testAccCheckAnxCloudVLAN(resourceName, locationID, customerDescription, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
-					resource.TestCheckResourceAttr(resourcePath, "vm_provisioning", "false"),
 					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescription),
-					testAccCheckAnxCloudVLANExists(resourcePath, customerDescription, false),
+					testAccCheckAnxCloudVLANExists(resourcePath, customerDescription, true),
 				),
 			},
 			{
@@ -42,7 +41,14 @@ func TestAccAnxCloudVLAN(t *testing.T) {
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
 					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescriptionUpdate),
 					testAccCheckAnxCloudVLANExists(resourcePath, customerDescriptionUpdate, true),
-					resource.TestCheckResourceAttr(resourcePath, "vm_provisioning", "true"),
+				),
+			},
+			{
+				Config: testAccCheckAnxCloudVLAN(resourceName, locationID, customerDescriptionUpdate, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
+					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescriptionUpdate),
+					testAccCheckAnxCloudVLANExists(resourcePath, customerDescriptionUpdate, false),
 				),
 			},
 			{
