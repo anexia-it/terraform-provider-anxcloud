@@ -27,6 +27,9 @@ Otherwise use the following format:
 
 where resource-type can be something like 'resource', 'data', 'all resources', '**New Resource**', '**New Datasource**' 
 
+e.g.
+
+* resource/anxcloud_ip_address - fix IP address cleanup
 -->
 
 ```release-note
