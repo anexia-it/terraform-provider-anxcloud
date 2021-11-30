@@ -22,7 +22,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 	vmDef := vm.Definition{
 		Location:           "52b5f6b2fd3a4a7eaaedf1a7c019e9ea",
 		TemplateType:       "templates",
-		TemplateID:         "12c28aa7-604d-47e9-83fb-5f1d1f1837b3",
+		TemplateID:         "8423ea74-daa6-4bf3-8424-275780c808e0",
 		Hostname:           "acc-test-" + shortuuid.New(),
 		Memory:             2048,
 		CPUs:               1,
@@ -114,7 +114,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 	vmDef := vm.Definition{
 		Location:           "52b5f6b2fd3a4a7eaaedf1a7c019e9ea",
 		TemplateType:       "templates",
-		TemplateID:         "12c28aa7-604d-47e9-83fb-5f1d1f1837b3",
+		TemplateID:         "8423ea74-daa6-4bf3-8424-275780c808e0",
 		Hostname:           "acc-test-" + shortuuid.New(),
 		Memory:             2048,
 		CPUs:               2,
