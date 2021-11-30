@@ -33,7 +33,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 	resourceName := "acc_test_vm_test"
 	resourcePath := "anxcloud_virtual_server." + resourceName
 
-	templateID := vsphereAccTestInit(t, locationID, templateName)
+	templateID := vsphereAccTestInit(locationID, templateName)
 	vmDef := vm.Definition{
 		Location:           locationID,
 		TemplateType:       "templates",
@@ -126,7 +126,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 	resourceName := "acc_test_vm_test_multi_disk"
 	resourcePath := "anxcloud_virtual_server." + resourceName
 
-	templateID := vsphereAccTestInit(t, locationID, templateName)
+	templateID := vsphereAccTestInit(locationID, templateName)
 	vmDef := vm.Definition{
 		Location:           locationID,
 		TemplateType:       "templates",
@@ -467,7 +467,7 @@ func generateTagsString(tags ...string) string {
 	return fmt.Sprintf("tags = [\n%s\n]", strings.Join(tags, "\n"))
 }
 
-func vsphereAccTestInit(t *testing.T, locationID string, templateName string) string {
+func vsphereAccTestInit(locationID string, templateName string) string {
 	if _, ok := os.LookupEnv(client.TokenEnvName); !ok {
 		// we are running in unit test context so do nothing
 		return ""
