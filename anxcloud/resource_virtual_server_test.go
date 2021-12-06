@@ -59,10 +59,6 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 	vmDefUpscale := vmDef
 	vmDefUpscale.CPUs = 2
 	vmDefUpscale.Memory = 4096
-	vmDefUpscale.Network = append(vmDefUpscale.Network, vm.Network{
-		VLAN:    "02f39d20ca0f4adfb5032f88dbc26c39",
-		NICType: "vmxnet3",
-	})
 
 	// down scale resources which does not require recreation of the VM
 	vmDefDownscale := vmDefUpscale
@@ -139,6 +135,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 			{
 				VLAN:    "02f39d20ca0f4adfb5032f88dbc26c39",
 				NICType: "vmxnet3",
+				IPs:     []string{"10.244.2.27"},
 			},
 		},
 		DNS1:     "8.8.8.8",
@@ -436,10 +433,10 @@ func testAccCheckAnxCloudVirtualServerDisks(n string, expectedDisks []vm.Disk) r
 
 func generateNetworkSubResourceString(networks []vm.Network) string {
 	var output string
-	template := "\nnetwork {\n\tvlan_id = \"%s\"\n\tnic_type = \"%s\"\n}\n"
+	template := "\nnetwork {\n\tvlan_id = \"%s\"\n\tnic_type = \"%s\"\n\tips = [\"%s\"]\n}\n"
 
 	for _, n := range networks {
-		output += fmt.Sprintf(template, n.VLAN, n.NICType)
+		output += fmt.Sprintf(template, n.VLAN, n.NICType, n.IPs[0])
 	}
 
 	return output
