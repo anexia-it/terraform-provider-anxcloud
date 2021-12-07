@@ -3,6 +3,12 @@ package anxcloud
 import (
 	"context"
 	"fmt"
+	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/templates"
+	"github.com/stretchr/testify/require"
+	"log"
+	"os"
+	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -15,14 +21,23 @@ import (
 	"github.com/lithammer/shortuuid"
 )
 
+// This versioning scheme that currently seems to be in place for template build numbers.
+var buildNumberRegex = regexp.MustCompile(`[bB]?(\d+)`)
+
+const (
+	locationID   = "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
+	templateName = "Ubuntu 20.04.02"
+)
+
 func TestAccAnxCloudVirtualServer(t *testing.T) {
 	resourceName := "acc_test_vm_test"
 	resourcePath := "anxcloud_virtual_server." + resourceName
 
+	templateID := vsphereAccTestInit(locationID, templateName)
 	vmDef := vm.Definition{
-		Location:           "52b5f6b2fd3a4a7eaaedf1a7c019e9ea",
+		Location:           locationID,
 		TemplateType:       "templates",
-		TemplateID:         "12c28aa7-604d-47e9-83fb-5f1d1f1837b3",
+		TemplateID:         templateID,
 		Hostname:           "acc-test-" + shortuuid.New(),
 		Memory:             2048,
 		CPUs:               1,
@@ -44,10 +59,6 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 	vmDefUpscale := vmDef
 	vmDefUpscale.CPUs = 2
 	vmDefUpscale.Memory = 4096
-	vmDefUpscale.Network = append(vmDefUpscale.Network, vm.Network{
-		VLAN:    "02f39d20ca0f4adfb5032f88dbc26c39",
-		NICType: "vmxnet3",
-	})
 
 	// down scale resources which does not require recreation of the VM
 	vmDefDownscale := vmDefUpscale
@@ -111,10 +122,11 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 	resourceName := "acc_test_vm_test_multi_disk"
 	resourcePath := "anxcloud_virtual_server." + resourceName
 
+	templateID := vsphereAccTestInit(locationID, templateName)
 	vmDef := vm.Definition{
-		Location:           "52b5f6b2fd3a4a7eaaedf1a7c019e9ea",
+		Location:           locationID,
 		TemplateType:       "templates",
-		TemplateID:         "12c28aa7-604d-47e9-83fb-5f1d1f1837b3",
+		TemplateID:         templateID,
 		Hostname:           "acc-test-" + shortuuid.New(),
 		Memory:             2048,
 		CPUs:               2,
@@ -123,6 +135,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 			{
 				VLAN:    "02f39d20ca0f4adfb5032f88dbc26c39",
 				NICType: "vmxnet3",
+				IPs:     []string{"10.244.2.27"},
 			},
 		},
 		DNS1:     "8.8.8.8",
@@ -420,10 +433,10 @@ func testAccCheckAnxCloudVirtualServerDisks(n string, expectedDisks []vm.Disk) r
 
 func generateNetworkSubResourceString(networks []vm.Network) string {
 	var output string
-	template := "\nnetwork {\n\tvlan_id = \"%s\"\n\tnic_type = \"%s\"\n}\n"
+	template := "\nnetwork {\n\tvlan_id = \"%s\"\n\tnic_type = \"%s\"\n\tips = [\"%s\"]\n}\n"
 
 	for _, n := range networks {
-		output += fmt.Sprintf(template, n.VLAN, n.NICType)
+		output += fmt.Sprintf(template, n.VLAN, n.NICType, n.IPs[0])
 	}
 
 	return output
@@ -449,4 +462,54 @@ func generateTagsString(tags ...string) string {
 		tags[i] = fmt.Sprintf("\"%s\",", tag)
 	}
 	return fmt.Sprintf("tags = [\n%s\n]", strings.Join(tags, "\n"))
+}
+
+func vsphereAccTestInit(locationID string, templateName string) string {
+	if _, ok := os.LookupEnv(client.TokenEnvName); !ok {
+		// we are running in unit test context so do nothing
+		return ""
+	}
+	cli, err := client.New(client.AuthFromEnv(false))
+	if err != nil {
+		log.Fatalf("Error creating client for retrieving template ID: %v\n", err)
+	}
+
+	tplAPI := templates.NewAPI(cli)
+	tpls, err := tplAPI.List(context.TODO(), locationID, templates.TemplateTypeTemplates, 1, 500)
+
+	if err != nil {
+		log.Fatalf("Error retrieving templates: %v\n", err)
+	}
+
+	selected := make([]templates.Template, 0, 1)
+	for _, tpl := range tpls {
+		if tpl.Name == templateName {
+			selected = append(selected, tpl)
+		}
+	}
+
+	sort.Slice(selected, func(i, j int) bool {
+		return extractBuildNumber(selected[i].Build) > extractBuildNumber(selected[j].Build)
+	})
+
+	log.Printf("VSphere: selected template %v (build %v, ID %v)\n", selected[0].Name, selected[0].Build, selected[0].ID)
+
+	return selected[0].ID
+}
+
+func extractBuildNumber(version string) int {
+	match := buildNumberRegex.FindStringSubmatch(version)
+	if len(match) != 2 {
+		panic("the version doesn't match the given regex")
+	}
+	number, err := strconv.ParseInt(match[1], 10, 0)
+	if err != nil {
+		panic(fmt.Sprintf("could not extract version for %s", version))
+	}
+	return int(number)
+}
+
+func TestVersionParsing(t *testing.T) {
+	require.Equal(t, 5555, extractBuildNumber("b5555"))
+	require.Equal(t, 6666, extractBuildNumber("6666"))
 }
