@@ -22,6 +22,14 @@ $ make testacc TESTARGS='-run=TestAccXXX'
 Release note for [CHANGELOG](https://github.com/anexia-it/terraform-provider-anxcloud/blob/master/CHANGELOG.md):
 <!--
 If change is not user facing, just write "NONE" in the release-note block below.
+Otherwise use the following format:
+ * <resource-type>[/<resource-name>] - <short description of what has been done>
+
+where resource-type can be something like 'resource', 'data', 'all resources', '**New Resource**', '**New Datasource**' 
+
+e.g.
+
+* resource/anxcloud_ip_address - fix IP address cleanup
 -->
 
 ```release-note
