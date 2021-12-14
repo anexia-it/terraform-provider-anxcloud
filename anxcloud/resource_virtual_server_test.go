@@ -13,6 +13,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/recorder"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/lithammer/shortuuid"
@@ -31,10 +33,20 @@ const (
 	templateName = "Ubuntu 20.04.02"
 )
 
+func getVMRecorder(t *testing.T) recorder.VMRecoder {
+
+	vmRecorder := recorder.VMRecoder{}
+	t.Cleanup(func() {
+		vmRecorder.Cleanup(context.TODO())
+	})
+	return vmRecorder
+}
+
 func TestAccAnxCloudVirtualServer(t *testing.T) {
 	resourceName := "acc_test_vm_test"
 	resourcePath := "anxcloud_virtual_server." + resourceName
 
+	vmRecorder := getVMRecorder(t)
 	templateID := vsphereAccTestInit(locationID, templateName)
 	vmDef := vm.Definition{
 		Location:           locationID,
@@ -56,6 +68,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 		DNS1:     "8.8.8.8",
 		Password: "flatcar#1234$%%",
 	}
+	vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", vmDef.Hostname))
 
 	// upscale resources
 	vmDefUpscale := vmDef
@@ -124,6 +137,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 	resourceName := "acc_test_vm_test_multi_disk"
 	resourcePath := "anxcloud_virtual_server." + resourceName
 
+	vmRecorder := getVMRecorder(t)
 	templateID := vsphereAccTestInit(locationID, templateName)
 	vmDef := vm.Definition{
 		Location:           locationID,
@@ -143,6 +157,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 		DNS1:     "8.8.8.8",
 		Password: "flatcar#1234$%%",
 	}
+	vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", vmDef.Hostname))
 
 	disks := []vm.Disk{
 		{
@@ -185,7 +200,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 	t.Run("ChangeAddDisk", func(t *testing.T) {
 		changeDiskDef := vmDef
 		changeDiskDef.Hostname = "acc-test-" + shortuuid.New()
-
+		vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", changeDiskDef.Hostname))
 		disksChange := append(disks, vm.Disk{
 			SizeGBs: 50,
 			Type:    "ENT6",
@@ -218,6 +233,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 	t.Run("MultiDiskTemplateChange", func(t *testing.T) {
 		changeDiskDef := vmDef
 		changeDiskDef.Hostname = "acc-test-" + shortuuid.New()
+		vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", changeDiskDef.Hostname))
 		changeDiskDef.TemplateID = "659b35b5-0060-44de-9f9e-a069ec5f1bca"
 		templateDisks := []vm.Disk{
 			{

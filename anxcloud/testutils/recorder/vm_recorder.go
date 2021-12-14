@@ -19,7 +19,7 @@ type VMRecoder struct {
 func (v VMRecoder) Cleanup(ctx context.Context) []error {
 	var cleanUpErrors []error
 	for _, handler := range v.handlers {
-		err := handler()
+		err := handler(ctx)
 		if err != nil {
 			cleanUpErrors = append(cleanUpErrors, err)
 		}
