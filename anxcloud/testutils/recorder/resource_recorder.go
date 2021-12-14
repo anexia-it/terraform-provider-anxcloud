@@ -9,6 +9,11 @@ type Recorder interface {
 	Cleanup(ctx context.Context) []error
 }
 
+var DefaultRecorder = ResourceRecorder{
+	lock:      &sync.Mutex{},
+	recorders: nil,
+}
+
 type ResourceRecorder struct {
 	lock      *sync.Mutex
 	recorders []Recorder
