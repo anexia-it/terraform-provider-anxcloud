@@ -69,7 +69,6 @@ func (v VMRecoder) createCleanupHanlderByName(name string) vmCleanUpFunc {
 
 		vmAPI := vm.NewAPI(client)
 		for _, machine := range res {
-			// TODO wait for deprovision to be finished?
 			_, err := vmAPI.Deprovision(ctx, machine.Identifier, false)
 			if err != nil {
 				return err
