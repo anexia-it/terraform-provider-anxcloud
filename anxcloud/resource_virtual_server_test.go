@@ -484,7 +484,7 @@ func generateTagsString(tags ...string) string {
 
 func vsphereAccTestInit(locationID string, templateName string) string {
 	if _, ok := os.LookupEnv(client.TokenEnvName); !ok {
-		// we are running in unit test context so do nothing
+		// we are running in unit test environment so do nothing
 		return ""
 	}
 	cli, err := client.New(client.AuthFromEnv(false))
