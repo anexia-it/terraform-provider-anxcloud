@@ -3,22 +3,22 @@ package anxcloud
 import (
 	"context"
 	"fmt"
-	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/progress"
 	"github.com/hashicorp/go-multierror"
+	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/progress"
 	"log"
 	"strings"
 	"time"
 
-	"github.com/anexia-it/go-anxcloud/pkg/client"
-	"github.com/anexia-it/go-anxcloud/pkg/ipam/address"
-	"github.com/anexia-it/go-anxcloud/pkg/vsphere"
-	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/nictype"
-	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/vm"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"go.anx.io/go-anxcloud/pkg/client"
+	"go.anx.io/go-anxcloud/pkg/ipam/address"
+	"go.anx.io/go-anxcloud/pkg/vsphere"
+	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/nictype"
+	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/vm"
 )
 
 const (

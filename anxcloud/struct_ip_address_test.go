@@ -3,7 +3,7 @@ package anxcloud
 import (
 	"testing"
 
-	"github.com/anexia-it/go-anxcloud/pkg/ipam/address"
+	"go.anx.io/go-anxcloud/pkg/ipam/address"
 
 	"github.com/google/go-cmp/cmp"
 )

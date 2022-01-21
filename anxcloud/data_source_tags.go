@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/anexia-it/go-anxcloud/pkg/client"
-	"github.com/anexia-it/go-anxcloud/pkg/core/tags"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"go.anx.io/go-anxcloud/pkg/client"
+	"go.anx.io/go-anxcloud/pkg/core/tags"
 )
 
 func dataSourceTags() *schema.Resource {

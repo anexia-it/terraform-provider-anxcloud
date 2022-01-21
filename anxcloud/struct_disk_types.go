@@ -1,7 +1,7 @@
 package anxcloud
 
 import (
-	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/disktype"
+	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/disktype"
 )
 
 // expanders

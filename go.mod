@@ -4,7 +4,6 @@ go 1.15
 
 require (
 	github.com/agext/levenshtein v1.2.3 // indirect
-	github.com/anexia-it/go-anxcloud v0.3.28
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/go-test/deep v1.0.7 // indirect
 	github.com/google/go-cmp v0.5.6
@@ -27,6 +26,7 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.7.0
 	github.com/zclconf/go-cty v1.10.0 // indirect
+	go.anx.io/go-anxcloud v0.4.0
 	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce // indirect
 	golang.org/x/net v0.0.0-20220114011407-0dd24b26b47d // indirect
 	golang.org/x/sys v0.0.0-20220111092808-5a964db01320 // indirect

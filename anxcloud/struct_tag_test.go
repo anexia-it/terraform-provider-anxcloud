@@ -3,8 +3,8 @@ package anxcloud
 import (
 	"testing"
 
-	"github.com/anexia-it/go-anxcloud/pkg/core/tags"
 	"github.com/google/go-cmp/cmp"
+	"go.anx.io/go-anxcloud/pkg/core/tags"
 )
 
 // expanders tests

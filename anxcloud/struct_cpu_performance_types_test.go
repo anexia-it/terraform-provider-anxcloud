@@ -3,8 +3,8 @@ package anxcloud
 import (
 	"testing"
 
-	cpuperformancetype "github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/cpuperformancetypes"
 	"github.com/google/go-cmp/cmp"
+	cpuperformancetype "go.anx.io/go-anxcloud/pkg/vsphere/provisioning/cpuperformancetypes"
 )
 
 // expanders tests

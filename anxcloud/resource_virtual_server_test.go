@@ -3,8 +3,8 @@ package anxcloud
 import (
 	"context"
 	"fmt"
-	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/templates"
 	"github.com/stretchr/testify/require"
+	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/templates"
 	"log"
 	"os"
 	"regexp"
@@ -13,12 +13,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/anexia-it/go-anxcloud/pkg/client"
-	"github.com/anexia-it/go-anxcloud/pkg/vsphere"
-	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/vm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/lithammer/shortuuid"
+	"go.anx.io/go-anxcloud/pkg/client"
+	"go.anx.io/go-anxcloud/pkg/vsphere"
+	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/vm"
 )
 
 // This versioning scheme that currently seems to be in place for template build numbers.

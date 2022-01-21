@@ -1,7 +1,7 @@
 package anxcloud
 
 import (
-	"github.com/anexia-it/go-anxcloud/pkg/ipam/address"
+	"go.anx.io/go-anxcloud/pkg/ipam/address"
 )
 
 // expanders
