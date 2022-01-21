@@ -29,7 +29,7 @@ func TestAccAnxCloudNetworkPrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
 					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescription),
-					resource.TestCheckResourceAttr(resourcePath, "type", "0"),
+					resource.TestCheckResourceAttr(resourcePath, "type", "1"),
 					resource.TestCheckResourceAttr(resourcePath, "create_empty", "true"),
 					testAccAnxCloudNetworkPrefixExists(resourcePath, customerDescription),
 				),
@@ -39,7 +39,7 @@ func TestAccAnxCloudNetworkPrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
 					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescriptionUpdate),
-					resource.TestCheckResourceAttr(resourcePath, "type", "0"),
+					resource.TestCheckResourceAttr(resourcePath, "type", "1"),
 					resource.TestCheckResourceAttr(resourcePath, "create_empty", "true"),
 					testAccAnxCloudNetworkPrefixExists(resourcePath, customerDescriptionUpdate),
 				),
@@ -49,7 +49,7 @@ func TestAccAnxCloudNetworkPrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
 					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescriptionUpdate),
-					resource.TestCheckResourceAttr(resourcePath, "type", "0"),
+					resource.TestCheckResourceAttr(resourcePath, "type", "1"),
 					resource.TestCheckResourceAttr(resourcePath, "create_empty", "false"),
 					testAccAnxCloudNetworkPrefixExists(resourcePath, customerDescriptionUpdate),
 				),
@@ -98,9 +98,9 @@ func testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescription 
 		vlan_id = "02f39d20ca0f4adfb5032f88dbc26c39"
 		ip_version = 4
 		netmask = 30
-    type = 0
+		type = 1
 		description_customer = "%s"
-    create_empty = %v
+		create_empty = %v
 	}
 	`, resourceName, locationID, customerDescription, createEmpty)
 }
