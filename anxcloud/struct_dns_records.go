@@ -1,6 +1,6 @@
 package anxcloud
 
-import "github.com/anexia-it/go-anxcloud/pkg/clouddns/zone"
+import "go.anx.io/go-anxcloud/pkg/clouddns/zone"
 
 func flattenDnsRecords(records []zone.Record) []interface{} {
 	zoneRecords := make([]interface{}, 0, len(records))

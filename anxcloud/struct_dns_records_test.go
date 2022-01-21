@@ -1,9 +1,9 @@
 package anxcloud
 
 import (
-	"github.com/anexia-it/go-anxcloud/pkg/clouddns/zone"
 	"github.com/google/go-cmp/cmp"
 	uuid "github.com/satori/go.uuid"
+	"go.anx.io/go-anxcloud/pkg/clouddns/zone"
 	"testing"
 )
 

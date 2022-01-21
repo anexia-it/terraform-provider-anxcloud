@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/anexia-it/go-anxcloud/pkg/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"go.anx.io/go-anxcloud/pkg/client"
 
-	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/location"
+	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/location"
 )
 
 func dataSourceVSphereLocations() *schema.Resource {

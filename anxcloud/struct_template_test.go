@@ -4,7 +4,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"testing"
 
-	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/templates"
+	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/templates"
 )
 
 // expanders tests

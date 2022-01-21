@@ -1,7 +1,7 @@
 package anxcloud
 
 import (
-	"github.com/anexia-it/go-anxcloud/pkg/core/tags"
+	"go.anx.io/go-anxcloud/pkg/core/tags"
 )
 
 // expanders

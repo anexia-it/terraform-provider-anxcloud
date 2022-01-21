@@ -1,7 +1,7 @@
 package anxcloud
 
 import (
-	cpuperformancetype "github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/cpuperformancetypes"
+	cpuperformancetype "go.anx.io/go-anxcloud/pkg/vsphere/provisioning/cpuperformancetypes"
 )
 
 // expanders

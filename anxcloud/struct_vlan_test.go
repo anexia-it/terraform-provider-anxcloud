@@ -3,7 +3,7 @@ package anxcloud
 import (
 	"testing"
 
-	"github.com/anexia-it/go-anxcloud/pkg/vlan"
+	"go.anx.io/go-anxcloud/pkg/vlan"
 
 	"github.com/google/go-cmp/cmp"
 )

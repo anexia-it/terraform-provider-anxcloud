@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"runtime"
 
-	"github.com/anexia-it/go-anxcloud/pkg/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"go.anx.io/go-anxcloud/pkg/client"
 )
 
 var providerVersion = "development"

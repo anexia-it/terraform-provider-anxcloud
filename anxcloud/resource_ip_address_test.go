@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/anexia-it/go-anxcloud/pkg/client"
-	"github.com/anexia-it/go-anxcloud/pkg/ipam/address"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"go.anx.io/go-anxcloud/pkg/client"
+	"go.anx.io/go-anxcloud/pkg/ipam/address"
 )
 
 func TestAccAnxCloudIPAddress(t *testing.T) {

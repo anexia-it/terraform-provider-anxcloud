@@ -1,10 +1,10 @@
 package anxcloud
 
 import (
-	corelocation "github.com/anexia-it/go-anxcloud/pkg/core/location"
-	"github.com/anexia-it/go-anxcloud/pkg/ipam/prefix"
-	"github.com/anexia-it/go-anxcloud/pkg/vlan"
-	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/location"
+	corelocation "go.anx.io/go-anxcloud/pkg/core/location"
+	"go.anx.io/go-anxcloud/pkg/ipam/prefix"
+	"go.anx.io/go-anxcloud/pkg/vlan"
+	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/location"
 )
 
 // expanders
