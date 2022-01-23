@@ -13,6 +13,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
 	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/recorder"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -29,7 +30,6 @@ import (
 var buildNumberRegex = regexp.MustCompile(`[bB]?(\d+)`)
 
 const (
-	locationID   = "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
 	templateName = "Ubuntu 20.04.02"
 )
 
@@ -47,9 +47,10 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 	resourcePath := "anxcloud_virtual_server." + resourceName
 
 	vmRecorder := getVMRecorder(t)
-	templateID := vsphereAccTestInit(locationID, templateName)
+	envInfo := environment.GetEnvInfo()
+	templateID := vsphereAccTestInit(envInfo.Location, templateName)
 	vmDef := vm.Definition{
-		Location:           locationID,
+		Location:           envInfo.Location,
 		TemplateType:       "templates",
 		TemplateID:         templateID,
 		Hostname:           "acc-test-" + shortuuid.New(),
@@ -60,9 +61,9 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 		DiskType:           "ENT6",
 		Network: []vm.Network{
 			{
-				VLAN:    "02f39d20ca0f4adfb5032f88dbc26c39",
+				VLAN:    envInfo.VlanID,
 				NICType: "vmxnet3",
-				IPs:     []string{"10.244.2.26"},
+				IPs:     []string{envInfo.Prefix.GetNextIP()},
 			},
 		},
 		DNS1:     "8.8.8.8",
@@ -138,9 +139,10 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 	resourcePath := "anxcloud_virtual_server." + resourceName
 
 	vmRecorder := getVMRecorder(t)
-	templateID := vsphereAccTestInit(locationID, templateName)
+	envInfo := environment.GetEnvInfo()
+	templateID := vsphereAccTestInit(envInfo.Location, templateName)
 	vmDef := vm.Definition{
-		Location:           locationID,
+		Location:           envInfo.Location,
 		TemplateType:       "templates",
 		TemplateID:         templateID,
 		Hostname:           "acc-test-" + shortuuid.New(),

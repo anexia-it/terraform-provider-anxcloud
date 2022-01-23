@@ -9,6 +9,7 @@ import (
 type Info struct {
 	Location string
 	VlanID   string
+	Prefix   Prefix
 }
 
 var (
@@ -16,14 +17,22 @@ var (
 	mutex   sync.Mutex
 )
 
-type contextKey struct{}
+func (i *Info) setup() error {
+	context.Background()
+	prefix, err := CreateTestPrefix(context.Background())
+	if err != nil {
+		return err
+	}
+	i.Prefix = prefix
 
-func NewContext(ctx context.Context, environmentInfo Info) context.Context {
-	return context.WithValue(ctx, contextKey{}, &environmentInfo)
+	return nil
 }
 
-func GetInfo(ctx context.Context) Info {
-	return *ctx.Value(contextKey{}).(*Info)
+func GetEnvInfo() Info {
+	if envInfo == nil {
+		panic("envInfo is only supported when ANEXIA_TOKEN is set")
+	}
+	return *envInfo
 }
 
 func init() {
@@ -42,5 +51,12 @@ func init() {
 	if envInfo != nil {
 		return
 	}
-	envInfo = &Info{}
+	envInfo = &Info{
+		VlanID:   "02f39d20ca0f4adfb5032f88dbc26c39",
+		Location: "52b5f6b2fd3a4a7eaaedf1a7c019e9ea",
+	}
+	err := envInfo.setup()
+	if err != nil {
+		panic(err)
+	}
 }

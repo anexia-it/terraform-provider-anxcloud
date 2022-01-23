@@ -3,7 +3,6 @@ package anxcloud
 import (
 	"context"
 	"fmt"
-	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/components"
 	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
 	"testing"
 
@@ -14,25 +13,18 @@ import (
 )
 
 func TestAccAnxCloudIPAddress(t *testing.T) {
-	environment.NewContext(context.Background(), environment.Info{
-		Location: "52b5f6b2fd3a4a7eaaedf1a7c019e9ea",
-		VlanID:   "1f45f9a5275845fa8249d59af465ce80",
-	})
 	resourceName := "acc_test"
 	resourcePath := "anxcloud_ip_address." + resourceName
 
-	var prefixID string
-	ipAddress := "10.244.2.18"
+	envInfo := environment.GetEnvInfo()
+
+	prefixID := envInfo.Prefix.ID
+	ipAddress := envInfo.Prefix.GetNextIP()
 	role := "Default"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			prefix, err := components.CreateTestPrefix(context.Background())
-			if err != nil {
-				t.Fatal("unable to create prefix for testing", err)
-			}
-			prefixID = prefix
 		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccAnxCloudIPAddressDestroy,
