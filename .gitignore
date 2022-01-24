@@ -3,6 +3,9 @@ terraform-provider-anxcloud
 bin
 .idea
 
+# Ignore direnv file as it contains secrets
+.envrc
+
 # Local .terraform directories
 **/.terraform/*
 
