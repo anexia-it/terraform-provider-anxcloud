@@ -43,8 +43,8 @@ func CreateTestPrefix(ctx context.Context) (Prefix, error) {
 	create := prefix.Create{
 		Location:             environment.Location,
 		IPVersion:            4,
-		Type:                 0,
-		NetworkMask:          25,
+		Type:                 1,
+		NetworkMask:          24,
 		CreateEmpty:          true,
 		VLANID:               environment.VlanID,
 		EnableVMProvisioning: false,
