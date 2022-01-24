@@ -3,8 +3,6 @@ package anxcloud
 import (
 	"context"
 	"fmt"
-	"github.com/stretchr/testify/require"
-	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/templates"
 	"log"
 	"os"
 	"regexp"
@@ -13,11 +11,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/lithammer/shortuuid"
+
 	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/vsphere"
+	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/templates"
 	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/vm"
 )
 
@@ -483,7 +485,7 @@ func vsphereAccTestInit(locationID string, templateName string) string {
 
 	selected := make([]templates.Template, 0, 1)
 	for _, tpl := range tpls {
-		if tpl.Name == templateName {
+		if strings.HasPrefix(tpl.Name, templateName) {
 			selected = append(selected, tpl)
 		}
 	}
