@@ -3,11 +3,12 @@ package anxcloud
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/go-multierror"
-	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/progress"
 	"log"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/go-multierror"
+	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/progress"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -625,7 +626,7 @@ func updateVirtualServerDisk(ctx context.Context, c client.Client, id string, ex
 		expectedDisk := expected[diskIndex]
 
 		if actualDisk.ExactDiskSize > float64(expectedDisk.SizeGBs) {
-			LogError("Skipping disk %d because expected disk size to small! Expected: %d  -  got: %f", actualDisk.ID, expectedDisk.SizeGBs, actualDisk.ExactDiskSize)
+			logger.Error(nil, "Skipping disk %d because expected disk size to small! Expected: %d  -  got: %f", actualDisk.ID, expectedDisk.SizeGBs, actualDisk.ExactDiskSize)
 		}
 		if actualDisk.Type != expectedDisk.Type || actualDisk.ExactDiskSize < float64(expectedDisk.SizeGBs) {
 			changeDisks = append(changeDisks, *expectedDisk.Disk)
