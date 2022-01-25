@@ -4,15 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"runtime"
 
+	"github.com/go-logr/logr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"go.anx.io/go-anxcloud/pkg/client"
 )
 
 var providerVersion = "development"
+
+var logger logr.Logger
 
 // Provider Anexia
 func Provider() *schema.Provider {
@@ -51,7 +55,7 @@ func Provider() *schema.Provider {
 }
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-	setupLogger()
+	logger = NewTerraformr(log.Default().Writer())
 	var diags diag.Diagnostics
 
 	token := d.Get("token").(string)
