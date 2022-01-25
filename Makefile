@@ -10,7 +10,6 @@ VERSION=0.3.1
 OS_ARCH=linux_amd64
 GOLDFLAGS= -s -X github.com/anexia-it/terraform-provider-anxcloud/anxcloud.providerVersion=$(VERSION)
 
-TEST?=$$(go list ./... | grep -v 'vendor')
 GOFMT_FILES  := $(shell find ./anxcloud -name '*.go' |grep -v vendor)
 
 default: install
@@ -42,8 +41,7 @@ install: build
 
 .PHONY: test
 test: fmtcheck
-	go test $(TEST) || exit 1
-	echo $(TEST) | xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
+	go test ./... -v $(TESTARGS)
 
 .PHONY: testacc
 testacc: fmtcheck
@@ -56,7 +54,7 @@ testacc: fmtcheck
 		echo ""; \
 		exit 1; \
 	fi
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -parallel=4
+	TF_ACC=1 go test ./... -v $(TESTARGS) -timeout 120m
 
 .PHONY: fmt
 fmt:
