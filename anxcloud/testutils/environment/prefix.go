@@ -32,6 +32,20 @@ func (p *Prefix) GetNextIP() string {
 	return network.IP.String()
 }
 
+func deletePrefix(ctx context.Context, environment Info) error {
+	c, err := client.New(client.TokenFromEnv(false))
+	if err != nil {
+		return err
+	}
+	prefixAPI := prefix.NewAPI(c)
+	err = prefixAPI.Delete(ctx, environment.Prefix.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CreateTestPrefix(ctx context.Context, environment Info) (Prefix, error) {
 	c, err := client.New(client.TokenFromEnv(false))
 	if err != nil {
@@ -46,7 +60,7 @@ func CreateTestPrefix(ctx context.Context, environment Info) (Prefix, error) {
 		CreateEmpty:          true,
 		VLANID:               environment.VlanID,
 		EnableVMProvisioning: false,
-		CustomerDescription:  "A prefix used for terraform testing",
+		CustomerDescription:  fmt.Sprintf("terraform-test: %s", environment.TestRunName),
 	}
 
 	prefixAPI := prefix.NewAPI(c)

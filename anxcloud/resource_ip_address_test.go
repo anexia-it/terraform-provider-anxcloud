@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccAnxCloudIPAddress(t *testing.T) {
+	environment.SkipIfNoEnvironment(t)
 	resourceName := "acc_test"
 	resourcePath := "anxcloud_ip_address." + resourceName
 

@@ -3,6 +3,7 @@ package anxcloud
 import (
 	"context"
 	"fmt"
+	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,12 +13,14 @@ import (
 )
 
 func TestAccAnxCloudVLAN(t *testing.T) {
+	environment.SkipIfNoEnvironment(t)
+
 	resourceName := "acc_test"
 	resourcePath := "anxcloud_vlan." + resourceName
 
 	locationID := "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
 	customerDescription := "vlan acceptance tests"
-	customerDescriptionUpdate := "vlan acceptance tests update"
+	customerDescriptionUpdate := "vlan acceptance tests update " + environment.GetEnvInfo(t).TestRunName
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },

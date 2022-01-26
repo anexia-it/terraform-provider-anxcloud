@@ -3,6 +3,7 @@ package anxcloud
 import (
 	"context"
 	"fmt"
+	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,11 +13,14 @@ import (
 )
 
 func TestAccAnxCloudNetworkPrefix(t *testing.T) {
+	environment.SkipIfNoEnvironment(t)
+
 	resourceName := "acc_test"
 	resourcePath := "anxcloud_network_prefix." + resourceName
 
-	locationID := "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
-	customerDescription := "network prefix acceptance tests"
+	envInfo := environment.GetEnvInfo(t)
+	locationID := envInfo.Location
+	customerDescription := "network prefix acceptance tests: " + envInfo.TestRunName
 	customerDescriptionUpdate := "network prefix acceptance tests update"
 
 	resource.Test(t, resource.TestCase{

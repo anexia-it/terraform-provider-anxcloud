@@ -2,7 +2,7 @@
 on:
   pull_request:
   repository_dispatch:
-    types: [ok-to-test-command]
+    types: [ ok-to-test-command ]
 
 name: Integration tests
 
@@ -22,6 +22,8 @@ jobs:
           go-version: ${{env.GO_VERSION}}
       - name: run integration tests
         env:
+          ANEXIA_LOCATION_ID: 52b5f6b2fd3a4a7eaaedf1a7c019e9ea
+          ANEXIA_VLAN_ID: 02f39d20ca0f4adfb5032f88dbc26c39
           ANEXIA_TOKEN: ${{ secrets.ANEXIA_TOKEN }}
         run: make testacc
 
@@ -42,6 +44,8 @@ jobs:
           go-version: ${{env.GO_VERSION}}
       - name: run integration tests
         env:
+          ANEXIA_LOCATION_ID: 52b5f6b2fd3a4a7eaaedf1a7c019e9ea
+          ANEXIA_VLAN_ID: 02f39d20ca0f4adfb5032f88dbc26c39
           ANEXIA_TOKEN: ${{ secrets.ANEXIA_TOKEN }}
         run: make testacc
 
