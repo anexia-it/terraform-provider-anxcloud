@@ -16,7 +16,7 @@ func TestAccAnxCloudIPAddress(t *testing.T) {
 	resourceName := "acc_test"
 	resourcePath := "anxcloud_ip_address." + resourceName
 
-	envInfo := environment.GetEnvInfo()
+	envInfo := environment.GetEnvInfo(t)
 
 	prefixID := envInfo.Prefix.ID
 	ipAddress := envInfo.Prefix.GetNextIP()

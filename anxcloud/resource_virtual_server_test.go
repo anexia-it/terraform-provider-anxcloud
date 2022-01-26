@@ -47,7 +47,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 	resourcePath := "anxcloud_virtual_server." + resourceName
 
 	vmRecorder := getVMRecorder(t)
-	envInfo := environment.GetEnvInfo()
+	envInfo := environment.GetEnvInfo(t)
 	templateID := vsphereAccTestInit(envInfo.Location, templateName)
 	vmDef := vm.Definition{
 		Location:           envInfo.Location,
@@ -139,7 +139,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 	resourcePath := "anxcloud_virtual_server." + resourceName
 
 	vmRecorder := getVMRecorder(t)
-	envInfo := environment.GetEnvInfo()
+	envInfo := environment.GetEnvInfo(t)
 	templateID := vsphereAccTestInit(envInfo.Location, templateName)
 	vmDef := vm.Definition{
 		Location:           envInfo.Location,

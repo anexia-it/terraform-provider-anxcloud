@@ -12,7 +12,6 @@ import (
 
 type Prefix struct {
 	ID      string
-	Prefix  string
 	CIDR    string
 	counter uint8
 	mutex   *sync.Mutex
@@ -22,7 +21,7 @@ func (p *Prefix) GetNextIP() string {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
-	_, network, err := net.ParseCIDR(p.Prefix)
+	_, network, err := net.ParseCIDR(p.CIDR)
 	if err != nil {
 		panic(fmt.Errorf("could not get next free IP: %w", err))
 	}
@@ -33,8 +32,7 @@ func (p *Prefix) GetNextIP() string {
 	return network.IP.String()
 }
 
-func CreateTestPrefix(ctx context.Context) (Prefix, error) {
-	environment := GetEnvInfo()
+func CreateTestPrefix(ctx context.Context, environment Info) (Prefix, error) {
 	c, err := client.New(client.TokenFromEnv(false))
 	if err != nil {
 		return Prefix{}, err
