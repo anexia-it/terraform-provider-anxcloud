@@ -18,7 +18,7 @@ func TestAccAnxCloudVLAN(t *testing.T) {
 	resourceName := "acc_test"
 	resourcePath := "anxcloud_vlan." + resourceName
 
-	locationID := "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
+	locationID := environment.GetEnvInfo(t).Location
 	customerDescription := "vlan acceptance tests"
 	customerDescriptionUpdate := "vlan acceptance tests update " + environment.GetEnvInfo(t).TestRunName
 
