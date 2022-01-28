@@ -3,8 +3,8 @@ package environment
 import (
 	"context"
 	"fmt"
-	"github.com/anexia-it/go-anxcloud/pkg/client"
-	"github.com/anexia-it/go-anxcloud/pkg/ipam/prefix"
+	"go.anx.io/go-anxcloud/pkg/client"
+	"go.anx.io/go-anxcloud/pkg/ipam/prefix"
 	"net"
 	"sync"
 	"time"

@@ -3,8 +3,8 @@ package recorder
 import (
 	"context"
 	"errors"
-	"github.com/anexia-it/go-anxcloud/pkg/client"
-	"github.com/anexia-it/go-anxcloud/pkg/ipam/prefix"
+	"go.anx.io/go-anxcloud/pkg/client"
+	"go.anx.io/go-anxcloud/pkg/ipam/prefix"
 )
 
 type prefixCleanupHandler func(ctx context.Context) error
