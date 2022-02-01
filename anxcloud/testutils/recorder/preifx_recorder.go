@@ -21,7 +21,7 @@ func (p PrefixRecorder) Cleanup(ctx context.Context) []error {
 			cleanUpErrors = append(cleanUpErrors, err)
 		}
 	}
-	return nil
+	return cleanUpErrors
 }
 
 func (p *PrefixRecorder) RecordPrefixByID(identifier string) {

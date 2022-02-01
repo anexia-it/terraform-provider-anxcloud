@@ -84,7 +84,7 @@ func CreateTestPrefix(ctx context.Context, environment Info) (Prefix, error) {
 		if fetchedPrefix.Status == "Failed" {
 			err := prefixAPI.Delete(ctx, summary.ID)
 			if err != nil {
-				panic(fmt.Sprintf("setting up test prefix failed and err occured when deleting: %s", err.Error()))
+				panic(fmt.Sprintf("setting up test prefix failed and err occurred when deleting: %s", err.Error()))
 			}
 			panic("setting up test prefix failed")
 		}
