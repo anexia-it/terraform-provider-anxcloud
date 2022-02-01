@@ -60,15 +60,9 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 		CPUPerformanceType: "performance",
 		Disk:               50,
 		DiskType:           "ENT6",
-		Network: []vm.Network{
-			{
-				VLAN:    envInfo.VlanID,
-				NICType: "vmxnet3",
-				IPs:     []string{envInfo.Prefix.GetNextIP()},
-			},
-		},
-		DNS1:     "8.8.8.8",
-		Password: "flatcar#1234$%%",
+		Network:            []vm.Network{createNewNetworkInterface(envInfo)},
+		DNS1:               "8.8.8.8",
+		Password:           "flatcar#1234$%%",
 	}
 	vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", vmDef.Hostname))
 
@@ -184,15 +178,9 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 		Memory:             2048,
 		CPUs:               2,
 		CPUPerformanceType: "performance",
-		Network: []vm.Network{
-			{
-				VLAN:    "02f39d20ca0f4adfb5032f88dbc26c39",
-				NICType: "vmxnet3",
-				IPs:     []string{"10.244.2.27"},
-			},
-		},
-		DNS1:     "8.8.8.8",
-		Password: "flatcar#1234$%%",
+		Network:            []vm.Network{createNewNetworkInterface(envInfo)},
+		DNS1:               "8.8.8.8",
+		Password:           "flatcar#1234$%%",
 	}
 	vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", vmDef.Hostname))
 
@@ -206,6 +194,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 	t.Run("AddDisk", func(t *testing.T) {
 		addDiskDef := vmDef
 		addDiskDef.Hostname = "acc-test-" + shortuuid.New()
+		addDiskDef.Network = []vm.Network{createNewNetworkInterface(envInfo)}
 
 		disksAdd := append(disks, vm.Disk{
 
@@ -236,7 +225,9 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 
 	t.Run("ChangeAddDisk", func(t *testing.T) {
 		changeDiskDef := vmDef
+		changeDiskDef.Network = []vm.Network{{}}
 		changeDiskDef.Hostname = "acc-test-" + shortuuid.New()
+		changeDiskDef.Network = []vm.Network{createNewNetworkInterface(envInfo)}
 		vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", changeDiskDef.Hostname))
 		disksChange := append(disks, vm.Disk{
 			SizeGBs: 50,
@@ -270,6 +261,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 	t.Run("MultiDiskTemplateChange", func(t *testing.T) {
 		changeDiskDef := vmDef
 		changeDiskDef.Hostname = "acc-test-" + shortuuid.New()
+		changeDiskDef.Network = []vm.Network{createNewNetworkInterface(envInfo)}
 		vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", changeDiskDef.Hostname))
 		changeDiskDef.TemplateID = "659b35b5-0060-44de-9f9e-a069ec5f1bca"
 		templateDisks := []vm.Disk{
@@ -567,4 +559,12 @@ func extractBuildNumber(version string) int {
 func TestVersionParsing(t *testing.T) {
 	require.Equal(t, 5555, extractBuildNumber("b5555"))
 	require.Equal(t, 6666, extractBuildNumber("6666"))
+}
+
+func createNewNetworkInterface(info environment.Info) vm.Network {
+	return vm.Network{
+		VLAN:    info.VlanID,
+		NICType: "vmxnet3",
+		IPs:     []string{info.Prefix.GetNextIP()},
+	}
 }
