@@ -28,11 +28,11 @@ func (v VMRecoder) Cleanup(ctx context.Context) []error {
 }
 
 func (v *VMRecoder) RecordVMByName(name string) {
-	v.handlers = append(v.handlers, v.createCleanupHanlderByName(name))
+	v.handlers = append(v.handlers, v.createCleanupHandlerByName(name))
 }
 
 func (v *VMRecoder) RecordVMByID(id string) {
-	v.handlers = append(v.handlers, v.createCleanupHanlderByName(id))
+	v.handlers = append(v.handlers, v.createCleanupHandlerByName(id))
 }
 
 func (v VMRecoder) createCleanupHandlerByID(id string) vmCleanUpFunc {
@@ -55,7 +55,7 @@ func (v VMRecoder) createCleanupHandlerByID(id string) vmCleanUpFunc {
 	}
 }
 
-func (v VMRecoder) createCleanupHanlderByName(name string) vmCleanUpFunc {
+func (v VMRecoder) createCleanupHandlerByName(name string) vmCleanUpFunc {
 	return func(ctx context.Context) error {
 		client, err := client.New(client.TokenFromEnv(false))
 		if err != nil {
