@@ -11,23 +11,17 @@ import (
 )
 
 type Prefix struct {
-	ID      string
-	CIDR    net.IPNet
-	counter uint8
-	mutex   *sync.Mutex
+	ID    string
+	CIDR  net.IPNet
+	mutex *sync.Mutex
 }
 
 func (p *Prefix) GetNextIP() string {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
-	var newIP net.IP
-	copy(newIP, p.CIDR.IP)
-
-	newIP[3] += p.counter + 2
-	p.counter += 1
-
-	return newIP.String()
+	p.CIDR.IP[3]++
+	return p.CIDR.IP.String()
 }
 
 func deletePrefix(ctx context.Context, environment Info) error {
@@ -77,6 +71,7 @@ func CreateTestPrefix(ctx context.Context, environment Info) (Prefix, error) {
 			if err != nil || network == nil {
 				return Prefix{}, fmt.Errorf("could not parse CIDR '%s': %w", fetchedPrefix.Name, err)
 			}
+			network.IP[3] = 2
 
 			return Prefix{
 				ID:    fetchedPrefix.ID,
