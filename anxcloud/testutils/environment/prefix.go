@@ -12,7 +12,7 @@ import (
 
 type Prefix struct {
 	ID      string
-	CIDR    string
+	CIDR    net.IPNet
 	counter uint8
 	mutex   *sync.Mutex
 }
@@ -21,15 +21,13 @@ func (p *Prefix) GetNextIP() string {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
-	_, network, err := net.ParseCIDR(p.CIDR)
-	if err != nil {
-		panic(fmt.Errorf("could not get next free IP: %w", err))
-	}
+	var newIP net.IP
+	copy(newIP, p.CIDR.IP)
 
-	network.IP[3] += p.counter + 2
+	newIP[3] += p.counter + 2
 	p.counter += 1
 
-	return network.IP.String()
+	return newIP.String()
 }
 
 func deletePrefix(ctx context.Context, environment Info) error {
@@ -75,9 +73,14 @@ func CreateTestPrefix(ctx context.Context, environment Info) (Prefix, error) {
 			panic(err)
 		}
 		if fetchedPrefix.Status == "Active" {
+			_, network, err := net.ParseCIDR(fetchedPrefix.Name)
+			if err != nil || network == nil {
+				return Prefix{}, fmt.Errorf("could not parse CIDR '%s': %w", fetchedPrefix.Name, err)
+			}
+
 			return Prefix{
 				ID:    fetchedPrefix.ID,
-				CIDR:  fetchedPrefix.Name,
+				CIDR:  *network,
 				mutex: &sync.Mutex{},
 			}, nil
 		}
