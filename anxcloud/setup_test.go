@@ -10,7 +10,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	rand.Seed(time.Now().Unix())
+	rand.Seed(time.Now().UnixNano())
 
 	// setup test environment
 	var env *environment.Info

@@ -18,8 +18,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/lithammer/shortuuid"
-
 	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/vsphere"
 	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/templates"
@@ -34,7 +32,6 @@ const (
 )
 
 func getVMRecorder(t *testing.T) recorder.VMRecoder {
-
 	vmRecorder := recorder.VMRecoder{}
 	t.Cleanup(func() {
 		vmRecorder.Cleanup(context.TODO())
@@ -54,7 +51,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 		Location:           envInfo.Location,
 		TemplateType:       "templates",
 		TemplateID:         templateID,
-		Hostname:           "acc-test-" + envInfo.TestRunName,
+		Hostname:           "terraform-test-" + envInfo.TestRunName,
 		Memory:             2048,
 		CPUs:               1,
 		CPUPerformanceType: "performance",
@@ -174,7 +171,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 		Location:           envInfo.Location,
 		TemplateType:       "templates",
 		TemplateID:         templateID,
-		Hostname:           "acc-test-" + shortuuid.New(),
+		Hostname:           "terraform-test-" + envInfo.TestRunName,
 		Memory:             2048,
 		CPUs:               2,
 		CPUPerformanceType: "performance",
@@ -193,7 +190,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 
 	t.Run("AddDisk", func(t *testing.T) {
 		addDiskDef := vmDef
-		addDiskDef.Hostname = "acc-test-" + shortuuid.New()
+		addDiskDef.Hostname = "terraform-test-" + envInfo.TestRunName
 		addDiskDef.Network = []vm.Network{createNewNetworkInterface(envInfo)}
 
 		disksAdd := append(disks, vm.Disk{
@@ -226,7 +223,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 	t.Run("ChangeAddDisk", func(t *testing.T) {
 		changeDiskDef := vmDef
 		changeDiskDef.Network = []vm.Network{{}}
-		changeDiskDef.Hostname = "acc-test-" + shortuuid.New()
+		changeDiskDef.Hostname = "terraform-test-" + envInfo.TestRunName
 		changeDiskDef.Network = []vm.Network{createNewNetworkInterface(envInfo)}
 		vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", changeDiskDef.Hostname))
 		disksChange := append(disks, vm.Disk{
@@ -260,7 +257,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 
 	t.Run("MultiDiskTemplateChange", func(t *testing.T) {
 		changeDiskDef := vmDef
-		changeDiskDef.Hostname = "acc-test-" + shortuuid.New()
+		changeDiskDef.Hostname = "terraform-test-" + envInfo.TestRunName
 		changeDiskDef.Network = []vm.Network{createNewNetworkInterface(envInfo)}
 		vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", changeDiskDef.Hostname))
 		changeDiskDef.TemplateID = "659b35b5-0060-44de-9f9e-a069ec5f1bca"
