@@ -4,7 +4,6 @@ go 1.15
 
 require (
 	github.com/agext/levenshtein v1.2.3 // indirect
-	github.com/anexia-it/go-anxcloud v0.0.0-00010101000000-000000000000
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/go-test/deep v1.0.7 // indirect
 	github.com/google/go-cmp v0.5.6
@@ -37,5 +36,3 @@ require (
 	google.golang.org/grpc v1.43.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200506231410-2ff61e1afc86 // indirect
 )
-
-replace github.com/anexia-it/go-anxcloud => github.com/anexia-it/go-anxcloud v0.3.29-0.20211210090154-02fcc446cc4b
