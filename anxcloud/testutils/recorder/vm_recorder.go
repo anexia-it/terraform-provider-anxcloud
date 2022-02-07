@@ -3,10 +3,10 @@ package recorder
 import (
 	"context"
 	"errors"
-	"github.com/anexia-it/go-anxcloud/pkg/api"
-	"github.com/anexia-it/go-anxcloud/pkg/client"
-	"github.com/anexia-it/go-anxcloud/pkg/vsphere/provisioning/vm"
-	"github.com/anexia-it/go-anxcloud/pkg/vsphere/search"
+	"go.anx.io/go-anxcloud/pkg/api"
+	"go.anx.io/go-anxcloud/pkg/client"
+	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/vm"
+	"go.anx.io/go-anxcloud/pkg/vsphere/search"
 	"net/http"
 )
 
