@@ -3,7 +3,6 @@ package recorder
 import (
 	"context"
 	"errors"
-	"go.anx.io/go-anxcloud/pkg/api"
 	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/vm"
 	"go.anx.io/go-anxcloud/pkg/vsphere/search"
@@ -13,7 +12,6 @@ import (
 type vmCleanUpFunc func(ctx context.Context) error
 type VMRecoder struct {
 	handlers []vmCleanUpFunc
-	client   api.API
 }
 
 func (v VMRecoder) Cleanup(ctx context.Context) []error {
@@ -32,7 +30,7 @@ func (v *VMRecoder) RecordVMByName(name string) {
 }
 
 func (v *VMRecoder) RecordVMByID(id string) {
-	v.handlers = append(v.handlers, v.createCleanupHandlerByName(id))
+	v.handlers = append(v.handlers, v.createCleanupHandlerByID(id))
 }
 
 func (v VMRecoder) createCleanupHandlerByID(id string) vmCleanUpFunc {
