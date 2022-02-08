@@ -51,7 +51,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 		Location:           envInfo.Location,
 		TemplateType:       "templates",
 		TemplateID:         templateID,
-		Hostname:           "terraform-test-" + envInfo.TestRunName,
+		Hostname:           fmt.Sprintf("terraform-test-%s-create-virtual-server", envInfo.TestRunName),
 		Memory:             2048,
 		CPUs:               1,
 		CPUPerformanceType: "performance",
@@ -171,7 +171,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 		Location:           envInfo.Location,
 		TemplateType:       "templates",
 		TemplateID:         templateID,
-		Hostname:           "terraform-test-" + envInfo.TestRunName,
+		Hostname:           fmt.Sprintf("terraform-test-%s-multi-disk-scaling", envInfo.TestRunName),
 		Memory:             2048,
 		CPUs:               2,
 		CPUPerformanceType: "performance",
@@ -190,7 +190,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 
 	t.Run("AddDisk", func(t *testing.T) {
 		addDiskDef := vmDef
-		addDiskDef.Hostname = "terraform-test-" + envInfo.TestRunName
+		addDiskDef.Hostname = fmt.Sprintf("terraform-test-%s-add-disk", envInfo.TestRunName)
 		addDiskDef.Network = []vm.Network{createNewNetworkInterface(envInfo)}
 
 		disksAdd := append(disks, vm.Disk{
@@ -222,7 +222,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 
 	t.Run("ChangeAddDisk", func(t *testing.T) {
 		changeDiskDef := vmDef
-		changeDiskDef.Hostname = "terraform-test-" + envInfo.TestRunName
+		changeDiskDef.Hostname = fmt.Sprintf("terraform-test-%s-change-add-disk", envInfo.TestRunName)
 		changeDiskDef.Network = []vm.Network{createNewNetworkInterface(envInfo)}
 		vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", changeDiskDef.Hostname))
 		disksChange := append(disks, vm.Disk{
@@ -256,7 +256,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 
 	t.Run("MultiDiskTemplateChange", func(t *testing.T) {
 		changeDiskDef := vmDef
-		changeDiskDef.Hostname = "terraform-test-" + envInfo.TestRunName
+		changeDiskDef.Hostname = fmt.Sprintf("terraform-test-%s-multi-disk-template-change", envInfo.TestRunName)
 		changeDiskDef.Network = []vm.Network{createNewNetworkInterface(envInfo)}
 		vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", changeDiskDef.Hostname))
 		changeDiskDef.TemplateID = "659b35b5-0060-44de-9f9e-a069ec5f1bca"
