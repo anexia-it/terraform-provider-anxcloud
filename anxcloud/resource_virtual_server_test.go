@@ -222,7 +222,6 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 
 	t.Run("ChangeAddDisk", func(t *testing.T) {
 		changeDiskDef := vmDef
-		changeDiskDef.Network = []vm.Network{{}}
 		changeDiskDef.Hostname = "terraform-test-" + envInfo.TestRunName
 		changeDiskDef.Network = []vm.Network{createNewNetworkInterface(envInfo)}
 		vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", changeDiskDef.Hostname))
