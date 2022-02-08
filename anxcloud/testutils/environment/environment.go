@@ -3,9 +3,11 @@ package environment
 import (
 	"context"
 	"errors"
+	"github.com/goombaio/namegenerator"
 	"log"
 	"os"
 	"testing"
+	"time"
 )
 
 type Info struct {
@@ -71,7 +73,7 @@ func InitEnvironment() (*Info, error) {
 	log.Println("Setting up new test environment")
 	// we create a new environment
 	envInfo = &Info{
-		TestRunName: generateRandomName(),
+		TestRunName: namegenerator.NewNameGenerator(time.Now().UnixNano()).Generate(),
 		VlanID:      vlanID,
 		Location:    locationID,
 	}
