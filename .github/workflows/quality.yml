@@ -1,0 +1,69 @@
+name: Code quality
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+env:
+  GO_VERSION: 1.17
+
+jobs:
+  docs-lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{env.GO_VERSION}}
+
+    - name: Check for spelling errors
+      run: make misspell
+
+    - name: Check HCL format
+      run: make terrafmt
+
+    - name: Lint markdown sources
+      uses: avto-dev/markdown-lint@v1
+      with:
+        config: '.markdownlint.yml'
+        args: 'docs'
+
+  code-lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{env.GO_VERSION}}
+
+    - name: Check code format
+      run: make fmtcheck
+
+    - name: Lint code
+      run: make go-lint
+
+  dependencies:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{env.GO_VERSION}}
+
+    - name: run depscheck
+      run: make depscheck
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{env.GO_VERSION}}
+
+    - name: run unit tests
+      run: make test

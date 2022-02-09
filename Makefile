@@ -73,40 +73,52 @@ depscheck:
 	@git diff --exit-code -- go.mod go.sum || \
 		(echo; echo "Found differences in go.mod/go.sum files. Run 'go mod tidy' or revert go.mod/go.sum changes."; exit 1)
 
-.PHONY: tools
-tools:
-	cd tools && go install github.com/client9/misspell/cmd/misspell
-	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	cd tools && go install github.com/katbyte/terrafmt
+.PHONY: tools/misspell
+tools/misspell:
+	cd tools && go build -o . github.com/client9/misspell/cmd/misspell
+
+.PHONY: tools/golangci-lint
+tools/golangci-lint:
+	cd tools && go build -o . github.com/golangci/golangci-lint/cmd/golangci-lint
+
+.PHONY: tools/terrafmt
+tools/terrafmt:
+	cd tools && go build -o . github.com/katbyte/terrafmt
 
 .PHONY: docs-lint
-docs-lint:
+docs-lint: misspell terrafmt
 	@echo "==> Checking docs against linters..."
-	@misspell -error -source=text docs/ || (echo; \
-		echo "Unexpected misspelling found in docs files."; \
-		echo "To automatically fix the misspelling, run 'make docs-lint-fix' and commit the changes."; \
-		exit 1)
 	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli docs/ || (echo; \
 		echo "Unexpected issues found in docs Markdown files."; \
 		echo "To apply any automatic fixes, run 'make docs-lint-fix' and commit the changes."; \
 		exit 1)
-	@terrafmt diff ./docs --check --pattern '*.md' --quiet || (echo; \
+
+.PHONY: docs-lint-fix
+docs-lint-fix: tools/misspell tools/terrafmt
+	@echo "==> Applying automatic docs linter fixes..."
+	@tools/misspell -w -source=text docs/
+	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix docs/
+	@tools/terrafmt fmt ./docs --pattern '*.md'
+
+.PHONY: go-lint
+go-lint: tools/golangci-lint
+	@echo "==> Checking source code against linters..."
+	@tools/golangci-lint run ./...
+
+.PHONY: terrafmt
+terrafmt: tools/terrafmt
+	@tools/terrafmt diff ./docs --check --pattern '*.md' --quiet || (echo; \
 		echo "Unexpected differences in docs HCL formatting."; \
-		echo "To see the full differences, run: terrafmt diff ./docs --pattern '*.md'"; \
+		echo "To see the full differences, run: tools/terrafmt diff ./docs --pattern '*.md'"; \
 		echo "To automatically fix the formatting, run 'make docs-lint-fix' and commit the changes."; \
 		exit 1)
 
-.PHONY: docs-lint-fix
-docs-lint-fix:
-	@echo "==> Applying automatic docs linter fixes..."
-	@misspell -w -source=text docs/
-	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix docs/
-	@terrafmt fmt ./docs --pattern '*.md'
-
-.PHONY: go-lint
-go-lint:
-	@echo "==> Checking source code against linters..."
-	@golangci-lint run ./$(NAME)
+.PHONY: misspell
+misspell: tools/misspell
+	@tools/misspell -error -source=text docs/ || (echo; \
+		echo "Unexpected misspelling found in docs files."; \
+		echo "To automatically fix the misspelling, run 'make docs-lint-fix' and commit the changes."; \
+		exit 1)
 
 .PHONY: lint
 lint: go-lint docs-lint
