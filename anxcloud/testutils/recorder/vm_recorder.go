@@ -22,7 +22,7 @@ func (v VMRecoder) Cleanup(ctx context.Context) []error {
 			cleanUpErrors = append(cleanUpErrors, err)
 		}
 	}
-	return nil
+	return cleanUpErrors
 }
 
 func (v *VMRecoder) RecordVMByName(name string) {
