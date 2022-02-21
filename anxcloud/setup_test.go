@@ -15,7 +15,9 @@ func TestMain(m *testing.M) {
 	// setup test environment
 	var env *environment.Info
 	var err error
-	if env, err = environment.InitEnvironment(); err != nil {
+
+	env, err = environment.InitEnvironment()
+	if err != nil {
 		log.Fatalf("could not setup environment: %s", err.Error())
 	}
 
@@ -23,7 +25,8 @@ func TestMain(m *testing.M) {
 	exitCode := m.Run()
 
 	// cleanup
-	if err := env.CleanUp(); err != nil {
+	err = env.CleanUp()
+	if err != nil {
 		log.Fatalf("could not clean up environment: %s", err.Error())
 	}
 	os.Exit(exitCode)
