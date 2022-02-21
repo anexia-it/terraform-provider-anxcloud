@@ -2,6 +2,7 @@ package anxcloud
 
 import (
 	"fmt"
+	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -9,10 +10,11 @@ import (
 )
 
 func TestAccAnxCloudTemplateDataSource(t *testing.T) {
+	environment.SkipIfNoEnvironment(t)
 	resourceName := "acc_test"
 	resourcePath := "data.anxcloud_template." + resourceName
 
-	locationID := "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
+	locationID := environment.GetEnvInfo(t).Location
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },

@@ -13,12 +13,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
 	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/recorder"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/lithammer/shortuuid"
-
 	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/vsphere"
 	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/templates"
@@ -29,12 +28,10 @@ import (
 var buildNumberRegex = regexp.MustCompile(`[bB]?(\d+)`)
 
 const (
-	locationID   = "52b5f6b2fd3a4a7eaaedf1a7c019e9ea"
 	templateName = "Ubuntu 20.04.02"
 )
 
 func getVMRecorder(t *testing.T) recorder.VMRecoder {
-
 	vmRecorder := recorder.VMRecoder{}
 	t.Cleanup(func() {
 		vmRecorder.Cleanup(context.TODO())
@@ -43,30 +40,26 @@ func getVMRecorder(t *testing.T) recorder.VMRecoder {
 }
 
 func TestAccAnxCloudVirtualServer(t *testing.T) {
+	environment.SkipIfNoEnvironment(t)
 	resourceName := "acc_test_vm_test"
 	resourcePath := "anxcloud_virtual_server." + resourceName
 
 	vmRecorder := getVMRecorder(t)
-	templateID := vsphereAccTestInit(locationID, templateName)
+	envInfo := environment.GetEnvInfo(t)
+	templateID := vsphereAccTestInit(envInfo.Location, templateName)
 	vmDef := vm.Definition{
-		Location:           locationID,
+		Location:           envInfo.Location,
 		TemplateType:       "templates",
 		TemplateID:         templateID,
-		Hostname:           "acc-test-" + shortuuid.New(),
+		Hostname:           fmt.Sprintf("terraform-test-%s-create-virtual-server", envInfo.TestRunName),
 		Memory:             2048,
 		CPUs:               1,
 		CPUPerformanceType: "performance",
 		Disk:               50,
 		DiskType:           "ENT6",
-		Network: []vm.Network{
-			{
-				VLAN:    "02f39d20ca0f4adfb5032f88dbc26c39",
-				NICType: "vmxnet3",
-				IPs:     []string{"10.244.2.26"},
-			},
-		},
-		DNS1:     "8.8.8.8",
-		Password: "flatcar#1234$%%",
+		Network:            []vm.Network{createNewNetworkInterface(envInfo)},
+		DNS1:               "8.8.8.8",
+		Password:           "flatcar#1234$%%",
 	}
 	vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", vmDef.Hostname))
 
@@ -129,33 +122,62 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"cpu_performance_type", "tags.#", "tags.0", "critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template_type", "network"},
 			},
+			{
+				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmAddTag, "newTag"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmAddTag),
+					resource.TestCheckResourceAttr(resourcePath, "tags.0", "newTag"),
+				),
+			},
+			{
+				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDefUpscale),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefUpscale),
+					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefUpscale.Location),
+					resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefUpscale.TemplateID),
+					resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefUpscale.CPUs)),
+					resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefUpscale.Memory)),
+				),
+			},
+			{
+				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDefDownscale),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefDownscale),
+					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefDownscale.Location),
+					resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefDownscale.TemplateID),
+					resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefDownscale.CPUs)),
+					resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefDownscale.Memory)),
+				),
+			},
+			{
+				ResourceName:            resourcePath,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"cpu_performance_type", "tags.#", "tags.0", "critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template_type", "network"},
+			},
 		},
 	})
 }
 
 func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
+	environment.SkipIfNoEnvironment(t)
 	resourceName := "acc_test_vm_test_multi_disk"
 	resourcePath := "anxcloud_virtual_server." + resourceName
 
 	vmRecorder := getVMRecorder(t)
-	templateID := vsphereAccTestInit(locationID, templateName)
+	envInfo := environment.GetEnvInfo(t)
+	templateID := vsphereAccTestInit(envInfo.Location, templateName)
 	vmDef := vm.Definition{
-		Location:           locationID,
+		Location:           envInfo.Location,
 		TemplateType:       "templates",
 		TemplateID:         templateID,
-		Hostname:           "acc-test-" + shortuuid.New(),
+		Hostname:           fmt.Sprintf("terraform-test-%s-multi-disk-scaling", envInfo.TestRunName),
 		Memory:             2048,
 		CPUs:               2,
 		CPUPerformanceType: "performance",
-		Network: []vm.Network{
-			{
-				VLAN:    "02f39d20ca0f4adfb5032f88dbc26c39",
-				NICType: "vmxnet3",
-				IPs:     []string{"10.244.2.27"},
-			},
-		},
-		DNS1:     "8.8.8.8",
-		Password: "flatcar#1234$%%",
+		Network:            []vm.Network{createNewNetworkInterface(envInfo)},
+		DNS1:               "8.8.8.8",
+		Password:           "flatcar#1234$%%",
 	}
 	vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", vmDef.Hostname))
 
@@ -168,7 +190,8 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 
 	t.Run("AddDisk", func(t *testing.T) {
 		addDiskDef := vmDef
-		addDiskDef.Hostname = "acc-test-" + shortuuid.New()
+		addDiskDef.Hostname = fmt.Sprintf("terraform-test-%s-add-disk", envInfo.TestRunName)
+		addDiskDef.Network = []vm.Network{createNewNetworkInterface(envInfo)}
 
 		disksAdd := append(disks, vm.Disk{
 
@@ -199,7 +222,8 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 
 	t.Run("ChangeAddDisk", func(t *testing.T) {
 		changeDiskDef := vmDef
-		changeDiskDef.Hostname = "acc-test-" + shortuuid.New()
+		changeDiskDef.Hostname = fmt.Sprintf("terraform-test-%s-change-add-disk", envInfo.TestRunName)
+		changeDiskDef.Network = []vm.Network{createNewNetworkInterface(envInfo)}
 		vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", changeDiskDef.Hostname))
 		disksChange := append(disks, vm.Disk{
 			SizeGBs: 50,
@@ -232,7 +256,8 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 
 	t.Run("MultiDiskTemplateChange", func(t *testing.T) {
 		changeDiskDef := vmDef
-		changeDiskDef.Hostname = "acc-test-" + shortuuid.New()
+		changeDiskDef.Hostname = fmt.Sprintf("terraform-test-%s-multi-disk-template-change", envInfo.TestRunName)
+		changeDiskDef.Network = []vm.Network{createNewNetworkInterface(envInfo)}
 		vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", changeDiskDef.Hostname))
 		changeDiskDef.TemplateID = "659b35b5-0060-44de-9f9e-a069ec5f1bca"
 		templateDisks := []vm.Disk{
@@ -484,7 +509,7 @@ func generateTagsString(tags ...string) string {
 
 func vsphereAccTestInit(locationID string, templateName string) string {
 	if _, ok := os.LookupEnv(client.TokenEnvName); !ok {
-		// we are running in unit test context so do nothing
+		// we are running in unit test environment so do nothing
 		return ""
 	}
 	cli, err := client.New(client.AuthFromEnv(false))
@@ -530,4 +555,12 @@ func extractBuildNumber(version string) int {
 func TestVersionParsing(t *testing.T) {
 	require.Equal(t, 5555, extractBuildNumber("b5555"))
 	require.Equal(t, 6666, extractBuildNumber("6666"))
+}
+
+func createNewNetworkInterface(info environment.Info) vm.Network {
+	return vm.Network{
+		VLAN:    info.VlanID,
+		NICType: "vmxnet3",
+		IPs:     []string{info.Prefix.GetNextIP()},
+	}
 }
