@@ -4,11 +4,6 @@
 
 # Terraform Provider for Anexia Cloud
 
-[![Forums][discuss-badge]][discuss]
-
-[discuss-badge]: https://img.shields.io/badge/discuss-terraform--anxcloud-623CE4.svg?style=flat
-[discuss]: https://discuss.hashicorp.com/c/terraform-providers/tf-anxcloud/
-
 - Website: [terraform.io](https://terraform.io)
 - Tutorials: [learn.hashicorp.com](https://learn.hashicorp.com/terraform?track=getting-started#getting-started)
 - Forum: [discuss.hashicorp.com](https://discuss.hashicorp.com/c/terraform-providers/tf-anxcloud/)
