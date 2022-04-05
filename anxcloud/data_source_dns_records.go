@@ -2,9 +2,9 @@ package anxcloud
 
 import (
 	"context"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/clouddns/zone"
 )
 
@@ -16,7 +16,7 @@ func dataSourceDNSRecords() *schema.Resource {
 }
 
 func dataSourceDNSRecordsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	a := zone.NewAPI(c)
 
 	zoneName := d.Get("zone_name").(string)

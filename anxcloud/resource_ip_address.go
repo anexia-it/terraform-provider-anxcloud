@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/ipam/address"
 )
 
@@ -38,7 +37,7 @@ func resourceIPAddress() *schema.Resource {
 }
 
 func resourceIPAddressCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	a := address.NewAPI(c)
 	prefixID := d.Get("network_prefix_id").(string)
 
@@ -75,7 +74,7 @@ func resourceIPAddressCreate(ctx context.Context, d *schema.ResourceData, m inte
 func resourceIPAddressRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags []diag.Diagnostic
 
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	a := address.NewAPI(c)
 
 	info, err := a.Get(ctx, d.Id())
@@ -117,7 +116,7 @@ func resourceIPAddressRead(ctx context.Context, d *schema.ResourceData, m interf
 }
 
 func resourceIPAddressUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	a := address.NewAPI(c)
 
 	if !d.HasChanges("description_customer", "role") {
@@ -136,7 +135,7 @@ func resourceIPAddressUpdate(ctx context.Context, d *schema.ResourceData, m inte
 }
 
 func resourceIPAddressDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	a := address.NewAPI(c)
 
 	err := a.Delete(ctx, d.Id())

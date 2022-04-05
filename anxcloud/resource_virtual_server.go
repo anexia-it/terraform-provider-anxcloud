@@ -144,7 +144,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		disks    []Disk
 	)
 
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	vsphereAPI := vsphere.NewAPI(c)
 	addressAPI := address.NewAPI(c)
 	locationID := d.Get("location_id").(string)
@@ -280,7 +280,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	vsphereAPI := vsphere.NewAPI(c)
 	nicAPI := nictype.NewAPI(c)
 
@@ -425,7 +425,7 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 }
 
 func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	vsphereAPI := vsphere.NewAPI(c)
 	ch := vm.Change{
 		Reboot:          d.Get("force_restart_if_needed").(bool),
@@ -557,7 +557,7 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 }
 
 func resourceVirtualServerDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	vsphereAPI := vsphere.NewAPI(c)
 	progressAPI := progress.NewAPI(c)
 

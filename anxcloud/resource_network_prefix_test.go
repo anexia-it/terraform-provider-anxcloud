@@ -3,12 +3,12 @@ package anxcloud
 import (
 	"context"
 	"fmt"
-	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
 	"testing"
+
+	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/ipam/prefix"
 )
 
@@ -68,7 +68,7 @@ func TestAccAnxCloudNetworkPrefix(t *testing.T) {
 }
 
 func testAccCheckAnxCloudNetworkPrefixDestroy(s *terraform.State) error {
-	c := testAccProvider.Meta().(client.Client)
+	c := testAccProvider.Meta().(providerContext).legacyClient
 	p := prefix.NewAPI(c)
 	ctx := context.Background()
 	for _, rs := range s.RootModule().Resources {
@@ -112,7 +112,7 @@ func testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescription 
 func testAccAnxCloudNetworkPrefixExists(n string, expectedCustomerDescription string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
-		c := testAccProvider.Meta().(client.Client)
+		c := testAccProvider.Meta().(providerContext).legacyClient
 		p := prefix.NewAPI(c)
 		ctx := context.Background()
 

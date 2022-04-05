@@ -5,7 +5,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/disktype"
 )
 
@@ -17,7 +16,7 @@ func dataSourceDiskTypes() *schema.Resource {
 }
 
 func dataSourceDiskTypesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	t := disktype.NewAPI(c)
 	locationID := d.Get("location_id").(string)
 	diskTypes, err := t.List(ctx, locationID, 0, 1000)

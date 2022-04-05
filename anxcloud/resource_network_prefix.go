@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/ipam/prefix"
 )
 
@@ -38,7 +37,7 @@ func resourceNetworkPrefix() *schema.Resource {
 }
 
 func resourceNetworkPrefixCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	p := prefix.NewAPI(c)
 	locationID := d.Get("location_id").(string)
 
@@ -79,7 +78,7 @@ func resourceNetworkPrefixCreate(ctx context.Context, d *schema.ResourceData, m 
 func resourceNetworkPrefixRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags []diag.Diagnostic
 
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	p := prefix.NewAPI(c)
 
 	info, err := p.Get(ctx, d.Id())
@@ -143,7 +142,7 @@ func resourceNetworkPrefixRead(ctx context.Context, d *schema.ResourceData, m in
 }
 
 func resourceNetworkPrefixUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	p := prefix.NewAPI(c)
 
 	if !d.HasChange("description_customer") {
@@ -161,7 +160,7 @@ func resourceNetworkPrefixUpdate(ctx context.Context, d *schema.ResourceData, m 
 }
 
 func resourceNetworkPrefixDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	p := prefix.NewAPI(c)
 
 	if err := p.Delete(ctx, d.Id()); err != nil {

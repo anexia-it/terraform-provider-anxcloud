@@ -5,7 +5,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/templates"
 )
 
@@ -17,7 +16,7 @@ func dataSourceTemplate() *schema.Resource {
 }
 
 func dataSourceTemplateRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	t := templates.NewAPI(c)
 	locationID := d.Get("location_id").(string)
 	templateType := d.Get("template_type").(string)

@@ -3,12 +3,12 @@ package anxcloud
 import (
 	"context"
 	"fmt"
-	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
 	"testing"
+
+	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/ipam/address"
 )
 
@@ -85,7 +85,7 @@ func testAccAnxCloudIPAddress(resourceName, prefixID, ipAddress, role string) st
 }
 
 func testAccAnxCloudIPAddressDestroy(s *terraform.State) error {
-	c := testAccProvider.Meta().(client.Client)
+	c := testAccProvider.Meta().(providerContext).legacyClient
 	a := address.NewAPI(c)
 	ctx := context.Background()
 	for _, rs := range s.RootModule().Resources {

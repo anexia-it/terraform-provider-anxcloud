@@ -32,7 +32,7 @@ func resourceTag() *schema.Resource {
 }
 
 func resourceTagCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	t := tags.NewAPI(c)
 
 	def := tags.Create{
@@ -53,7 +53,7 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, m interface{
 func resourceTagRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags []diag.Diagnostic
 
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	t := tags.NewAPI(c)
 
 	info, err := t.Get(ctx, d.Id())
@@ -80,7 +80,7 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, m interface{})
 }
 
 func resourceTagDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	t := tags.NewAPI(c)
 
 	if err := t.Delete(ctx, d.Id(), d.Get("service_id").(string)); err != nil {

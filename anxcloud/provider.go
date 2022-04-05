@@ -11,6 +11,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"go.anx.io/go-anxcloud/pkg/api"
 	"go.anx.io/go-anxcloud/pkg/client"
 )
 
@@ -54,6 +55,11 @@ func Provider() *schema.Provider {
 	}
 }
 
+type providerContext struct {
+	api          api.API
+	legacyClient client.Client
+}
+
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	logger = NewTerraformr(log.Default().Writer())
 	var diags diag.Diagnostics
@@ -76,7 +82,20 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		return nil, diags
 	}
 
-	return c, diags
+	apiClient, err := api.NewAPI(api.WithClientOptions(opts...))
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to create Anexia client",
+			Detail:   "Unable to create Anexia client with the given token, either the token is empty or invalid",
+		})
+		return nil, diags
+	}
+
+	return providerContext{
+		api:          apiClient,
+		legacyClient: c,
+	}, diags
 }
 
 func handleNotFoundError(err error) error {

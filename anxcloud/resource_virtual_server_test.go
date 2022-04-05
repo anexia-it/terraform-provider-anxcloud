@@ -300,7 +300,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 }
 
 func testAccCheckAnxCloudVirtualServerDestroy(s *terraform.State) error {
-	c := testAccProvider.Meta().(client.Client)
+	c := testAccProvider.Meta().(providerContext).legacyClient
 	v := vsphere.NewAPI(c)
 	ctx := context.Background()
 
@@ -389,7 +389,7 @@ func testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName string, def
 func testAccCheckAnxCloudVirtualServerExists(n string, def *vm.Definition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
-		c := testAccProvider.Meta().(client.Client)
+		c := testAccProvider.Meta().(providerContext).legacyClient
 		v := vsphere.NewAPI(c)
 		ctx := context.Background()
 
@@ -441,7 +441,7 @@ func testAccCheckAnxCloudVirtualServerExists(n string, def *vm.Definition) resou
 func testAccCheckAnxCloudVirtualServerDisks(n string, expectedDisks []vm.Disk) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
-		c := testAccProvider.Meta().(client.Client)
+		c := testAccProvider.Meta().(providerContext).legacyClient
 		v := vsphere.NewAPI(c)
 		ctx := context.Background()
 

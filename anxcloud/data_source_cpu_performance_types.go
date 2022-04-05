@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"go.anx.io/go-anxcloud/pkg/client"
 
 	cpuperformancetypes "go.anx.io/go-anxcloud/pkg/vsphere/provisioning/cpuperformancetypes"
 )
@@ -20,7 +19,7 @@ func dataSourceCPUPerformanceTypes() *schema.Resource {
 }
 
 func dataSourceCPUPerformanceTypesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	api := cpuperformancetypes.NewAPI(c)
 
 	types, err := api.List(ctx)
