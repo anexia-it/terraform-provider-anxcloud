@@ -86,8 +86,8 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to create generic Anexia API",
-			Detail:   "Unable to create generic Anexia API with the given token, either the token is empty or invalid",
+			Summary:  "Unable to create generic Anexia client",
+			Detail:   "Unable to create generic Anexia client with the given token, either the token is empty or invalid",
 		})
 		return nil, diags
 	}
