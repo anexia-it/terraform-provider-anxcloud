@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/vlan"
 )
 
@@ -37,7 +36,7 @@ func resourceVLAN() *schema.Resource {
 }
 
 func resourceVLANCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	v := vlan.NewAPI(c)
 	locationID := d.Get("location_id").(string)
 
@@ -71,7 +70,7 @@ func resourceVLANCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 func resourceVLANRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags []diag.Diagnostic
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	v := vlan.NewAPI(c)
 
 	vlan, err := v.Get(ctx, d.Id())
@@ -115,7 +114,7 @@ func resourceVLANRead(ctx context.Context, d *schema.ResourceData, m interface{}
 }
 
 func resourceVLANUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	vlanAPI := vlan.NewAPI(c)
 
 	if !d.HasChange("description_customer") && !d.HasChange("vm_provisioning") {
@@ -154,7 +153,7 @@ func resourceVLANUpdate(ctx context.Context, d *schema.ResourceData, m interface
 }
 
 func resourceVLANDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	v := vlan.NewAPI(c)
 
 	err := v.Delete(ctx, d.Id())

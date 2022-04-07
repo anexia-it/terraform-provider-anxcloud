@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/core/tags"
 )
 
@@ -40,7 +39,7 @@ func TestAccAnxCloudTag(t *testing.T) {
 }
 
 func testAccCheckAnxCloudTagDestroy(s *terraform.State) error {
-	c := testAccProvider.Meta().(client.Client)
+	c := testAccProvider.Meta().(providerContext).legacyClient
 	t := tags.NewAPI(c)
 	ctx := context.Background()
 	for _, rs := range s.RootModule().Resources {
@@ -76,7 +75,7 @@ func testAccAnxCloudTag(resourceName, serviceID string) string {
 func testAccAnxCloudTagExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
-		c := testAccProvider.Meta().(client.Client)
+		c := testAccProvider.Meta().(providerContext).legacyClient
 		t := tags.NewAPI(c)
 		ctx := context.Background()
 

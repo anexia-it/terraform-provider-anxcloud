@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/core/resource"
 	"go.anx.io/go-anxcloud/pkg/core/tags"
 )
@@ -32,7 +31,7 @@ func resourceTag() *schema.Resource {
 }
 
 func resourceTagCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	t := tags.NewAPI(c)
 
 	def := tags.Create{
@@ -53,7 +52,7 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, m interface{
 func resourceTagRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags []diag.Diagnostic
 
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	t := tags.NewAPI(c)
 
 	info, err := t.Get(ctx, d.Id())
@@ -80,7 +79,7 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, m interface{})
 }
 
 func resourceTagDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	t := tags.NewAPI(c)
 
 	if err := t.Delete(ctx, d.Id(), d.Get("service_id").(string)); err != nil {
@@ -90,16 +89,16 @@ func resourceTagDelete(ctx context.Context, d *schema.ResourceData, m interface{
 	return nil
 }
 
-func attachTag(ctx context.Context, c client.Client, resourceID, tagName string) error {
-	r := resource.NewAPI(c)
+func attachTag(ctx context.Context, m providerContext, resourceID, tagName string) error {
+	r := resource.NewAPI(m.legacyClient)
 	if _, err := r.AttachTag(ctx, resourceID, tagName); err != nil {
 		return err
 	}
 	return nil
 }
 
-func detachTag(ctx context.Context, c client.Client, resourceID, tagName string) error {
-	r := resource.NewAPI(c)
+func detachTag(ctx context.Context, m providerContext, resourceID, tagName string) error {
+	r := resource.NewAPI(m.legacyClient)
 	if err := r.DetachTag(ctx, resourceID, tagName); err != nil {
 		return err
 	}

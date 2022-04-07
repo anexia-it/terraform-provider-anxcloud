@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/ipam/address"
 	"go.anx.io/go-anxcloud/pkg/vsphere"
 	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/nictype"
@@ -144,9 +143,9 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		disks    []Disk
 	)
 
-	c := m.(client.Client)
-	vsphereAPI := vsphere.NewAPI(c)
-	addressAPI := address.NewAPI(c)
+	provContext := m.(providerContext)
+	vsphereAPI := vsphere.NewAPI(provContext.legacyClient)
+	addressAPI := address.NewAPI(provContext.legacyClient)
 	locationID := d.Get("location_id").(string)
 
 	networks = expandVirtualServerNetworks(d.Get("network").([]interface{}))
@@ -257,7 +256,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 
 	tags := expandTags(d.Get("tags").([]interface{}))
 	for _, t := range tags {
-		if err := attachTag(ctx, c, d.Id(), t); err != nil {
+		if err := attachTag(ctx, provContext, d.Id(), t); err != nil {
 			return diag.FromErr(err)
 		}
 	}
@@ -268,7 +267,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		}
 
 		initialDisks := expandVirtualServerDisks(d.Get("disk").([]interface{}))
-		if update := updateVirtualServerDisk(ctx, c, d.Id(), disks, initialDisks); update != nil {
+		if update := updateVirtualServerDisk(ctx, provContext, d.Id(), disks, initialDisks); update != nil {
 			return update
 		}
 	}
@@ -280,7 +279,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	vsphereAPI := vsphere.NewAPI(c)
 	nicAPI := nictype.NewAPI(c)
 
@@ -425,8 +424,8 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 }
 
 func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
-	vsphereAPI := vsphere.NewAPI(c)
+	provContext := m.(providerContext)
+	vsphereAPI := vsphere.NewAPI(provContext.legacyClient)
 	ch := vm.Change{
 		Reboot:          d.Get("force_restart_if_needed").(bool),
 		EnableDangerous: d.Get("critical_operation_confirmed").(bool),
@@ -500,13 +499,13 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 		cTags := getTagsDifferences(newTags, oldTags)
 
 		for _, t := range dTags {
-			if err := detachTag(ctx, c, d.Id(), t); err != nil {
+			if err := detachTag(ctx, provContext, d.Id(), t); err != nil {
 				return diag.FromErr(err)
 			}
 		}
 
 		for _, t := range cTags {
-			if err := attachTag(ctx, c, d.Id(), t); err != nil {
+			if err := attachTag(ctx, provContext, d.Id(), t); err != nil {
 				return diag.FromErr(err)
 			}
 		}
@@ -557,7 +556,7 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 }
 
 func resourceVirtualServerDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	vsphereAPI := vsphere.NewAPI(c)
 	progressAPI := progress.NewAPI(c)
 
@@ -614,7 +613,7 @@ func getTagsDifferences(tagsA, tagsB []string) []string {
 	return out
 }
 
-func updateVirtualServerDisk(ctx context.Context, c client.Client, id string, expected []Disk, current []Disk) diag.Diagnostics {
+func updateVirtualServerDisk(ctx context.Context, m providerContext, id string, expected []Disk, current []Disk) diag.Diagnostics {
 	changeDisks := make([]vm.Disk, 0, len(current))
 	addDisks := make([]vm.Disk, 0, len(expected))
 	for diskIndex := range current {
@@ -644,7 +643,7 @@ func updateVirtualServerDisk(ctx context.Context, c client.Client, id string, ex
 		ChangeDisks: changeDisks,
 	}
 
-	v := vsphere.NewAPI(c)
+	v := vsphere.NewAPI(m.legacyClient)
 	var response vm.ProvisioningResponse
 	provisioning := v.Provisioning()
 	var err error

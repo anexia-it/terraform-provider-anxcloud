@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/core/location"
 )
 
@@ -19,7 +18,7 @@ func dataSourceCoreLocations() *schema.Resource {
 }
 
 func dataSourceCoreLocationsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	l := location.NewAPI(c)
 
 	locations, err := l.List(ctx, d.Get("page").(int), d.Get("limit").(int), d.Get("search").(string))

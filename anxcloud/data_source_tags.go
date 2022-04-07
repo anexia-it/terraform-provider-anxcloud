@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/core/tags"
 )
 
@@ -20,7 +19,7 @@ func dataSourceTags() *schema.Resource {
 }
 
 func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(client.Client)
+	c := m.(providerContext).legacyClient
 	tagsAPI := tags.NewAPI(c)
 
 	page := d.Get("page").(int)
