@@ -37,6 +37,7 @@ func Provider() *schema.Provider {
 			"anxcloud_network_prefix": resourceNetworkPrefix(),
 			"anxcloud_ip_address":     resourceIPAddress(),
 			"anxcloud_tag":            resourceTag(),
+			"anxcloud_dns_zone":       resourceDNSZone(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anxcloud_disk_types":            dataSourceDiskTypes(),

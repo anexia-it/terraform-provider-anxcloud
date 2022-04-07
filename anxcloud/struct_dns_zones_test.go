@@ -1,9 +1,11 @@
 package anxcloud
 
 import (
-	"github.com/google/go-cmp/cmp"
-	"go.anx.io/go-anxcloud/pkg/clouddns/zone"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	clouddns "go.anx.io/go-anxcloud/pkg/apis/clouddns/v1"
+	"go.anx.io/go-anxcloud/pkg/clouddns/zone"
 )
 
 func TestFlattenDnsZones(t *testing.T) {
@@ -115,6 +117,85 @@ func TestFlattenDnsZones(t *testing.T) {
 		output := flattenDnsZones(tc.Input)
 		if diff := cmp.Diff(tc.ExpectedOutput, output); diff != "" {
 			t.Fatalf("Unexpected output from flattener: missmatch (-want +got):\n%s", diff)
+		}
+	}
+}
+
+func TestFlattenDNSServers(t *testing.T) {
+	cases := []struct {
+		Input          []clouddns.DNSServer
+		ExpectedOutput []interface{}
+	}{
+		{
+			[]clouddns.DNSServer{
+				{
+					Server: "ns1.example.com",
+					Alias:  "Nameserver #1",
+				},
+				{
+					Server: "ns2.example.com",
+				},
+			},
+			[]interface{}{
+				map[string]interface{}{
+					"server": "ns1.example.com",
+					"alias":  "Nameserver #1",
+				},
+				map[string]interface{}{
+					"server": "ns2.example.com",
+					"alias":  "",
+				},
+			},
+		},
+		{
+			[]clouddns.DNSServer{},
+			[]interface{}{},
+		},
+	}
+
+	for _, tc := range cases {
+		output := flattenDNSServers(tc.Input)
+		if diff := cmp.Diff(tc.ExpectedOutput, output); diff != "" {
+			t.Fatalf("Unexpected output from flattener: missmatch (-want +got):\n%s", diff)
+		}
+	}
+}
+
+func TestExpandDNSServers(t *testing.T) {
+	cases := []struct {
+		Input          []interface{}
+		ExpectedOutput []clouddns.DNSServer
+	}{
+		{
+			[]interface{}{
+				map[string]interface{}{
+					"server": "ns1.example.com",
+					"alias":  "Nameserver #1",
+				},
+				map[string]interface{}{
+					"server": "ns2.example.com",
+				},
+			},
+			[]clouddns.DNSServer{
+				{
+					Server: "ns1.example.com",
+					Alias:  "Nameserver #1",
+				},
+				{
+					Server: "ns2.example.com",
+				},
+			},
+		},
+		{
+			[]interface{}{},
+			[]clouddns.DNSServer{},
+		},
+	}
+
+	for _, tc := range cases {
+		output := expandDNSServers(tc.Input)
+		if diff := cmp.Diff(tc.ExpectedOutput, output); diff != "" {
+			t.Fatalf("Unexpected output from expander: missmatch (-want +got):\n%s", diff)
 		}
 	}
 }
