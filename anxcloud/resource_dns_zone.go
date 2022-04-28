@@ -2,12 +2,15 @@ package anxcloud
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	clouddns "go.anx.io/go-anxcloud/pkg/apis/clouddns/v1"
+	"go.anx.io/go-anxcloud/pkg/api"
+	clouddnsv1 "go.anx.io/go-anxcloud/pkg/apis/clouddns/v1"
 )
 
 func resourceDNSZone() *schema.Resource {
@@ -30,35 +33,23 @@ func resourceDNSZone() *schema.Resource {
 }
 
 func resourceDNSZoneCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var (
-		dnsServers []clouddns.DNSServer
-	)
-
 	a := m.(providerContext).api
 
-	dnsServers = expandDNSServers(d.Get("dns_servers").([]interface{}))
-
-	var notifyAllowedIPs []string
-	for _, v := range d.Get("notify_allowed_ips").([]interface{}) {
-		notifyAllowedIPs = append(notifyAllowedIPs, v.(string))
+	// try to import
+	z := &clouddnsv1.Zone{Name: d.Get("name").(string)}
+	if err := a.Get(ctx, z); err != nil {
+		if !errors.Is(err, api.ErrNotFound) {
+			return diag.FromErr(err)
+		}
+		// not found -> create new zone
+	} else {
+		// DNS Zone found -> update to match terraform definition
+		d.SetId(z.Name)
+		return resourceDNSZoneUpdate(ctx, d, m)
 	}
 
-	z := clouddns.Zone{
-		Name:       d.Get("name").(string),
-		IsMaster:   d.Get("is_master").(bool),
-		DNSSecMode: d.Get("dns_sec_mode").(string),
-		AdminEmail: d.Get("admin_email").(string),
-		Refresh:    d.Get("refresh").(int),
-		Retry:      d.Get("retry").(int),
-		Expire:     d.Get("expire").(int),
-		TTL:        d.Get("ttl").(int),
-		MasterNS:   d.Get("master_nameserver").(string),
-
-		NotifyAllowedIPs: notifyAllowedIPs,
-		DNSServers:       dnsServers,
-	}
-
-	if err := a.Create(ctx, &z); err != nil {
+	z = dnsZoneFromResourceData(d)
+	if err := a.Create(ctx, z); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -72,12 +63,12 @@ func resourceDNSZoneRead(ctx context.Context, d *schema.ResourceData, m interfac
 
 	a := m.(providerContext).api
 
-	z := clouddns.Zone{Name: d.Id()}
+	z := clouddnsv1.Zone{Name: d.Id()}
 
 	err := a.Get(ctx, &z)
 
 	if err != nil {
-		if err := handleNotFoundError(err); err != nil {
+		if !errors.Is(err, api.ErrNotFound) {
 			return diag.FromErr(err)
 		}
 		d.SetId("")
@@ -127,33 +118,20 @@ func resourceDNSZoneRead(ctx context.Context, d *schema.ResourceData, m interfac
 	if err := d.Set("deployment_level", z.DeploymentLevel); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	return nil
+
+	return diags
 }
 
 func resourceDNSZoneUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var (
-		dnsServers []clouddns.DNSServer
-	)
-
 	a := m.(providerContext).api
 
-	dnsServers = expandDNSServers(d.Get("dns_servers").([]interface{}))
-
-	def := clouddns.Zone{
-		Name:             d.Get("name").(string),
-		IsMaster:         d.Get("is_master").(bool),
-		DNSSecMode:       d.Get("dns_sec_mode").(string),
-		AdminEmail:       d.Get("admin_email").(string),
-		Refresh:          d.Get("refresh").(int),
-		Retry:            d.Get("retry").(int),
-		Expire:           d.Get("expire").(int),
-		TTL:              d.Get("ttl").(int),
-		MasterNS:         d.Get("master_nameserver").(string),
-		NotifyAllowedIPs: d.Get("notify_allowed_ips").([]string),
-		DNSServers:       dnsServers,
+	if d.HasChange("name") {
+		return diag.FromErr(fmt.Errorf("%w: cannot change the name of a DNS zone", ErrOperationNotSupported))
 	}
 
-	if err := a.Update(ctx, &def); err != nil {
+	def := dnsZoneFromResourceData(d)
+
+	if err := a.Update(ctx, def); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -165,11 +143,11 @@ func resourceDNSZoneUpdate(ctx context.Context, d *schema.ResourceData, m interf
 func resourceDNSZoneDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	a := m.(providerContext).api
 
-	z := clouddns.Zone{Name: d.Id()}
+	z := clouddnsv1.Zone{Name: d.Id()}
 
 	err := a.Destroy(ctx, &z)
 	if err != nil {
-		if err := handleNotFoundError(err); err != nil {
+		if !errors.Is(err, api.ErrNotFound) {
 			return diag.FromErr(err)
 		}
 		d.SetId("")
@@ -181,4 +159,25 @@ func resourceDNSZoneDelete(ctx context.Context, d *schema.ResourceData, m interf
 	}
 
 	return nil
+}
+
+func dnsZoneFromResourceData(d *schema.ResourceData) *clouddnsv1.Zone {
+	var notifyAllowedIPs []string
+	for _, v := range d.Get("notify_allowed_ips").([]interface{}) {
+		notifyAllowedIPs = append(notifyAllowedIPs, v.(string))
+	}
+
+	return &clouddnsv1.Zone{
+		Name:             d.Get("name").(string),
+		IsMaster:         d.Get("is_master").(bool),
+		DNSSecMode:       d.Get("dns_sec_mode").(string),
+		AdminEmail:       d.Get("admin_email").(string),
+		Refresh:          d.Get("refresh").(int),
+		Retry:            d.Get("retry").(int),
+		Expire:           d.Get("expire").(int),
+		TTL:              d.Get("ttl").(int),
+		MasterNS:         d.Get("master_nameserver").(string),
+		DNSServers:       expandDNSServers(d.Get("dns_servers").([]interface{})),
+		NotifyAllowedIPs: notifyAllowedIPs,
+	}
 }
