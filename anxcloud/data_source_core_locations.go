@@ -12,6 +12,7 @@ import (
 
 func dataSourceCoreLocations() *schema.Resource {
 	return &schema.Resource{
+		Description: "Provides available locations.",
 		ReadContext: dataSourceCoreLocationsRead,
 		Schema:      schemaDataSourceLocations(),
 	}

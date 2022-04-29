@@ -1,0 +1,1 @@
+data "anxcloud_dns_zones" "example" {}

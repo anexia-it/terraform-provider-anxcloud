@@ -10,6 +10,7 @@ import (
 
 func dataSourceDNSRecords() *schema.Resource {
 	return &schema.Resource{
+		Description: "Provides DNS records for a specified zone.",
 		ReadContext: dataSourceDNSRecordsRead,
 		Schema:      schemaDNSRecords(),
 	}

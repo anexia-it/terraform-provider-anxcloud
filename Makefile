@@ -83,19 +83,21 @@ tools/golangci-lint:
 tools/terrafmt:
 	cd tools && go build -o . github.com/katbyte/terrafmt
 
+.PHONY: tools/tfplugindocs
+tools/tfplugindocs:
+	cd tools && go build -o . github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+
+.PHONY: docs-generate
+docs-generate: tools/tfplugindocs
+	@tools/tfplugindocs
+
 .PHONY: docs-lint
 docs-lint: misspell terrafmt
-	@echo "==> Checking docs against linters..."
-	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli docs/ || (echo; \
-		echo "Unexpected issues found in docs Markdown files."; \
-		echo "To apply any automatic fixes, run 'make docs-lint-fix' and commit the changes."; \
-		exit 1)
 
 .PHONY: docs-lint-fix
 docs-lint-fix: tools/misspell tools/terrafmt
 	@echo "==> Applying automatic docs linter fixes..."
 	@tools/misspell -w -source=text docs/
-	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix docs/
 	@tools/terrafmt fmt ./docs --pattern '*.md'
 
 .PHONY: go-lint

@@ -29,6 +29,13 @@ const (
 
 func resourceVirtualServer() *schema.Resource {
 	return &schema.Resource{
+		Description: `
+The virtual_server resource allows you to configure and run virtual machines.
+
+### Known limitations
+- removal of disks not supported
+- removal of networks not supported
+`,
 		CreateContext: resourceVirtualServerCreate,
 		ReadContext:   resourceVirtualServerRead,
 		UpdateContext: resourceVirtualServerUpdate,

@@ -15,6 +15,7 @@ import (
 
 func resourceTag() *schema.Resource {
 	return &schema.Resource{
+		Description:   "The tag resource allows you to create and configure a tag.",
 		CreateContext: resourceTagCreate,
 		ReadContext:   resourceTagRead,
 		DeleteContext: resourceTagDelete,

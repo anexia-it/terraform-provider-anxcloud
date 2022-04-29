@@ -19,6 +19,7 @@ const (
 
 func resourceNetworkPrefix() *schema.Resource {
 	return &schema.Resource{
+		Description:   "This resource allows you to create and configure network prefix.",
 		CreateContext: resourceNetworkPrefixCreate,
 		ReadContext:   resourceNetworkPrefixRead,
 		UpdateContext: resourceNetworkPrefixUpdate,

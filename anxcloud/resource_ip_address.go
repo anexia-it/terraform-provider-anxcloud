@@ -19,6 +19,7 @@ const (
 
 func resourceIPAddress() *schema.Resource {
 	return &schema.Resource{
+		Description:   "This resource allows you to create and configure IP addresses.",
 		CreateContext: resourceIPAddressCreate,
 		ReadContext:   resourceIPAddressRead,
 		UpdateContext: resourceIPAddressUpdate,

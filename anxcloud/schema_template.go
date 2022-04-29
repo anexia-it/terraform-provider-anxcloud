@@ -15,18 +15,18 @@ func schemaTemplate() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "templates",
-			Description: "Template type. Defaults to 'templates'.",
+			Description: "Template type. Defaults to 'templates' and also supports 'from_scratch'.",
 		},
 		"templates": {
 			Type:        schema.TypeList,
 			Computed:    true,
-			Description: "Available list of templates.",
+			Description: "List of available templates.",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"id": {
 						Type:        schema.TypeString,
 						Computed:    true,
-						Description: "Template identifier.",
+						Description: identifierDescription,
 					},
 					"name": {
 						Type:        schema.TypeString,
@@ -60,7 +60,7 @@ func schemaTemplate() map[string]*schema.Schema {
 								"cpus": {
 									Type:        schema.TypeList,
 									Computed:    true,
-									Description: "Hostname parameter.",
+									Description: "CPUs parameter.",
 									Elem: &schema.Resource{
 										Schema: schemaANXParamInt(),
 									},

@@ -20,7 +20,7 @@ func schemaDiskTypes() map[string]*schema.Schema {
 					"id": {
 						Type:        schema.TypeString,
 						Computed:    true,
-						Description: "Identifier of the disk type.",
+						Description: identifierDescription,
 					},
 					"storage_type": {
 						Type:        schema.TypeString,
@@ -35,12 +35,12 @@ func schemaDiskTypes() map[string]*schema.Schema {
 					"iops": {
 						Type:        schema.TypeInt,
 						Computed:    true,
-						Description: "Disk input/output operations per second.",
+						Description: "Input/output operations per second.",
 					},
 					"latency": {
 						Type:        schema.TypeInt,
 						Computed:    true,
-						Description: "Disk latency.",
+						Description: "Latency.",
 					},
 				},
 			},

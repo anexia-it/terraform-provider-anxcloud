@@ -39,7 +39,7 @@ func schemaVirtualServer() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "standard",
-			Description: "CPU type. Example: (\"best-effort\", \"standard\", \"enterprise\", \"performance\"), defaults to \"standard\".",
+			Description: "CPU type. Example: (`best-effort`, `standard`, `enterprise`, `performance`), defaults to `standard`.",
 		},
 		"sockets": {
 			Type:     schema.TypeInt,
@@ -58,20 +58,20 @@ func schemaVirtualServer() map[string]*schema.Schema {
 			Description: "Virtual Server Disks",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
+					"disk_id": {
+						Type:        schema.TypeInt,
+						Computed:    true,
+						Description: "Device identifier of the disk.",
+					},
 					"disk_gb": {
 						Type:        schema.TypeInt,
 						Required:    true,
-						Description: "Requested disk capacity in GB.",
+						Description: "Disk capacity in GB.",
 					},
 					"disk_type": {
 						Type:        schema.TypeString,
 						Optional:    true,
-						Description: "Requested disk category (limits disk performance, e.g. IOPS). Default as defined by data center.",
-					},
-					"disk_id": {
-						Type:        schema.TypeInt,
-						Computed:    true,
-						Description: "Device ID of the disk on.",
+						Description: "Disk category (limits disk performance, e.g. IOPS). Default value depends on location.",
 					},
 					"disk_exact": {
 						Type:        schema.TypeFloat,
@@ -125,7 +125,7 @@ func schemaVirtualServer() map[string]*schema.Schema {
 			Optional:    true,
 			Sensitive:   true,
 			ForceNew:    true,
-			Description: "Plaintext password. Example: ('!anx123mySuperStrongPassword123anx!', 'go3ju0la1ro3', …). USE IT AT YOUR OWN RISK! (or SSH key instead).",
+			Description: "Plaintext password. Example: ('!anx123mySuperStrongPassword123anx!', 'go3ju0la1ro3', …). For systems that support it, we strongly recommend using a SSH key instead.",
 		},
 		"ssh_key": {
 			Type:        schema.TypeString,
@@ -156,9 +156,9 @@ func schemaVirtualServer() map[string]*schema.Schema {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,
-			Description: "Certain operations may only be performed in powered off stat." +
-				"Such as: shrinking memory, shrinking/adding cpu, removing disk, scale a disk beyond 2 GB. " +
-				"Passing this value as true will always execute a power offand reboot request after completing all other operations. " +
+			Description: "Certain operations may only be performed in powered off state. " +
+				"Such as: shrinking memory, shrinking/adding CPU, removing disk and scaling a disk beyond 2 GB. " +
+				"Passing this value as true will always execute a power off and reboot request after completing all other operations. " +
 				"Without this flag set to true scaling operations requiring a reboot will fail.",
 		},
 		"critical_operation_confirmed": {
@@ -186,7 +186,7 @@ func schemaVirtualServer() map[string]*schema.Schema {
 					"identifier": {
 						Type:        schema.TypeString,
 						Computed:    true,
-						Description: "Virtual server identifier.",
+						Description: identifierDescription,
 					},
 					"status": {
 						Type:        schema.TypeString,
@@ -221,12 +221,12 @@ func schemaVirtualServer() map[string]*schema.Schema {
 					"cpu": {
 						Type:        schema.TypeInt,
 						Computed:    true,
-						Description: "Number of cpus.",
+						Description: "Number of CPUs.",
 					},
 					"cores": {
 						Type:        schema.TypeInt,
 						Computed:    true,
-						Description: "Number of cpu cores.",
+						Description: "Number of CPU cores.",
 					},
 					"ram": {
 						Type:        schema.TypeInt,
@@ -290,7 +290,7 @@ func schemaVirtualServer() map[string]*schema.Schema {
 					"network": {
 						Type:        schema.TypeList,
 						Computed:    true,
-						Description: "Network interfaces",
+						Description: "Network interfaces.",
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"id": {
@@ -327,7 +327,7 @@ func schemaVirtualServer() map[string]*schema.Schema {
 								"mac_address": {
 									Type:        schema.TypeString,
 									Computed:    true,
-									Description: "MAC address of the NIC",
+									Description: "MAC address of the NIC.",
 								},
 							},
 						},

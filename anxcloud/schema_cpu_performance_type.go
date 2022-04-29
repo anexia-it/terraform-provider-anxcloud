@@ -15,22 +15,22 @@ func schemaCPUPerformanceType() map[string]*schema.Schema {
 					"id": {
 						Type:        schema.TypeString,
 						Computed:    true,
-						Description: "Id of the CPU performance type",
+						Description: "CPU performance type identifier.",
 					},
 					"prioritization": {
 						Type:        schema.TypeString,
 						Computed:    true,
-						Description: "Prio of the CPU performance type",
+						Description: "CPU performance type prioritization.",
 					},
 					"limit": {
 						Type:        schema.TypeFloat,
 						Computed:    true,
-						Description: "The limit of the CPU performance type",
+						Description: "CPU performance type limit.",
 					},
 					"unit": {
 						Type:        schema.TypeString,
 						Computed:    true,
-						Description: "The unit for the limit of the CPU performance type",
+						Description: "CPU performance type limit unit.",
 					},
 				},
 			},

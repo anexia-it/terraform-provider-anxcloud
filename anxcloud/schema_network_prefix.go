@@ -10,7 +10,7 @@ func schemaNetworkPrefix() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			ForceNew:    true,
-			Description: "Location Identifier.",
+			Description: "Identifier of the location to create the prefix at.",
 		},
 		"netmask": {
 			Type:        schema.TypeInt,
@@ -33,7 +33,7 @@ func schemaNetworkPrefix() map[string]*schema.Schema {
 		"vlan_id": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The corresponding VLAN ID",
+			Description: "The corresponding VLAN identifier",
 		},
 		"router_redundancy": {
 			Type:        schema.TypeBool,
@@ -70,7 +70,7 @@ func schemaNetworkPrefix() map[string]*schema.Schema {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     true,
-			Description: "whether the prefix should be created with inactive IPs",
+			Description: "Whether the prefix should be created with inactive IPs",
 		},
 		"description_internal": {
 			Type:        schema.TypeString,

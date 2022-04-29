@@ -14,8 +14,10 @@ import (
 
 func dataSourceVSphereLocations() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceVSphereLocationsRead,
-		Schema:      schemaDataSourceVSPhereLocations(),
+		Description:        "Provides available vSphere locations.",
+		ReadContext:        dataSourceVSphereLocationsRead,
+		Schema:             schemaDataSourceVSPhereLocations(),
+		DeprecationMessage: "Use `anxcloud_core_locations` data-source instead!",
 	}
 }
 
