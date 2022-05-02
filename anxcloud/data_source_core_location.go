@@ -26,9 +26,11 @@ func dataSourceCoreLocationRead(ctx context.Context, d *schema.ResourceData, m i
 		return diag.Errorf("location data-source requires code argument")
 	}
 
+	listCTX, cancel := context.WithCancel(ctx)
+	defer cancel()
 	searchLocation := &corev1.Location{Code: code.(string)}
 	channel := make(types.ObjectChannel)
-	if err := a.List(ctx, searchLocation, api.ObjectChannel(&channel)); err != nil {
+	if err := a.List(listCTX, searchLocation, api.ObjectChannel(&channel)); err != nil {
 		return diag.FromErr(err)
 	}
 
