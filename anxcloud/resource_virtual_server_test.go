@@ -28,7 +28,7 @@ import (
 var buildNumberRegex = regexp.MustCompile(`[bB]?(\d+)`)
 
 const (
-	templateName = "Ubuntu 20.04.02"
+	templateName = "Flatcar Linux"
 )
 
 func getVMRecorder(t *testing.T) recorder.VMRecoder {
