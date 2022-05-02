@@ -210,8 +210,10 @@ func findDNSRecord(ctx context.Context, a api.API, r *clouddnsv1.Record) (*cloud
 		r.RData = fmt.Sprintf("%q", r.RData)
 	}
 
+	listCTX, cancel := context.WithCancel(ctx)
+	defer cancel()
 	channel := make(types.ObjectChannel)
-	err := a.List(ctx, r, api.ObjectChannel(&channel))
+	err := a.List(listCTX, r, api.ObjectChannel(&channel))
 	if err != nil {
 		return nil, err
 	}
