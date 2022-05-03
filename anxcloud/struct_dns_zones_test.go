@@ -4,62 +4,57 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	clouddns "go.anx.io/go-anxcloud/pkg/apis/clouddns/v1"
-	"go.anx.io/go-anxcloud/pkg/clouddns/zone"
+	clouddnsv1 "go.anx.io/go-anxcloud/pkg/apis/clouddns/v1"
 )
 
 func TestFlattenDnsZones(t *testing.T) {
 	cases := []struct {
-		Input          []zone.Zone
+		Input          []clouddnsv1.Zone
 		ExpectedOutput []interface{}
 	}{
 		{
-			[]zone.Zone{
+			[]clouddnsv1.Zone{
 				{
-					Definition: &zone.Definition{
-						Name:             "zone1.test",
-						IsMaster:         true,
-						DNSSecMode:       "unvalidated",
-						AdminEmail:       "test@zone1.test",
-						Refresh:          3600,
-						Retry:            300,
-						Expire:           3600,
-						TTL:              60,
-						NotifyAllowedIPs: []string{"127.0.0.1", "192.168.0.1"},
-						MasterNS:         "8.8.8.8",
-						DNSServers: []zone.DNSServer{
-							{
-								Server: "nameserver-1",
-								Alias:  "ns1",
-							},
+					Name:             "zone1.test",
+					IsMaster:         true,
+					IsEditable:       true,
+					DNSSecMode:       "unvalidated",
+					AdminEmail:       "test@zone1.test",
+					Refresh:          3600,
+					Retry:            300,
+					Expire:           3600,
+					TTL:              60,
+					NotifyAllowedIPs: []string{"127.0.0.1", "192.168.0.1"},
+					MasterNS:         "8.8.8.8",
+					DeploymentLevel:  100,
+					ValidationLevel:  100,
+					DNSServers: []clouddnsv1.DNSServer{
+						{
+							Server: "nameserver-1",
+							Alias:  "ns1",
 						},
 					},
-					DeploymentLevel: 100,
-					ValidationLevel: 100,
-					IsEditable:      true,
 				},
 				{
-					Definition: &zone.Definition{
-						Name:             "zone2.test",
-						IsMaster:         true,
-						DNSSecMode:       "managed",
-						AdminEmail:       "test@zone2.test",
-						Refresh:          3600,
-						Retry:            300,
-						Expire:           3600,
-						TTL:              60,
-						NotifyAllowedIPs: []string{"127.0.0.1", "192.168.0.1"},
-						MasterNS:         "8.8.8.8",
-						DNSServers: []zone.DNSServer{
-							{
-								Server: "nameserver-2",
-								Alias:  "ns2",
-							},
+					Name:             "zone2.test",
+					IsMaster:         true,
+					IsEditable:       false,
+					DNSSecMode:       "managed",
+					AdminEmail:       "test@zone2.test",
+					Refresh:          3600,
+					Retry:            300,
+					Expire:           3600,
+					TTL:              60,
+					NotifyAllowedIPs: []string{"127.0.0.1", "192.168.0.1"},
+					MasterNS:         "8.8.8.8",
+					DeploymentLevel:  99,
+					ValidationLevel:  99,
+					DNSServers: []clouddnsv1.DNSServer{
+						{
+							Server: "nameserver-2",
+							Alias:  "ns2",
 						},
 					},
-					DeploymentLevel: 99,
-					ValidationLevel: 99,
-					IsEditable:      false,
 				},
 			},
 			[]interface{}{
@@ -108,7 +103,7 @@ func TestFlattenDnsZones(t *testing.T) {
 			},
 		},
 		{
-			[]zone.Zone{},
+			[]clouddnsv1.Zone{},
 			[]interface{}{},
 		},
 	}
@@ -123,11 +118,11 @@ func TestFlattenDnsZones(t *testing.T) {
 
 func TestFlattenDNSServers(t *testing.T) {
 	cases := []struct {
-		Input          []clouddns.DNSServer
+		Input          []clouddnsv1.DNSServer
 		ExpectedOutput []interface{}
 	}{
 		{
-			[]clouddns.DNSServer{
+			[]clouddnsv1.DNSServer{
 				{
 					Server: "ns1.example.com",
 					Alias:  "Nameserver #1",
@@ -148,7 +143,7 @@ func TestFlattenDNSServers(t *testing.T) {
 			},
 		},
 		{
-			[]clouddns.DNSServer{},
+			[]clouddnsv1.DNSServer{},
 			[]interface{}{},
 		},
 	}
@@ -164,7 +159,7 @@ func TestFlattenDNSServers(t *testing.T) {
 func TestExpandDNSServers(t *testing.T) {
 	cases := []struct {
 		Input          []interface{}
-		ExpectedOutput []clouddns.DNSServer
+		ExpectedOutput []clouddnsv1.DNSServer
 	}{
 		{
 			[]interface{}{
@@ -176,7 +171,7 @@ func TestExpandDNSServers(t *testing.T) {
 					"server": "ns2.example.com",
 				},
 			},
-			[]clouddns.DNSServer{
+			[]clouddnsv1.DNSServer{
 				{
 					Server: "ns1.example.com",
 					Alias:  "Nameserver #1",
@@ -188,7 +183,7 @@ func TestExpandDNSServers(t *testing.T) {
 		},
 		{
 			[]interface{}{},
-			[]clouddns.DNSServer{},
+			[]clouddnsv1.DNSServer{},
 		},
 	}
 

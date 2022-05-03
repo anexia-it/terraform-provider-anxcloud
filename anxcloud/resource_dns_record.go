@@ -2,7 +2,6 @@ package anxcloud
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -39,10 +38,9 @@ func resourceDNSRecord() *schema.Resource {
 }
 
 func resourceDNSRecordCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	if v := ctx.Value(dnsRecordSkipMutexLock); v == nil {
-		syncDNSRecordOps.Lock()
-		defer syncDNSRecordOps.Unlock()
-	}
+	unlock := lockRecordContextIfNeeded(ctx)
+	defer unlock()
+	// decelerate (engine needs time to process)
 	time.Sleep(time.Second)
 
 	a := m.(providerContext).api
@@ -51,10 +49,9 @@ func resourceDNSRecordCreate(ctx context.Context, d *schema.ResourceData, m inte
 
 	// try to import
 	ret, err := findDNSRecord(ctx, a, r)
-	if err != nil {
-		if !errors.Is(err, api.ErrNotFound) {
-			return diag.FromErr(err)
-		}
+	if api.IgnoreNotFound(err) != nil {
+		return diag.FromErr(err)
+	} else if err != nil {
 		// no matching record found -> create new
 		if err := a.Create(ctx, r); err != nil {
 			return diag.FromErr(err)
@@ -76,10 +73,10 @@ func resourceDNSRecordRead(ctx context.Context, d *schema.ResourceData, m interf
 
 	r := dnsRecordFromResourceData(d)
 	r, err := findDNSRecord(ctx, a, r)
-	if err != nil {
-		if !errors.Is(err, api.ErrNotFound) {
-			return diag.FromErr(err)
-		}
+
+	if api.IgnoreNotFound(err) != nil {
+		return diag.FromErr(err)
+	} else if err != nil {
 		d.SetId("")
 		return diags
 	}
@@ -115,10 +112,9 @@ func resourceDNSRecordRead(ctx context.Context, d *schema.ResourceData, m interf
 }
 
 func resourceDNSRecordUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	if v := ctx.Value(dnsRecordSkipMutexLock); v == nil {
-		syncDNSRecordOps.Lock()
-		defer syncDNSRecordOps.Unlock()
-	}
+	unlock := lockRecordContextIfNeeded(ctx)
+	defer unlock()
+	// decelerate (engine needs time to process)
 	time.Sleep(time.Second)
 
 	a := m.(providerContext).api
@@ -143,7 +139,7 @@ func resourceDNSRecordUpdate(ctx context.Context, d *schema.ResourceData, m inte
 
 	if d.HasChange("zone_name") { // cannot change records zone -> recreate
 		if err := a.Destroy(ctx, &clouddnsv1.Record{Identifier: r.Identifier, ZoneName: prevZoneName.(string)}); err != nil {
-			if !errors.Is(err, api.ErrNotFound) {
+			if api.IgnoreNotFound(err) != nil {
 				return diag.FromErr(err)
 			}
 		}
@@ -164,10 +160,9 @@ func resourceDNSRecordUpdate(ctx context.Context, d *schema.ResourceData, m inte
 }
 
 func resourceDNSRecordDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	if v := ctx.Value(dnsRecordSkipMutexLock); v == nil {
-		syncDNSRecordOps.Lock()
-		defer syncDNSRecordOps.Unlock()
-	}
+	unlock := lockRecordContextIfNeeded(ctx)
+	defer unlock()
+	// decelerate (engine needs time to process)
 	time.Sleep(time.Second)
 
 	a := m.(providerContext).api
@@ -175,10 +170,9 @@ func resourceDNSRecordDelete(ctx context.Context, d *schema.ResourceData, m inte
 	r := dnsRecordFromResourceData(d)
 	r, err := findDNSRecord(ctx, a, r)
 
-	if err != nil {
-		if !errors.Is(err, api.ErrNotFound) {
-			return diag.FromErr(err)
-		}
+	if api.IgnoreNotFound(err) != nil {
+		return diag.FromErr(err)
+	} else if err != nil {
 		d.SetId("")
 		return nil
 	}
@@ -236,4 +230,14 @@ func findDNSRecord(ctx context.Context, a api.API, r *clouddnsv1.Record) (*cloud
 	}
 
 	return nil, api.ErrNotFound
+}
+
+type recordContextUnlockFunc func()
+
+func lockRecordContextIfNeeded(ctx context.Context) recordContextUnlockFunc {
+	if v := ctx.Value(dnsRecordSkipMutexLock); v == nil {
+		syncDNSRecordOps.Lock()
+		return syncDNSRecordOps.Unlock
+	}
+	return func() { /* noop */ }
 }

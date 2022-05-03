@@ -1,28 +1,16 @@
 package anxcloud
 
 import (
-	clouddns "go.anx.io/go-anxcloud/pkg/apis/clouddns/v1"
-	"go.anx.io/go-anxcloud/pkg/clouddns/zone"
+	clouddnsv1 "go.anx.io/go-anxcloud/pkg/apis/clouddns/v1"
 )
 
-func flattenDnsZones(dnsZones []zone.Zone) []interface{} {
+func flattenDnsZones(dnsZones []clouddnsv1.Zone) []interface{} {
 	zones := make([]interface{}, 0, len(dnsZones))
 	if len(dnsZones) < 1 {
 		return zones
 	}
 
 	for _, zone := range dnsZones {
-
-		dnsServers := make([]interface{}, 0, len(zone.DNSServers))
-		for _, dnsServer := range zone.DNSServers {
-			d := map[string]interface{}{
-				"server": dnsServer.Server,
-				"alias":  dnsServer.Alias,
-			}
-
-			dnsServers = append(dnsServers, d)
-		}
-
 		m := map[string]interface{}{
 			"name":               zone.Name,
 			"is_master":          zone.IsMaster,
@@ -37,7 +25,7 @@ func flattenDnsZones(dnsZones []zone.Zone) []interface{} {
 			"is_editable":        zone.IsEditable,
 			"validation_level":   zone.ValidationLevel,
 			"deployment_level":   zone.DeploymentLevel,
-			"dns_servers":        dnsServers,
+			"dns_servers":        flattenDNSServers(zone.DNSServers),
 		}
 
 		zones = append(zones, m)
@@ -45,15 +33,15 @@ func flattenDnsZones(dnsZones []zone.Zone) []interface{} {
 	return zones
 }
 
-func expandDNSServers(p []interface{}) []clouddns.DNSServer {
-	dnsServers := make([]clouddns.DNSServer, 0)
+func expandDNSServers(p []interface{}) []clouddnsv1.DNSServer {
+	dnsServers := make([]clouddnsv1.DNSServer, 0, len(p))
 	if len(p) < 1 {
 		return dnsServers
 	}
 
 	for _, elem := range p {
 		in := elem.(map[string]interface{})
-		dnsServer := clouddns.DNSServer{}
+		dnsServer := clouddnsv1.DNSServer{}
 
 		if v, ok := in["server"]; ok {
 			dnsServer.Server = v.(string)
@@ -68,8 +56,8 @@ func expandDNSServers(p []interface{}) []clouddns.DNSServer {
 	return dnsServers
 }
 
-func flattenDNSServers(in []clouddns.DNSServer) []interface{} {
-	att := []interface{}{}
+func flattenDNSServers(in []clouddnsv1.DNSServer) []interface{} {
+	att := make([]interface{}, 0, len(in))
 
 	if len(in) < 1 {
 		return att

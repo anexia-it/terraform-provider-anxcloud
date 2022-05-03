@@ -2,7 +2,6 @@ package anxcloud
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -38,7 +37,7 @@ func resourceDNSZoneCreate(ctx context.Context, d *schema.ResourceData, m interf
 	// try to import
 	z := &clouddnsv1.Zone{Name: d.Get("name").(string)}
 	if err := a.Get(ctx, z); err != nil {
-		if !errors.Is(err, api.ErrNotFound) {
+		if api.IgnoreNotFound(err) != nil {
 			return diag.FromErr(err)
 		}
 		// not found -> create new zone
@@ -67,10 +66,9 @@ func resourceDNSZoneRead(ctx context.Context, d *schema.ResourceData, m interfac
 
 	err := a.Get(ctx, &z)
 
-	if err != nil {
-		if !errors.Is(err, api.ErrNotFound) {
-			return diag.FromErr(err)
-		}
+	if api.IgnoreNotFound(err) != nil {
+		return diag.FromErr(err)
+	} else if err != nil {
 		d.SetId("")
 		return nil
 	}
@@ -146,18 +144,11 @@ func resourceDNSZoneDelete(ctx context.Context, d *schema.ResourceData, m interf
 	z := clouddnsv1.Zone{Name: d.Id()}
 
 	err := a.Destroy(ctx, &z)
-	if err != nil {
-		if !errors.Is(err, api.ErrNotFound) {
-			return diag.FromErr(err)
-		}
-		d.SetId("")
-		return nil
-	}
-
-	if err != nil {
+	if api.IgnoreNotFound(err) != nil {
 		return diag.FromErr(err)
 	}
 
+	d.SetId("")
 	return nil
 }
 

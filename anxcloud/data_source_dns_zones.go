@@ -7,7 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"go.anx.io/go-anxcloud/pkg/clouddns/zone"
+	"go.anx.io/go-anxcloud/pkg/api"
+	"go.anx.io/go-anxcloud/pkg/api/types"
+	clouddnsv1 "go.anx.io/go-anxcloud/pkg/apis/clouddns/v1"
 )
 
 func datasourceDNSZones() *schema.Resource {
@@ -18,12 +20,21 @@ func datasourceDNSZones() *schema.Resource {
 }
 
 func dataSourceDNSZonesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(providerContext).legacyClient
-	a := zone.NewAPI(c)
+	a := m.(providerContext).api
 
-	zones, err := a.List(ctx)
+	var oc types.ObjectChannel
+	err := a.List(ctx, &clouddnsv1.Zone{}, api.ObjectChannel(&oc))
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	var zones []clouddnsv1.Zone
+	for retriever := range oc {
+		var zone clouddnsv1.Zone
+		if err = retriever(&zone); err != nil {
+			return diag.FromErr(err)
+		}
+		zones = append(zones, zone)
 	}
 
 	if err = d.Set("zones", flattenDnsZones(zones)); err != nil {
