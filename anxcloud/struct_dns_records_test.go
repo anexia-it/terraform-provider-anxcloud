@@ -1,15 +1,16 @@
 package anxcloud
 
 import (
+	"testing"
+
 	"github.com/google/go-cmp/cmp"
 	uuid "github.com/satori/go.uuid"
 	"go.anx.io/go-anxcloud/pkg/clouddns/zone"
-	"testing"
 )
 
 func TestFlattenDnsRecords(t *testing.T) {
-	id := uuid.NewV4()
-	id2 := uuid.NewV4()
+	id, _ := uuid.NewV4()
+	id2, _ := uuid.NewV4()
 	ttl := 100
 	cases := []struct {
 		Input          []zone.Record

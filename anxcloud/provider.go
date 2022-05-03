@@ -43,6 +43,7 @@ func Provider() *schema.Provider {
 			"anxcloud_template":              dataSourceTemplate(),
 			"anxcloud_ip_addresses":          dataSourceIPAddresses(),
 			"anxcloud_nic_types":             dataSourceNICTypes(),
+			"anxcloud_core_location":         dataSourceCoreLocation(),
 			"anxcloud_core_locations":        dataSourceCoreLocations(),
 			"anxcloud_vlans":                 dataSourceVLANs(),
 			"anxcloud_tags":                  dataSourceTags(),

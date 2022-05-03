@@ -13,7 +13,7 @@ import (
 func dataSourceCoreLocations() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceCoreLocationsRead,
-		Schema:      schemaDataSourceLocation(),
+		Schema:      schemaDataSourceLocations(),
 	}
 }
 
