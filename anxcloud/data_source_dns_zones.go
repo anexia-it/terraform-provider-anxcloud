@@ -22,19 +22,20 @@ func datasourceDNSZones() *schema.Resource {
 func dataSourceDNSZonesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	a := m.(providerContext).api
 
-	var oc types.ObjectChannel
-	err := a.List(ctx, &clouddnsv1.Zone{}, api.ObjectChannel(&oc))
+	var pageIter types.PageInfo
+	err := a.List(ctx, &clouddnsv1.Zone{}, api.Paged(1, 100, &pageIter))
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	var zones []clouddnsv1.Zone
-	for retriever := range oc {
-		var zone clouddnsv1.Zone
-		if err = retriever(&zone); err != nil {
-			return diag.FromErr(err)
-		}
-		zones = append(zones, zone)
+	var pagedZones []clouddnsv1.Zone
+	for pageIter.Next(&pagedZones) {
+		zones = append(zones, pagedZones...)
+	}
+
+	if err := pageIter.Error(); err != nil {
+		return diag.FromErr(err)
 	}
 
 	if err = d.Set("zones", flattenDnsZones(zones)); err != nil {

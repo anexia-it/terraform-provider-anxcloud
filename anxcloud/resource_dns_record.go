@@ -38,17 +38,14 @@ func resourceDNSRecord() *schema.Resource {
 }
 
 func resourceDNSRecordCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	unlock := lockRecordContextIfNeeded(ctx)
-	defer unlock()
-	// decelerate (engine needs time to process)
-	time.Sleep(time.Second)
+	defer lockRecordContextIfNeeded(ctx)()
 
 	a := m.(providerContext).api
 
 	r := dnsRecordFromResourceData(d)
 
 	// try to import
-	ret, err := findDNSRecord(ctx, a, r)
+	ret, err := findDNSRecord(ctx, a, *r)
 	if api.IgnoreNotFound(err) != nil {
 		return diag.FromErr(err)
 	} else if err != nil {
@@ -72,7 +69,7 @@ func resourceDNSRecordRead(ctx context.Context, d *schema.ResourceData, m interf
 	a := m.(providerContext).api
 
 	r := dnsRecordFromResourceData(d)
-	r, err := findDNSRecord(ctx, a, r)
+	r, err := findDNSRecord(ctx, a, *r)
 
 	if api.IgnoreNotFound(err) != nil {
 		return diag.FromErr(err)
@@ -112,10 +109,7 @@ func resourceDNSRecordRead(ctx context.Context, d *schema.ResourceData, m interf
 }
 
 func resourceDNSRecordUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	unlock := lockRecordContextIfNeeded(ctx)
-	defer unlock()
-	// decelerate (engine needs time to process)
-	time.Sleep(time.Second)
+	defer lockRecordContextIfNeeded(ctx)()
 
 	a := m.(providerContext).api
 
@@ -125,7 +119,7 @@ func resourceDNSRecordUpdate(ctx context.Context, d *schema.ResourceData, m inte
 	prevRData, _ := d.GetChange("rdata")
 	prevTTL, _ := d.GetChange("ttl")
 
-	r, err := findDNSRecord(ctx, a, &clouddnsv1.Record{
+	r, err := findDNSRecord(ctx, a, clouddnsv1.Record{
 		ZoneName: prevZoneName.(string),
 		Type:     prevType.(string),
 		Name:     prevName.(string),
@@ -138,10 +132,9 @@ func resourceDNSRecordUpdate(ctx context.Context, d *schema.ResourceData, m inte
 	}
 
 	if d.HasChange("zone_name") { // cannot change records zone -> recreate
-		if err := a.Destroy(ctx, &clouddnsv1.Record{Identifier: r.Identifier, ZoneName: prevZoneName.(string)}); err != nil {
-			if api.IgnoreNotFound(err) != nil {
-				return diag.FromErr(err)
-			}
+		err := a.Destroy(ctx, &clouddnsv1.Record{Identifier: r.Identifier, ZoneName: prevZoneName.(string)})
+		if api.IgnoreNotFound(err) != nil {
+			return diag.FromErr(err)
 		}
 		return resourceDNSRecordCreate(context.WithValue(ctx, dnsRecordSkipMutexLock, true), d, m)
 	}
@@ -160,15 +153,12 @@ func resourceDNSRecordUpdate(ctx context.Context, d *schema.ResourceData, m inte
 }
 
 func resourceDNSRecordDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	unlock := lockRecordContextIfNeeded(ctx)
-	defer unlock()
-	// decelerate (engine needs time to process)
-	time.Sleep(time.Second)
+	defer lockRecordContextIfNeeded(ctx)()
 
 	a := m.(providerContext).api
 
 	r := dnsRecordFromResourceData(d)
-	r, err := findDNSRecord(ctx, a, r)
+	r, err := findDNSRecord(ctx, a, *r)
 
 	if api.IgnoreNotFound(err) != nil {
 		return diag.FromErr(err)
@@ -198,43 +188,33 @@ func dnsRecordFromResourceData(d *schema.ResourceData) *clouddnsv1.Record {
 	}
 }
 
-func findDNSRecord(ctx context.Context, a api.API, r *clouddnsv1.Record) (*clouddnsv1.Record, error) {
+func findDNSRecord(ctx context.Context, a api.API, r clouddnsv1.Record) (*clouddnsv1.Record, error) {
 	// quote TXTs rdata for compare.Compare
 	if r.Type == "TXT" {
 		r.RData = fmt.Sprintf("%q", r.RData)
 	}
 
-	listCTX, cancel := context.WithCancel(ctx)
-	defer cancel()
-	channel := make(types.ObjectChannel)
-	err := a.List(listCTX, r, api.ObjectChannel(&channel))
+	var pageIter types.PageInfo
+	err := a.List(ctx, &r, api.Paged(1, 100, &pageIter))
 	if err != nil {
 		return nil, err
 	}
 
-	rec := &clouddnsv1.Record{}
-	for res := range channel {
-		err = res(rec)
+	var pagedRecords []clouddnsv1.Record
+	for pageIter.Next(&pagedRecords) {
+		idx, err := compare.Search(&r, pagedRecords, "Type", "Name", "RData", "TTL")
 		if err != nil {
 			return nil, err
 		}
-
-		diffs, err := compare.Compare(r, rec, "Type", "Name", "RData", "TTL")
-		if err != nil {
-			return nil, err
-		}
-
-		if len(diffs) == 0 {
-			return rec, nil
+		if idx > -1 {
+			return &pagedRecords[idx], nil
 		}
 	}
 
 	return nil, api.ErrNotFound
 }
 
-type recordContextUnlockFunc func()
-
-func lockRecordContextIfNeeded(ctx context.Context) recordContextUnlockFunc {
+func lockRecordContextIfNeeded(ctx context.Context) func() {
 	if v := ctx.Value(dnsRecordSkipMutexLock); v == nil {
 		syncDNSRecordOps.Lock()
 		return syncDNSRecordOps.Unlock

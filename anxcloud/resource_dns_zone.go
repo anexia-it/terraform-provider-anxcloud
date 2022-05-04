@@ -36,16 +36,16 @@ func resourceDNSZoneCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 	// try to import
 	z := &clouddnsv1.Zone{Name: d.Get("name").(string)}
-	if err := a.Get(ctx, z); err != nil {
-		if api.IgnoreNotFound(err) != nil {
-			return diag.FromErr(err)
-		}
-		// not found -> create new zone
-	} else {
+
+	if err := a.Get(ctx, z); api.IgnoreNotFound(err) != nil {
+		return diag.FromErr(err)
+	} else if err == nil {
 		// DNS Zone found -> update to match terraform definition
 		d.SetId(z.Name)
 		return resourceDNSZoneUpdate(ctx, d, m)
 	}
+
+	// not found -> create new zone
 
 	z = dnsZoneFromResourceData(d)
 	if err := a.Create(ctx, z); err != nil {
@@ -153,8 +153,11 @@ func resourceDNSZoneDelete(ctx context.Context, d *schema.ResourceData, m interf
 }
 
 func dnsZoneFromResourceData(d *schema.ResourceData) *clouddnsv1.Zone {
-	var notifyAllowedIPs []string
-	for _, v := range d.Get("notify_allowed_ips").([]interface{}) {
+	dnsServers := expandDNSServers(d.Get("dns_servers").([]interface{}))
+
+	notifyAllowedIPsAsInterfaces := d.Get("notify_allowed_ips").([]interface{})
+	notifyAllowedIPs := make([]string, 0, len(notifyAllowedIPsAsInterfaces))
+	for _, v := range notifyAllowedIPsAsInterfaces {
 		notifyAllowedIPs = append(notifyAllowedIPs, v.(string))
 	}
 
@@ -168,7 +171,7 @@ func dnsZoneFromResourceData(d *schema.ResourceData) *clouddnsv1.Zone {
 		Expire:           d.Get("expire").(int),
 		TTL:              d.Get("ttl").(int),
 		MasterNS:         d.Get("master_nameserver").(string),
-		DNSServers:       expandDNSServers(d.Get("dns_servers").([]interface{})),
+		DNSServers:       dnsServers,
 		NotifyAllowedIPs: notifyAllowedIPs,
 	}
 }

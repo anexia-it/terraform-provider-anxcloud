@@ -2,6 +2,7 @@ package anxcloud
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
@@ -33,6 +34,10 @@ func TestAccAnxCloudDNSZone(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"deployment_level", "validation_level"},
+			},
+			{
+				Config:      testAccAnxDNSZone(resourceName, "prefix-"+zoneName),
+				ExpectError: regexp.MustCompile("operation not supported"),
 			},
 		},
 	})
