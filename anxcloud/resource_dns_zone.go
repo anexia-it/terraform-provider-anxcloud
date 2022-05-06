@@ -14,6 +14,7 @@ import (
 
 func resourceDNSZone() *schema.Resource {
 	return &schema.Resource{
+		Description:   "This resource allows you to create DNS zones.",
 		CreateContext: resourceDNSZoneCreate,
 		ReadContext:   resourceDNSZoneRead,
 		UpdateContext: resourceDNSZoneUpdate,
@@ -22,10 +23,10 @@ func resourceDNSZone() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Read:   schema.DefaultTimeout(1 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+			Create: schema.DefaultTimeout(time.Minute),
+			Read:   schema.DefaultTimeout(time.Minute),
+			Update: schema.DefaultTimeout(time.Minute),
+			Delete: schema.DefaultTimeout(time.Minute),
 		},
 		Schema: schemaDNSZone(),
 	}
@@ -35,9 +36,9 @@ func resourceDNSZoneCreate(ctx context.Context, d *schema.ResourceData, m interf
 	a := m.(providerContext).api
 
 	// try to import
-	z := &clouddnsv1.Zone{Name: d.Get("name").(string)}
+	z := clouddnsv1.Zone{Name: d.Get("name").(string)}
 
-	if err := a.Get(ctx, z); api.IgnoreNotFound(err) != nil {
+	if err := a.Get(ctx, &z); api.IgnoreNotFound(err) != nil {
 		return diag.FromErr(err)
 	} else if err == nil {
 		// DNS Zone found -> update to match terraform definition
@@ -48,7 +49,7 @@ func resourceDNSZoneCreate(ctx context.Context, d *schema.ResourceData, m interf
 	// not found -> create new zone
 
 	z = dnsZoneFromResourceData(d)
-	if err := a.Create(ctx, z); err != nil {
+	if err := a.Create(ctx, &z); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -123,13 +124,13 @@ func resourceDNSZoneRead(ctx context.Context, d *schema.ResourceData, m interfac
 func resourceDNSZoneUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	a := m.(providerContext).api
 
-	if d.HasChange("name") {
+	if d.HasChange("name") && !d.IsNewResource() {
 		return diag.FromErr(fmt.Errorf("%w: cannot change the name of a DNS zone", ErrOperationNotSupported))
 	}
 
 	def := dnsZoneFromResourceData(d)
 
-	if err := a.Update(ctx, def); err != nil {
+	if err := a.Update(ctx, &def); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -152,7 +153,7 @@ func resourceDNSZoneDelete(ctx context.Context, d *schema.ResourceData, m interf
 	return nil
 }
 
-func dnsZoneFromResourceData(d *schema.ResourceData) *clouddnsv1.Zone {
+func dnsZoneFromResourceData(d *schema.ResourceData) clouddnsv1.Zone {
 	dnsServers := expandDNSServers(d.Get("dns_servers").([]interface{}))
 
 	notifyAllowedIPsAsInterfaces := d.Get("notify_allowed_ips").([]interface{})
@@ -161,7 +162,7 @@ func dnsZoneFromResourceData(d *schema.ResourceData) *clouddnsv1.Zone {
 		notifyAllowedIPs = append(notifyAllowedIPs, v.(string))
 	}
 
-	return &clouddnsv1.Zone{
+	return clouddnsv1.Zone{
 		Name:             d.Get("name").(string),
 		IsMaster:         d.Get("is_master").(bool),
 		DNSSecMode:       d.Get("dns_sec_mode").(string),

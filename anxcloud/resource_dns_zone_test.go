@@ -36,7 +36,7 @@ func TestAccAnxCloudDNSZone(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"deployment_level", "validation_level"},
 			},
 			{
-				Config:      testAccAnxDNSZone(resourceName, "prefix-"+zoneName),
+				Config:      testAccAnxDNSZone(resourceName, zoneName+"-renamed"),
 				ExpectError: regexp.MustCompile("operation not supported"),
 			},
 		},
@@ -46,14 +46,14 @@ func TestAccAnxCloudDNSZone(t *testing.T) {
 func testAccAnxDNSZone(resourceName, zoneName string) string {
 	return fmt.Sprintf(`
 	resource "anxcloud_dns_zone" "%s" {
-		name = "%s"
+		name = "%[2]s"
 		is_master = true
 		dns_sec_mode = "unvalidated"
-		admin_email = "admin@%s"
+		admin_email = "admin@%[2]s"
 		refresh = 100
 		retry = 100
 		expire = 1000
 		ttl = 100
 	}
-	`, resourceName, zoneName, zoneName)
+	`, resourceName, zoneName)
 }

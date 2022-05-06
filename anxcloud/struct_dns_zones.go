@@ -6,9 +6,6 @@ import (
 
 func flattenDnsZones(dnsZones []clouddnsv1.Zone) []interface{} {
 	zones := make([]interface{}, 0, len(dnsZones))
-	if len(dnsZones) < 1 {
-		return zones
-	}
 
 	for _, zone := range dnsZones {
 		m := map[string]interface{}{
@@ -35,9 +32,6 @@ func flattenDnsZones(dnsZones []clouddnsv1.Zone) []interface{} {
 
 func expandDNSServers(p []interface{}) []clouddnsv1.DNSServer {
 	dnsServers := make([]clouddnsv1.DNSServer, 0, len(p))
-	if len(p) < 1 {
-		return dnsServers
-	}
 
 	for _, elem := range p {
 		in := elem.(map[string]interface{})
@@ -58,10 +52,6 @@ func expandDNSServers(p []interface{}) []clouddnsv1.DNSServer {
 
 func flattenDNSServers(in []clouddnsv1.DNSServer) []interface{} {
 	att := make([]interface{}, 0, len(in))
-
-	if len(in) < 1 {
-		return att
-	}
 
 	for _, v := range in {
 		dnsServer := map[string]interface{}{}

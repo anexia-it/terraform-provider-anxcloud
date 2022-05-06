@@ -55,7 +55,7 @@ func testAccAnxDNSZoneAndRecord(zoneNameSuffix string, recordsZoneIndex uint) st
 
 	resource "anxcloud_dns_record" "a_record" {
 		name = "a-record"
-		zone_name = anxcloud_dns_zone.test_dns_zones[%d].name
+		zone_name = anxcloud_dns_zone.test_dns_zones[%[2]d].name
 		type = "A"
 		rdata = "1.1.1.1"
 		ttl = 300
@@ -63,10 +63,10 @@ func testAccAnxDNSZoneAndRecord(zoneNameSuffix string, recordsZoneIndex uint) st
 
 	resource "anxcloud_dns_record" "txt_record" {
 		name = "txt-record"
-		zone_name = anxcloud_dns_zone.test_dns_zones[%d].name
+		zone_name = anxcloud_dns_zone.test_dns_zones[%[2]d].name
 		type = "TXT"
 		rdata = "hello world"
 		ttl = 300
 	}
-	`, zoneNameSuffix, recordsZoneIndex, recordsZoneIndex)
+	`, zoneNameSuffix, recordsZoneIndex)
 }

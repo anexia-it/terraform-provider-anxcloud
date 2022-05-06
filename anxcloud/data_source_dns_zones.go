@@ -28,7 +28,7 @@ func dataSourceDNSZonesRead(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.FromErr(err)
 	}
 
-	var zones []clouddnsv1.Zone
+	zones := make([]clouddnsv1.Zone, 0, pageIter.TotalItems())
 	var pagedZones []clouddnsv1.Zone
 	for pageIter.Next(&pagedZones) {
 		zones = append(zones, pagedZones...)
