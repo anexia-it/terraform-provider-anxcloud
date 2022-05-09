@@ -56,10 +56,10 @@ func resourceVLANCreate(ctx context.Context, d *schema.ResourceData, m interface
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("unable to fetch vlan with '%s' id: %w", d.Id(), err))
 		}
-		if vlan.Status == vlanStatusActive {
+		if vlan.Status == vlanStatusActive && vlan.VMProvisioning == def.VMProvisioning {
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf("waiting for vlan with '%s' id to be '%s'", d.Id(), vlanStatusActive))
+		return resource.RetryableError(fmt.Errorf("waiting for vlan with '%s' id to be '%s' and 'vm_provisioning' to have the desired state", d.Id(), vlanStatusActive))
 	})
 	if err != nil {
 		return diag.FromErr(err)
