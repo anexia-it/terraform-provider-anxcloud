@@ -20,7 +20,7 @@ var dnsRecordSkipMutexLock = providerContextKey("dns-record-skip-mutex-lock")
 
 func resourceDNSRecord() *schema.Resource {
 	return &schema.Resource{
-		Description:   "This resource allows you to create DNS records for a specified zone. Records of type TXT might be unstable for now.",
+		Description:   "This resource allows you to create DNS records for a specified zone. TXT records might behave funny, we are working on it.",
 		CreateContext: resourceDNSRecordCreate,
 		ReadContext:   resourceDNSRecordRead,
 		UpdateContext: resourceDNSRecordUpdate,
@@ -41,7 +41,7 @@ func resourceDNSRecord() *schema.Resource {
 func resourceDNSRecordCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	defer lockRecordContextIfNeeded(ctx)()
 
-	a := m.(providerContext).api
+	a := apiFromProviderConfig(m)
 
 	r := dnsRecordFromResourceData(d)
 
@@ -68,7 +68,7 @@ func resourceDNSRecordCreate(ctx context.Context, d *schema.ResourceData, m inte
 func resourceDNSRecordRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags []diag.Diagnostic
 
-	a := m.(providerContext).api
+	a := apiFromProviderConfig(m)
 
 	r := dnsRecordFromResourceData(d)
 	r, err := findDNSRecord(ctx, a, r)
@@ -80,6 +80,15 @@ func resourceDNSRecordRead(ctx context.Context, d *schema.ResourceData, m interf
 		return diags
 	}
 
+	// remove quotes from txt rdata to prevent double, tripple, ... quoted data (SYSENG-816)
+	rData := r.RData
+	if r.Type == "TXT" {
+		rData = rData[1 : len(rData)-1]
+	}
+
+	if err := d.Set("rdata", rData); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
 	if err := d.Set("type", r.Type); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
@@ -90,14 +99,6 @@ func resourceDNSRecordRead(ctx context.Context, d *schema.ResourceData, m interf
 		diags = append(diags, diag.FromErr(err)...)
 	}
 	if err := d.Set("region", r.Region); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
-	// remove quotes from txt rdata to prevent double, tripple, ... quoted data
-	rData := r.RData
-	if r.Type == "TXT" {
-		rData = rData[1 : len(rData)-1]
-	}
-	if err := d.Set("rdata", rData); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 	if err := d.Set("ttl", r.TTL); err != nil {
@@ -113,7 +114,7 @@ func resourceDNSRecordRead(ctx context.Context, d *schema.ResourceData, m interf
 func resourceDNSRecordUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	defer lockRecordContextIfNeeded(ctx)()
 
-	a := m.(providerContext).api
+	a := apiFromProviderConfig(m)
 
 	prevZoneName, _ := d.GetChange("zone_name")
 	prevType, _ := d.GetChange("type")
@@ -157,7 +158,7 @@ func resourceDNSRecordUpdate(ctx context.Context, d *schema.ResourceData, m inte
 func resourceDNSRecordDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	defer lockRecordContextIfNeeded(ctx)()
 
-	a := m.(providerContext).api
+	a := apiFromProviderConfig(m)
 
 	r := dnsRecordFromResourceData(d)
 	r, err := findDNSRecord(ctx, a, r)

@@ -33,7 +33,7 @@ func resourceDNSZone() *schema.Resource {
 }
 
 func resourceDNSZoneCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	a := m.(providerContext).api
+	a := apiFromProviderConfig(m)
 
 	// try to import
 	z := clouddnsv1.Zone{Name: d.Get("name").(string)}
@@ -61,7 +61,7 @@ func resourceDNSZoneCreate(ctx context.Context, d *schema.ResourceData, m interf
 func resourceDNSZoneRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags []diag.Diagnostic
 
-	a := m.(providerContext).api
+	a := apiFromProviderConfig(m)
 
 	z := clouddnsv1.Zone{Name: d.Id()}
 
@@ -122,7 +122,7 @@ func resourceDNSZoneRead(ctx context.Context, d *schema.ResourceData, m interfac
 }
 
 func resourceDNSZoneUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	a := m.(providerContext).api
+	a := apiFromProviderConfig(m)
 
 	if d.HasChange("name") && !d.IsNewResource() {
 		return diag.FromErr(fmt.Errorf("%w: cannot change the name of a DNS zone", ErrOperationNotSupported))
@@ -140,7 +140,7 @@ func resourceDNSZoneUpdate(ctx context.Context, d *schema.ResourceData, m interf
 }
 
 func resourceDNSZoneDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	a := m.(providerContext).api
+	a := apiFromProviderConfig(m)
 
 	z := clouddnsv1.Zone{Name: d.Id()}
 

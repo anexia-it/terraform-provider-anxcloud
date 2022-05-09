@@ -20,7 +20,7 @@ func datasourceDNSZones() *schema.Resource {
 }
 
 func dataSourceDNSZonesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	a := m.(providerContext).api
+	a := apiFromProviderConfig(m)
 
 	var pageIter types.PageInfo
 	err := a.List(ctx, &clouddnsv1.Zone{}, api.Paged(1, 100, &pageIter))

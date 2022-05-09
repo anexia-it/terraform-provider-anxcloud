@@ -111,3 +111,7 @@ func handleNotFoundError(err error) error {
 
 // context key type for provider package
 type providerContextKey string
+
+func apiFromProviderConfig(m interface{}) api.API {
+	return m.(providerContext).api
+}
