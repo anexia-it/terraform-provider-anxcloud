@@ -37,12 +37,15 @@ func Provider() *schema.Provider {
 			"anxcloud_network_prefix": resourceNetworkPrefix(),
 			"anxcloud_ip_address":     resourceIPAddress(),
 			"anxcloud_tag":            resourceTag(),
+			"anxcloud_dns_zone":       resourceDNSZone(),
+			"anxcloud_dns_record":     resourceDNSRecord(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anxcloud_disk_types":            dataSourceDiskTypes(),
 			"anxcloud_template":              dataSourceTemplate(),
 			"anxcloud_ip_addresses":          dataSourceIPAddresses(),
 			"anxcloud_nic_types":             dataSourceNICTypes(),
+			"anxcloud_core_location":         dataSourceCoreLocation(),
 			"anxcloud_core_locations":        dataSourceCoreLocations(),
 			"anxcloud_vlans":                 dataSourceVLANs(),
 			"anxcloud_tags":                  dataSourceTags(),
@@ -104,4 +107,11 @@ func handleNotFoundError(err error) error {
 		return nil
 	}
 	return err
+}
+
+// context key type for provider package
+type providerContextKey string
+
+func apiFromProviderConfig(m interface{}) api.API {
+	return m.(providerContext).api
 }
