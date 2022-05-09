@@ -531,6 +531,10 @@ func vsphereAccTestTemplateByLocationAndPrefix(locationID string, templateNamePr
 		}
 	}
 
+	if len(selected) < 1 {
+		log.Fatalf("Template with prefix '%s' not found at location with ID '%s'", templateNamePrefix, locationID)
+	}
+
 	sort.Slice(selected, func(i, j int) bool {
 		return extractBuildNumber(selected[i].Build) > extractBuildNumber(selected[j].Build)
 	})
