@@ -6,8 +6,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/aws/aws-sdk-go v1.36.30 // indirect
 	github.com/fatih/color v1.13.0 // indirect
-	github.com/fsnotify/fsnotify v1.5.1 // indirect
-	github.com/go-logr/logr v1.2.0
+	github.com/go-logr/logr v1.2.3
 	github.com/go-test/deep v1.0.7 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/go-cmp v0.5.6
@@ -31,17 +30,14 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/onsi/ginkgo/v2 v2.0.0
-	github.com/onsi/gomega v1.17.0
+	github.com/onsi/ginkgo/v2 v2.1.4
+	github.com/onsi/gomega v1.19.0
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/satori/go.uuid v1.2.1-0.20181028125025-b2ce2384e17b
 	github.com/stretchr/testify v1.7.0
 	github.com/zclconf/go-cty v1.10.0 // indirect
-	go.anx.io/go-anxcloud v0.4.2
+	go.anx.io/go-anxcloud v0.4.3
 	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce // indirect
-	golang.org/x/net v0.0.0-20220114011407-0dd24b26b47d // indirect
-	golang.org/x/sys v0.0.0-20220111092808-5a964db01320 // indirect
-	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/api v0.63.0 // indirect
 	google.golang.org/genproto v0.0.0-20220112215332-a9c7c0acf9f2 // indirect
 	google.golang.org/grpc v1.43.0 // indirect

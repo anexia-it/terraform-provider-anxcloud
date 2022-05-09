@@ -19,7 +19,7 @@ func dataSourceCoreLocation() *schema.Resource {
 }
 
 func dataSourceCoreLocationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	a := m.(providerContext).api
+	a := apiFromProviderConfig(m)
 
 	code, exists := d.GetOk("code")
 	if !exists {

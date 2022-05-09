@@ -7,7 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"go.anx.io/go-anxcloud/pkg/clouddns/zone"
+	"go.anx.io/go-anxcloud/pkg/api"
+	"go.anx.io/go-anxcloud/pkg/api/types"
+	clouddnsv1 "go.anx.io/go-anxcloud/pkg/apis/clouddns/v1"
 )
 
 func datasourceDNSZones() *schema.Resource {
@@ -18,11 +20,21 @@ func datasourceDNSZones() *schema.Resource {
 }
 
 func dataSourceDNSZonesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(providerContext).legacyClient
-	a := zone.NewAPI(c)
+	a := apiFromProviderConfig(m)
 
-	zones, err := a.List(ctx)
+	var pageIter types.PageInfo
+	err := a.List(ctx, &clouddnsv1.Zone{}, api.Paged(1, 100, &pageIter))
 	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	zones := make([]clouddnsv1.Zone, 0, pageIter.TotalItems())
+	var pagedZones []clouddnsv1.Zone
+	for pageIter.Next(&pagedZones) {
+		zones = append(zones, pagedZones...)
+	}
+
+	if err := pageIter.Error(); err != nil {
 		return diag.FromErr(err)
 	}
 
