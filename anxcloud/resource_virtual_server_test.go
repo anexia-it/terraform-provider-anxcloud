@@ -46,7 +46,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 
 	vmRecorder := getVMRecorder(t)
 	envInfo := environment.GetEnvInfo(t)
-	templateID := vsphereAccTestInit(envInfo.Location, templateName)
+	templateID := vsphereAccTestTemplateByLocationAndPrefix(envInfo.Location, templateName)
 	vmDef := vm.Definition{
 		Location:           envInfo.Location,
 		TemplateType:       "templates",
@@ -166,7 +166,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 
 	vmRecorder := getVMRecorder(t)
 	envInfo := environment.GetEnvInfo(t)
-	templateID := vsphereAccTestInit(envInfo.Location, templateName)
+	templateID := vsphereAccTestTemplateByLocationAndPrefix(envInfo.Location, templateName)
 	vmDef := vm.Definition{
 		Location:           envInfo.Location,
 		TemplateType:       "templates",
@@ -259,7 +259,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 		changeDiskDef.Hostname = fmt.Sprintf("terraform-test-%s-multi-disk-template-change", envInfo.TestRunName)
 		changeDiskDef.Network = []vm.Network{createNewNetworkInterface(envInfo)}
 		vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", changeDiskDef.Hostname))
-		changeDiskDef.TemplateID = vsphereAccTestInit(envInfo.Location, "Flatcar Storage Stable")
+		changeDiskDef.TemplateID = vsphereAccTestTemplateByLocationAndPrefix(envInfo.Location, "Flatcar Storage Stable")
 		templateDisks := []vm.Disk{
 			{
 				Type:    "ENT6",
@@ -507,7 +507,7 @@ func generateTagsString(tags ...string) string {
 	return fmt.Sprintf("tags = [\n%s\n]", strings.Join(tags, "\n"))
 }
 
-func vsphereAccTestInit(locationID string, templateName string) string {
+func vsphereAccTestTemplateByLocationAndPrefix(locationID string, templateNamePrefix string) string {
 	if _, ok := os.LookupEnv(client.TokenEnvName); !ok {
 		// we are running in unit test environment so do nothing
 		return ""
@@ -526,7 +526,7 @@ func vsphereAccTestInit(locationID string, templateName string) string {
 
 	selected := make([]templates.Template, 0, 1)
 	for _, tpl := range tpls {
-		if strings.HasPrefix(tpl.Name, templateName) {
+		if strings.HasPrefix(tpl.Name, templateNamePrefix) {
 			selected = append(selected, tpl)
 		}
 	}
