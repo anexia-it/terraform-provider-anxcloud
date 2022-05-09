@@ -1,9 +1,7 @@
 package main
 
 import (
-	"context"
 	"flag"
-	"log"
 
 	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud"
 
@@ -16,16 +14,11 @@ func main() {
 	flag.BoolVar(&debugMode, "debuggable", false, "set to true to run the provider with support for debuggers like delve")
 	flag.Parse()
 
-	if debugMode {
-		err := plugin.Debug(context.Background(), "registry.terraform.io/hashicorp/anxcloud",
-			&plugin.ServeOpts{
-				ProviderFunc: anxcloud.Provider,
-			})
-		if err != nil {
-			log.Println(err.Error())
-		}
-	} else {
-		plugin.Serve(&plugin.ServeOpts{
-			ProviderFunc: anxcloud.Provider})
+	opts := &plugin.ServeOpts{
+		Debug:        debugMode,
+		ProviderAddr: "registry.terraform.io/hashicorp/anxcloud",
+		ProviderFunc: anxcloud.Provider,
 	}
+
+	plugin.Serve(opts)
 }
