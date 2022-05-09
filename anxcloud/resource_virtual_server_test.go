@@ -259,7 +259,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 		changeDiskDef.Hostname = fmt.Sprintf("terraform-test-%s-multi-disk-template-change", envInfo.TestRunName)
 		changeDiskDef.Network = []vm.Network{createNewNetworkInterface(envInfo)}
 		vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", changeDiskDef.Hostname))
-		changeDiskDef.TemplateID = "659b35b5-0060-44de-9f9e-a069ec5f1bca"
+		changeDiskDef.TemplateID = vsphereAccTestInit(envInfo.Location, "Flatcar Storage Stable")
 		templateDisks := []vm.Disk{
 			{
 				Type:    "ENT6",
