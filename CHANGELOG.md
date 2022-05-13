@@ -1,3 +1,24 @@
+## 0.3.4
+FEATURES
+
+* CloudDNS support!
+  - **New Data Source:** `anxcloud_dns_records` (by @X4mp in [#69](https://github.com/anexia-it/terraform-provider-anxcloud/pull/69))
+  - **New Data Source:** `anxcloud_dns_zones` (by @X4mp in [#70](https://github.com/anexia-it/terraform-provider-anxcloud/pull/70))
+  - **New Resources:**  `anxcloud_dns_zone` and `anxcloud_dns_record` (by @marioreggiori in [#82](https://github.com/anexia-it/terraform-provider-anxcloud/pull/82))
+* Data source for locations
+  - **New Data Source:** `anxcloud_core_location` (by @marioreggiori in [#84](https://github.com/anexia-it/terraform-provider-anxcloud/pull/84))
+
+ENHANCEMENTS
+
+* resource/vlan - attribute `vm_provisioning`
+  - Fix VLAN update leads to `vm_provisioning` flakiness (by @kstiehl in [#71](https://github.com/anexia-it/terraform-provider-anxcloud/pull/71))
+  - await desired `vm_provisioning` state on create (by @marioreggiori in [#86](https://github.com/anexia-it/terraform-provider-anxcloud/pull/86))
+* provider - Upgrade Terraform plugin SDK (by @marioreggiori in [#87](https://github.com/anexia-it/terraform-provider-anxcloud/pull/87))
+
+DOCUMENTATION
+* fixed naming in development docs (by @HaveFun83 in [#65](https://github.com/anexia-it/terraform-provider-anxcloud/pull/65))
+* enhanced all the docs, mostly now generated automatically and easier to keep up to date (by @marioreggiori in [#83](https://github.com/anexia-it/terraform-provider-anxcloud/pull/83))
+
 ## 0.3.3
 ENHANCEMENTS
 
