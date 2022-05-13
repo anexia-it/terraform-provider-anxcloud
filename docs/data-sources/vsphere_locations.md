@@ -8,6 +8,8 @@ description: |-
 
 # anxcloud_vsphere_locations (Data Source)
 
+~> This data-source is deprecated. Please use `anxcloud_core_locations` instead.
+
 Provides available vSphere locations.
 
 ## Example Usage
@@ -39,12 +41,12 @@ data "anxcloud_vsphere_locations" "example" {
 
 Read-Only:
 
-- `code` (String)
-- `country` (String)
-- `country_name` (String)
-- `identifier` (String)
-- `lat` (String)
-- `lon` (String)
-- `name` (String)
+- `code` (String) Location code.
+- `country` (String) Location country.
+- `country_name` (String) Location country name.
+- `identifier` (String) Identifier of the API resource.
+- `lat` (String) Location latitude.
+- `lon` (String) Location longitude.
+- `name` (String) Location name.
 
 

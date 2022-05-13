@@ -32,9 +32,9 @@ data "anxcloud_cpu_performance_types" "example" {}
 
 Read-Only:
 
-- `id` (String)
-- `limit` (Number)
-- `prioritization` (String)
-- `unit` (String)
+- `id` (String) CPU performance type identifier.
+- `limit` (Number) CPU performance type limit.
+- `prioritization` (String) CPU performance type prioritization.
+- `unit` (String) CPU performance type limit unit.
 
 

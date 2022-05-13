@@ -38,13 +38,13 @@ data "anxcloud_dns_records" "example" {
 
 Read-Only:
 
-- `identifier` (String)
-- `immutable` (Boolean)
-- `name` (String)
-- `rdata` (String)
-- `region` (String)
-- `ttl` (Number)
-- `type` (String)
-- `zone_name` (String)
+- `identifier` (String) DNS Record identifier. Changes on revision change and therefore shouldn't be used as reference.
+- `immutable` (Boolean) Specifies whether or not a record is immutable.
+- `name` (String) DNS record name.
+- `rdata` (String) DNS record data.
+- `region` (String) DNS record region (for GeoDNS aware records).
+- `ttl` (Number) Region specific TTL. If not set the zone TTL will be used.
+- `type` (String) DNS record type.
+- `zone_name` (String) Zone of DNS record.
 
 

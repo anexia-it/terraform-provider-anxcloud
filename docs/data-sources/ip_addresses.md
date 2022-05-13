@@ -37,9 +37,9 @@ data "anxcloud_ip_addresses" "example" {
 
 Read-Only:
 
-- `address` (String)
-- `description_customer` (String)
-- `identifier` (String)
-- `role` (String)
+- `address` (String) The IP address.
+- `description_customer` (String) Additional customer description.
+- `identifier` (String) Identifier of the API resource.
+- `role` (String) Role of the IP address.
 
 

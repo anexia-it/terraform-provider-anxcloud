@@ -42,7 +42,7 @@ data "anxcloud_tags" "example" {
 
 Read-Only:
 
-- `identifier` (String)
-- `name` (String)
+- `identifier` (String) Identifier of the tag.
+- `name` (String) Name of the tag.
 
 

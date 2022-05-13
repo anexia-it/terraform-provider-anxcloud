@@ -4,8 +4,6 @@ page_title: "anxcloud_virtual_server Resource - terraform-provider-anxcloud"
 subcategory: ""
 description: |-
   The virtual_server resource allows you to configure and run virtual machines.
-  Known limitations
-  removal of disks not supportedremoval of networks not supported
 ---
 
 # anxcloud_virtual_server (Resource)
@@ -161,36 +159,36 @@ Optional:
 
 Read-Only:
 
-- `cores` (Number)
-- `cpu` (Number)
-- `custom_name` (String)
-- `disks_info` (List of Object) (see [below for nested schema](#nestedobjatt--info--disks_info))
-- `disks_number` (Number)
-- `guest_os` (String)
-- `guest_tools_status` (String)
-- `identifier` (String)
-- `location_code` (String)
-- `location_country` (String)
-- `location_name` (String)
-- `name` (String)
-- `network` (List of Object) (see [below for nested schema](#nestedobjatt--info--network))
-- `ram` (Number)
-- `status` (String)
-- `version_tools` (String)
+- `cores` (Number) Number of CPU cores.
+- `cpu` (Number) Number of CPUs.
+- `custom_name` (String) Virtual server custom name.
+- `disks_info` (List of Object) Disks info. (see [below for nested schema](#nestedobjatt--info--disks_info))
+- `disks_number` (Number) Number of the attached disks.
+- `guest_os` (String) Guest operating system.
+- `guest_tools_status` (String) Guest tools status.
+- `identifier` (String) Identifier of the API resource.
+- `location_code` (String) Location code.
+- `location_country` (String) Location country.
+- `location_name` (String) Location name.
+- `name` (String) Virtual server name.
+- `network` (List of Object) Network interfaces. (see [below for nested schema](#nestedobjatt--info--network))
+- `ram` (Number) Memory in MB.
+- `status` (String) Virtual server status.
+- `version_tools` (String) Version tools.
 
 <a id="nestedobjatt--info--disks_info"></a>
 ### Nested Schema for `info.disks_info`
 
 Read-Only:
 
-- `bus_type` (String)
-- `bus_type_label` (String)
-- `disk_gb` (Number)
-- `disk_id` (Number)
-- `disk_type` (String)
-- `iops` (Number)
-- `latency` (Number)
-- `storage_type` (String)
+- `bus_type` (String) Bus type.
+- `bus_type_label` (String) Bus type label.
+- `disk_gb` (Number) Size of the disk in GB.
+- `disk_id` (Number) Disk identifier.
+- `disk_type` (String) Disk type.
+- `iops` (Number) Disk input/output operations per second.
+- `latency` (Number) Disk latency.
+- `storage_type` (String) Disk storage type.
 
 
 <a id="nestedobjatt--info--network"></a>
@@ -198,11 +196,11 @@ Read-Only:
 
 Read-Only:
 
-- `id` (Number)
-- `ip_v4` (List of String)
-- `ip_v6` (List of String)
-- `mac_address` (String)
-- `nic` (Number)
-- `vlan` (String)
+- `id` (Number) Network interface card identifier.
+- `ip_v4` (List of String) List of IPv4 addresses attached to the interface.
+- `ip_v6` (List of String) List of IPv6 addresses attached to the interface.
+- `mac_address` (String) MAC address of the NIC.
+- `nic` (Number) NIC type number.
+- `vlan` (String) VLAN identifier.
 
 

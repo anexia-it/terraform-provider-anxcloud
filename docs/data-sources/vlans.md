@@ -37,8 +37,8 @@ data "anxcloud_vlans" "example" {
 
 Read-Only:
 
-- `description_customer` (String)
-- `identifier` (String)
-- `name` (String)
+- `description_customer` (String) Additional customer description.
+- `identifier` (String) Identifier of the API resource.
+- `name` (String) VLAN name.
 
 

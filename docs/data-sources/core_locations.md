@@ -37,12 +37,12 @@ data "anxcloud_core_locations" "example" {
 
 Read-Only:
 
-- `city_code` (String)
-- `code` (String)
-- `country` (String)
-- `identifier` (String)
-- `lat` (String)
-- `lon` (String)
-- `name` (String)
+- `city_code` (String) Location city code.
+- `code` (String) Location code.
+- `country` (String) Location country.
+- `identifier` (String) Identifier of the API resource.
+- `lat` (String) Location latitude.
+- `lon` (String) Location longitude.
+- `name` (String) Location name.
 
 

@@ -52,20 +52,20 @@ Optional:
 
 Read-Only:
 
-- `customer` (List of Object) (see [below for nested schema](#nestedobjatt--organisation_assignments--customer))
-- `service` (List of Object) (see [below for nested schema](#nestedobjatt--organisation_assignments--service))
+- `customer` (List of Object) Customer related information. (see [below for nested schema](#nestedobjatt--organisation_assignments--customer))
+- `service` (List of Object) Service related information. (see [below for nested schema](#nestedobjatt--organisation_assignments--service))
 
 <a id="nestedobjatt--organisation_assignments--customer"></a>
 ### Nested Schema for `organisation_assignments.customer`
 
 Read-Only:
 
-- `customer_id` (String)
-- `demo` (Boolean)
-- `id` (String)
-- `name` (String)
-- `name_slug` (String)
-- `reseller` (String)
+- `customer_id` (String) Customer identifier.
+- `demo` (Boolean) Whether is demo.
+- `id` (String) Identifier.
+- `name` (String) Customer name.
+- `name_slug` (String) Slug name.
+- `reseller` (String) Reseller name.
 
 
 <a id="nestedobjatt--organisation_assignments--service"></a>
@@ -73,7 +73,7 @@ Read-Only:
 
 Read-Only:
 
-- `id` (String)
-- `name` (String)
+- `id` (String) Service identifier.
+- `name` (String) Service name.
 
 

@@ -32,27 +32,27 @@ data "anxcloud_dns_zones" "example" {}
 
 Read-Only:
 
-- `admin_email` (String)
-- `deployment_level` (Number)
-- `dns_sec_mode` (String)
-- `dns_servers` (List of Object) (see [below for nested schema](#nestedobjatt--zones--dns_servers))
-- `expire` (Number)
-- `is_editable` (Boolean)
-- `is_master` (Boolean)
-- `master_nameserver` (String)
-- `name` (String)
-- `notify_allowed_ips` (List of String)
-- `refresh` (Number)
-- `retry` (Number)
-- `ttl` (Number)
-- `validation_level` (Number)
+- `admin_email` (String) Admin email address.
+- `deployment_level` (Number) Current deployment progress in percent.
+- `dns_sec_mode` (String) DNSSec mode value for master zones. [`managed` or `unvalidated`]
+- `dns_servers` (List of Object) (see [below for nested schema](#nestedobjatt--zones--dns_servers)) Configured DNS servers.
+- `expire` (Number) Expiration value.
+- `is_editable` (Boolean) Indicator if zone is editable.
+- `is_master` (Boolean) Indicator if the zone is a master zone.
+- `master_nameserver` (String) IP or domain of master nameserver.
+- `name` (String) Zone name.
+- `notify_allowed_ips` (List of String) IP addresses allowed to initiate domain transfer.
+- `refresh` (Number) Refresh value.
+- `retry` (Number) Retry value.
+- `ttl` (Number) TTL value.
+- `validation_level` (Number) Current validation level in percent.
 
 <a id="nestedobjatt--zones--dns_servers"></a>
 ### Nested Schema for `zones.dns_servers`
 
 Read-Only:
 
-- `alias` (String)
-- `server` (String)
+- `alias` (String) DNS server alias.
+- `server` (String) DNS server name.
 
 

@@ -42,10 +42,10 @@ data "anxcloud_disk_types" "example" {
 
 Read-Only:
 
-- `bandwidth` (Number)
-- `id` (String)
-- `iops` (Number)
-- `latency` (Number)
-- `storage_type` (String)
+- `bandwidth` (Number) Bandwidth.
+- `id` (String) Identifier of the API resource.
+- `iops` (Number) Input/output operations per second.
+- `latency` (Number) Latency.
+- `storage_type` (String) Storage type.
 
 

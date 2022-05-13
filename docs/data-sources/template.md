@@ -63,22 +63,22 @@ Read-Only:
 
 Read-Only:
 
-- `boot_delay_seconds` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--boot_delay_seconds))
-- `cpus` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--cpus))
-- `disk_gb` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--disk_gb))
-- `disk_type` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--disk_type))
-- `dns0` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--dns0))
-- `dns1` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--dns1))
-- `dns2` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--dns2))
-- `dns3` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--dns3))
-- `enter_bios_setup` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--enter_bios_setup))
-- `hostname` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--hostname))
-- `ips` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--ips))
-- `memory_mb` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--memory_mb))
-- `nics` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--nics))
-- `password` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--password))
-- `user` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--user))
-- `vlan` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--vlan))
+- `boot_delay_seconds` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--boot_delay_seconds)) Boot delay parameter.
+- `cpus` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--cpus)) CPUs parameter.
+- `disk_gb` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--disk_gb)) Disk size parameter.
+- `disk_type` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--disk_type)) Disk type parameter.
+- `dns0` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--dns0)) DNS 0 parameter.
+- `dns1` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--dns1)) DNS 1 parameter.
+- `dns2` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--dns2)) DNS 2 parameter.
+- `dns3` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--dns3)) DNS 3 parameter.
+- `enter_bios_setup` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--enter_bios_setup)) Enter BIOS parameter.
+- `hostname` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--hostname)) Hostname parameter.
+- `ips` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--ips)) IPs parameter.
+- `memory_mb` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--memory_mb)) Memory parameter.
+- `nics` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--nics)) NICs parameter.
+- `password` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--password)) Password parameter.
+- `user` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--user)) User parameter.
+- `vlan` (List of Object) (see [below for nested schema](#nestedobjatt--templates--params--vlan)) VLAN parameter.
 
 <a id="nestedobjatt--templates--params--boot_delay_seconds"></a>
 ### Nested Schema for `templates.params.boot_delay_seconds`
