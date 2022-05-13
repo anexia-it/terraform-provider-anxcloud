@@ -89,7 +89,10 @@ tools/tfplugindocs:
 
 .PHONY: docs-generate
 docs-generate: tools/tfplugindocs
+	@echo -n "This operation will clear the /docs directory. Changes will be lost! Do you want to proceed? [y/N] " && read ans && [ $${ans:-N} = y ]
 	@tools/tfplugindocs
+	@echo "You need to manually patch some markdown files in /docs!"
+# https://github.com/hashicorp/terraform-plugin-docs/issues/28#issuecomment-768299611
 
 .PHONY: docs-lint
 docs-lint: misspell terrafmt
