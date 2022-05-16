@@ -12,6 +12,7 @@ import (
 
 func dataSourceIPAddresses() *schema.Resource {
 	return &schema.Resource{
+		Description: "Provides available IP addresses.",
 		ReadContext: dataSourceIPAddressesRead,
 		Schema:      schemaIPAddresses(),
 	}

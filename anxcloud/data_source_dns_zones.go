@@ -14,6 +14,7 @@ import (
 
 func datasourceDNSZones() *schema.Resource {
 	return &schema.Resource{
+		Description: "Provides available DNS zones.",
 		ReadContext: dataSourceDNSZonesRead,
 		Schema:      schemaDNSZones(),
 	}

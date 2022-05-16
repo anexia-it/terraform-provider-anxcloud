@@ -12,6 +12,7 @@ import (
 
 func dataSourceNICTypes() *schema.Resource {
 	return &schema.Resource{
+		Description: "Provides available network interface card types. This information can be used to provision virtual servers using the `anxcloud_virtual_server` resource.",
 		ReadContext: dataSourceNICTypesRead,
 		Schema:      schemaNICTypes(),
 	}

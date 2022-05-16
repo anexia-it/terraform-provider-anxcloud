@@ -18,6 +18,7 @@ const (
 
 func resourceVLAN() *schema.Resource {
 	return &schema.Resource{
+		Description:   "The VLAN resource allows you to create and configure VLAN.",
 		CreateContext: resourceVLANCreate,
 		ReadContext:   resourceVLANRead,
 		UpdateContext: resourceVLANUpdate,

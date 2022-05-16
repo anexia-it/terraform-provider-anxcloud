@@ -7,53 +7,53 @@ func schemaDNSZone() map[string]*schema.Schema {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The zone name",
+			Description: "Zone name.",
 		},
 		"is_master": {
 			Type:        schema.TypeBool,
 			Required:    true,
-			Description: "Indicator if the zone is a master zone",
+			Description: "Indicator if the zone is a master zone.",
 		},
 		"dns_sec_mode": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: `DNSSec mode value for master zones. ["managed" or "unvalidated"]`,
+			Description: "DNSSec mode value for master zones. [`managed` or `unvalidated`]",
 		},
 		"admin_email": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Admin email address",
+			Description: "Admin email address.",
 		},
 		"refresh": {
 			Type:        schema.TypeInt,
 			Required:    true,
-			Description: "Refresh value",
+			Description: "Refresh value.",
 		},
 		"retry": {
 			Type:        schema.TypeInt,
 			Required:    true,
-			Description: "Retry value",
+			Description: "Retry value.",
 		},
 		"expire": {
 			Type:        schema.TypeInt,
 			Required:    true,
-			Description: "Expiration value",
+			Description: "Expiration value.",
 		},
 		"ttl": {
 			Type:        schema.TypeInt,
 			Required:    true,
-			Description: "TTL value of a zone",
+			Description: "TTL value.",
 		},
 		"master_nameserver": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			Description: "Master nameserver",
+			Description: "Master nameserver.",
 		},
 		"notify_allowed_ips": {
 			Type:        schema.TypeList,
 			Optional:    true,
-			Description: "IP addresses allowed to initiate domain transfer",
+			Description: "IP addresses allowed to initiate domain transfer.",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
@@ -62,18 +62,18 @@ func schemaDNSZone() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Optional:    true,
 			Computed:    true,
-			Description: "Configured DNS servers",
+			Description: "Configured DNS servers.",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"server": {
 						Type:        schema.TypeString,
 						Required:    true,
-						Description: "DNS server name",
+						Description: "DNS server name.",
 					},
 					"alias": {
 						Type:        schema.TypeString,
 						Required:    true,
-						Description: "DNS server alias",
+						Description: "DNS server alias.",
 					},
 				},
 			},
@@ -81,17 +81,17 @@ func schemaDNSZone() map[string]*schema.Schema {
 		"is_editable": {
 			Type:        schema.TypeBool,
 			Computed:    true,
-			Description: "Indicator if zone is editable",
+			Description: "Indicator if zone is editable.",
 		},
 		"validation_level": {
 			Type:        schema.TypeInt,
 			Computed:    true,
-			Description: "Current validation level in percent",
+			Description: "Current validation level in percent.",
 		},
 		"deployment_level": {
 			Type:        schema.TypeInt,
 			Computed:    true,
-			Description: "Current state of deployment progress in percent",
+			Description: "Current deployment progress in percent.",
 		},
 	}
 }
@@ -101,7 +101,7 @@ func schemaDNSZones() map[string]*schema.Schema {
 		"zones": {
 			Type:        schema.TypeList,
 			Computed:    true,
-			Description: "List of DNS zones of the customer",
+			Description: "List of DNS zones of the customer.",
 			Elem: &schema.Resource{
 				Schema: schemaDNSZone(),
 			},

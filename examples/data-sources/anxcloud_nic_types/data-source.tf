@@ -1,0 +1,1 @@
+data "anxcloud_nic_types" "example" {}

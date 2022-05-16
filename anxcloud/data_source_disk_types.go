@@ -10,6 +10,7 @@ import (
 
 func dataSourceDiskTypes() *schema.Resource {
 	return &schema.Resource{
+		Description: "Provides available disk types for a specified location. This information can be used to provision virtual servers using the `anxcloud_virtual_server` resource.",
 		ReadContext: dataSourceDiskTypesRead,
 		Schema:      schemaDiskTypes(),
 	}

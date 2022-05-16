@@ -13,6 +13,7 @@ import (
 
 func dataSourceCPUPerformanceTypes() *schema.Resource {
 	return &schema.Resource{
+		Description: "Provides available cpu performance types. This information can be used to provision virtual servers using the `anxcloud_virtual_server` resource.",
 		ReadContext: dataSourceCPUPerformanceTypesRead,
 		Schema:      schemaCPUPerformanceType(),
 	}

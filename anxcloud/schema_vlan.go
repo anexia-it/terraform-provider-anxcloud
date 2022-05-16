@@ -10,18 +10,18 @@ func schemaVLANs() map[string]*schema.Schema {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     1,
-			Description: "The page of the list.",
+			Description: listPageIndexDescription,
 		},
 		"limit": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     1000,
-			Description: "The records limit of the list.",
+			Description: listLimitDescription,
 		},
 		"search": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "An optional string allowing to search trough entities.",
+			Description: listQueryDescription,
 		},
 		"vlans": {
 			Type:        schema.TypeList,
@@ -32,7 +32,7 @@ func schemaVLANs() map[string]*schema.Schema {
 					"identifier": {
 						Type:        schema.TypeString,
 						Computed:    true,
-						Description: "Identifier of the VLAN.",
+						Description: identifierDescription,
 					},
 					"name": {
 						Type:        schema.TypeString,

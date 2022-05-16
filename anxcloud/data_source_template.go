@@ -10,6 +10,7 @@ import (
 
 func dataSourceTemplate() *schema.Resource {
 	return &schema.Resource{
+		Description: "Provides available templates for specified location. This information can be used to provision virtual servers using the `anxcloud_virtual_server` resource.",
 		ReadContext: dataSourceTemplateRead,
 		Schema:      schemaTemplate(),
 	}

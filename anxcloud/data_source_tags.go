@@ -13,6 +13,7 @@ import (
 
 func dataSourceTags() *schema.Resource {
 	return &schema.Resource{
+		Description: "Provides available service tags.",
 		ReadContext: dataSourceTagsRead,
 		Schema:      schemaTags(),
 	}

@@ -10,38 +10,38 @@ func schemaTags() map[string]*schema.Schema {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     1,
-			Description: "Number of page",
+			Description: listPageIndexDescription,
 		},
 		"limit": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     1000,
-			Description: "Number of tags per page",
+			Description: listLimitDescription,
 		},
 		"query": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "Search term",
+			Description: listQueryDescription,
 		},
 		"service_identifier": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The id of the service",
+			Description: "The identifier of the service.",
 		},
 		"organization_identifier": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The id of the organization",
+			Description: "The identifier of the organization.",
 		},
 		"order": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The order of the tags",
+			Description: "The order of the tags.",
 		},
 		"sort_ascending": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Description: "Ascending or descending",
+			Description: "Ascending or descending.",
 		},
 		"tags": {
 			Type:        schema.TypeList,
@@ -52,12 +52,12 @@ func schemaTags() map[string]*schema.Schema {
 					"name": {
 						Type:        schema.TypeString,
 						Computed:    true,
-						Description: "Name of the tag.",
+						Description: "Tag name.",
 					},
 					"identifier": {
 						Type:        schema.TypeString,
 						Computed:    true,
-						Description: "Identifier of the tag.",
+						Description: "Tag identifier.",
 					},
 				},
 			},
@@ -94,7 +94,7 @@ func schemaTag() map[string]*schema.Schema {
 					"customer": {
 						Type:        schema.TypeList,
 						Computed:    true,
-						Description: "Customer related info.",
+						Description: "Customer related information.",
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"id": {
@@ -105,7 +105,7 @@ func schemaTag() map[string]*schema.Schema {
 								"customer_id": {
 									Type:        schema.TypeString,
 									Computed:    true,
-									Description: "Identifier of the customer.",
+									Description: "Customer identifier.",
 								},
 								"demo": {
 									Type:        schema.TypeBool,
@@ -125,7 +125,7 @@ func schemaTag() map[string]*schema.Schema {
 								"reseller": {
 									Type:        schema.TypeString,
 									Computed:    true,
-									Description: "Reseller.",
+									Description: "Reseller name.",
 								},
 							},
 						},
@@ -133,18 +133,18 @@ func schemaTag() map[string]*schema.Schema {
 					"service": {
 						Type:        schema.TypeList,
 						Computed:    true,
-						Description: "Service related info.",
+						Description: "Service related information.",
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"name": {
 									Type:        schema.TypeString,
 									Computed:    true,
-									Description: "Name of the service.",
+									Description: "Service name.",
 								},
 								"id": {
 									Type:        schema.TypeString,
 									Computed:    true,
-									Description: "Identifier of the service.",
+									Description: "Service identifier.",
 								},
 							},
 						},

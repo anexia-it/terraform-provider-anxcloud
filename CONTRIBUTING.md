@@ -1,6 +1,6 @@
 # How to Contribute
 
-The project is under [Apache 2.0 licensed](../LICENSE) and accept contributions via
+The project is under [Apache 2.0 licensed](LICENSE) and accept contributions via
 GitHub pull requests.  This document outlines some of the conventions on
 development workflow, commit message formatting, contact points and other
 resources to make it easier to get your contribution accepted.
@@ -10,7 +10,7 @@ resources to make it easier to get your contribution accepted.
 By contributing to this project you agree to the Developer Certificate of
 Origin (DCO). This document was created by the Linux Kernel community and is a
 simple statement that you, as a contributor, have the legal right to make the
-contribution. See the [DCO](../DCO) file for details.
+contribution. See the [DCO](DCO) file for details.
 
 Any copyright notices in this repo should specify the authors as "the Anexia XXX project contributors".
 
@@ -41,14 +41,14 @@ Due to their public nature, GitHub and mailing lists are not appropriate places 
 ## Getting Started
 
 - Fork the repository on GitHub
-- Read the [README](../README.md) and [Development](development.md) for build and test instructions
+- Read the [README](README.md) and [Development](README.md#Development) for build and test instructions
 - Play with the project, submit bugs, submit patches!
 
 ### Contribution Flow
 
 This is a rough outline of what a contributor's workflow looks like:
 
-- Create a topic branch from where you want to base your work (usually master).
+- Create a topic branch from where you want to base your work (usually main).
 - Make commits of logical units.
 - Make sure your commit messages are in the proper format (see below).
 - Push your changes to a topic branch in your fork of the repository.

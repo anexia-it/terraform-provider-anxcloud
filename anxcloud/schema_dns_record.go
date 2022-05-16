@@ -7,42 +7,42 @@ func schemaDNSRecord() map[string]*schema.Schema {
 		"identifier": {
 			Type:        schema.TypeString,
 			Computed:    true,
-			Description: "The record's identifier",
+			Description: "DNS Record identifier. Changes on revision change and therefore shouldn't be used as reference.",
 		},
 		"type": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The DNS record type",
+			Description: "DNS record type.",
 		},
 		"rdata": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The DNS record data",
+			Description: "DNS record data.",
 		},
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The name of the DNS record",
+			Description: "DNS record name.",
 		},
 		"zone_name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The name of the DNS records zone",
+			Description: "Zone of DNS record.",
 		},
 		"region": {
 			Type:        schema.TypeString,
 			Computed:    true,
-			Description: "The region for geodns aware records",
+			Description: "DNS record region (for GeoDNS aware records).",
 		},
 		"ttl": {
 			Type:        schema.TypeInt,
 			Optional:    true,
-			Description: "The region specific TTL. If nil the zone TTL will be used",
+			Description: "Region specific TTL. If not set the zone TTL will be used.",
 		},
 		"immutable": {
 			Type:        schema.TypeBool,
 			Computed:    true,
-			Description: "Specifies wheather or not a record is immutable",
+			Description: "Specifies whether or not a record is immutable.",
 		},
 	}
 }
@@ -52,7 +52,7 @@ func schemaDNSRecords() map[string]*schema.Schema {
 		"zone_name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The parent zone",
+			Description: "Parent zone",
 		},
 		"records": {
 			Type:        schema.TypeList,

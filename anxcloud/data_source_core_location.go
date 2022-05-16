@@ -12,7 +12,7 @@ import (
 
 func dataSourceCoreLocation() *schema.Resource {
 	return &schema.Resource{
-		Description: "Retrieves Location identified by it's `code` as selectable in the Engine.",
+		Description: "Retrieves a location identified by it's `code` as selectable in the Engine. Use this data source to specify the location identifier on other resources and data sources available in this provider.",
 		ReadContext: dataSourceCoreLocationRead,
 		Schema:      schemaLocation(),
 	}

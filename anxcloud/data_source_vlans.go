@@ -12,6 +12,7 @@ import (
 
 func dataSourceVLANs() *schema.Resource {
 	return &schema.Resource{
+		Description: "Provides available VLANs.",
 		ReadContext: dataSourceVLANsRead,
 		Schema:      schemaVLANs(),
 	}
