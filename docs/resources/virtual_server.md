@@ -50,6 +50,15 @@ resource "anxcloud_virtual_server" "example" {
 
   ssh_key = file("~/.ssh/id_rsa.pub")
 
+  # define bootstrap script
+  # e.g. install software
+  script = <<-EOT
+    #!/bin/bash
+
+    # install nginx server
+    apt update && apt install -y nginx
+    EOT
+
   # set two network interfaces
   # NIC 1
   network {
@@ -103,7 +112,7 @@ resource "anxcloud_virtual_server" "example" {
 - `id` (String) The ID of this resource.
 - `network` (Block List) Network interface (see [below for nested schema](#nestedblock--network))
 - `password` (String, Sensitive) Plaintext password. Example: ('!anx123mySuperStrongPassword123anx!', 'go3ju0la1ro3', …). For systems that support it, we strongly recommend using a SSH key instead.
-- `script` (String) Script to be executed after provisioning. Should be base64 encoded. Consider the corresponding shebang at the beginning of your script. If you want to use PowerShell, the first line should be: #ps1_sysnative.
+- `script` (String) Script to be executed after provisioning. Consider the corresponding shebang at the beginning of your script. If you want to use PowerShell, the first line should be: #ps1_sysnative.
 - `sockets` (Number) Amount of CPU sockets Number of cores have to be a multiple of sockets, as they will be spread evenly across all sockets. Defaults to number of cores, i.e. one socket per CPU core.
 - `ssh_key` (String) Public key (instead of password, only for Linux systems). Recommended over providing a plaintext password.
 - `tags` (List of String) List of tags attached to the Virtual Server.

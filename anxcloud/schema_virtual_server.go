@@ -137,7 +137,7 @@ func schemaVirtualServer() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			ForceNew: true,
-			Description: "Script to be executed after provisioning. Should be base64 encoded. " +
+			Description: "Script to be executed after provisioning. " +
 				"Consider the corresponding shebang at the beginning of your script. " +
 				"If you want to use PowerShell, the first line should be: #ps1_sysnative.",
 		},

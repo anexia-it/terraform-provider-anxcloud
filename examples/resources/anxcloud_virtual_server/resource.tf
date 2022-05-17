@@ -31,6 +31,15 @@ resource "anxcloud_virtual_server" "example" {
 
   ssh_key = file("~/.ssh/id_rsa.pub")
 
+  # define bootstrap script
+  # e.g. install software
+  script = <<-EOT
+    #!/bin/bash
+
+    # install nginx server
+    apt update && apt install -y nginx
+    EOT
+
   # set two network interfaces
   # NIC 1
   network {
