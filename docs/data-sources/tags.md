@@ -25,10 +25,8 @@ data "anxcloud_tags" "example" {
 ### Optional
 
 - `id` (String) The ID of this resource.
-- `limit` (Number) The limit of the list.
 - `order` (String) The order of the tags.
 - `organization_identifier` (String) The identifier of the organization.
-- `page` (Number) The page of the list.
 - `query` (String) An optional string allowing to search through entities.
 - `service_identifier` (String) The identifier of the service.
 - `sort_ascending` (Boolean) Ascending or descending.

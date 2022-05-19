@@ -22,7 +22,9 @@ func dataSourceCoreLocationsRead(ctx context.Context, d *schema.ResourceData, m 
 	c := m.(providerContext).legacyClient
 	l := location.NewAPI(c)
 
-	locations, err := l.List(ctx, d.Get("page").(int), d.Get("limit").(int), d.Get("search").(string))
+	locations, err := listAllPages(func(page int) ([]location.Location, error) {
+		return l.List(ctx, page, 100, d.Get("search").(string))
+	})
 	if err != nil {
 		return diag.FromErr(err)
 	}

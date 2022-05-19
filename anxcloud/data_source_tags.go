@@ -23,15 +23,15 @@ func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, m interface
 	c := m.(providerContext).legacyClient
 	tagsAPI := tags.NewAPI(c)
 
-	page := d.Get("page").(int)
-	limit := d.Get("limit").(int)
 	query := d.Get("query").(string)
 	serviceIdentifier := d.Get("service_identifier").(string)
 	organizationIdentifier := d.Get("organization_identifier").(string)
 	order := d.Get("order").(string)
 	sortAscending := d.Get("sort_ascending").(bool)
 
-	tags, err := tagsAPI.List(ctx, page, limit, query, serviceIdentifier, organizationIdentifier, order, sortAscending)
+	tags, err := listAllPages(func(page int) ([]tags.Summary, error) {
+		return tagsAPI.List(ctx, page, 100, query, serviceIdentifier, organizationIdentifier, order, sortAscending)
+	})
 	if err != nil {
 		return diag.FromErr(err)
 	}

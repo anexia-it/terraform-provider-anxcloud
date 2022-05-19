@@ -24,8 +24,6 @@ data "anxcloud_vlans" "example" {
 ### Optional
 
 - `id` (String) The ID of this resource.
-- `limit` (Number) The limit of the list.
-- `page` (Number) The page of the list.
 - `search` (String) An optional string allowing to search through entities.
 
 ### Read-Only

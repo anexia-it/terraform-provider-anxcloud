@@ -22,7 +22,9 @@ func dataSourceIPAddressesRead(ctx context.Context, d *schema.ResourceData, m in
 	c := m.(providerContext).legacyClient
 	a := address.NewAPI(c)
 
-	addresses, err := a.List(ctx, d.Get("page").(int), d.Get("limit").(int), d.Get("search").(string))
+	addresses, err := listAllPages(func(page int) ([]address.Summary, error) {
+		return a.List(ctx, page, 100, d.Get("search").(string))
+	})
 	if err != nil {
 		return diag.FromErr(err)
 	}

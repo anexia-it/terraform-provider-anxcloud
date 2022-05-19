@@ -17,6 +17,13 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+### Breaking
+* manual pagination removed from data sources (#90, @marioreggiori)
+  - anxcloud_core_locations
+  - anxcloud_ip_addresses
+  - anxcloud_tags
+  - anxcloud_vlans
+
 ## [0.3.5] - 2022-06-13
 
 ### Fixed

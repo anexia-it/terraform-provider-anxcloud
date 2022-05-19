@@ -2,7 +2,6 @@ package anxcloud
 
 import (
 	"fmt"
-	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -13,8 +12,6 @@ func TestAccAnxCloudTagsDataSource(t *testing.T) {
 	resourceName := "acc_tags_test"
 	resourcePath := "data.anxcloud_tags." + resourceName
 
-	page := 1
-	limit := 10
 	query := "test"
 
 	resource.Test(t, resource.TestCase{
@@ -22,10 +19,8 @@ func TestAccAnxCloudTagsDataSource(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnxCloudTagsDataSource(resourceName, page, limit, query),
+				Config: testAccAnxCloudTagsDataSource(resourceName, query),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourcePath, "page", strconv.Itoa(page)),
-					resource.TestCheckResourceAttr(resourcePath, "limit", strconv.Itoa(limit)),
 					resource.TestCheckResourceAttr(resourcePath, "query", query),
 					testAccAnxCloudTagsDataSourceExists(resourcePath),
 				),
@@ -34,15 +29,13 @@ func TestAccAnxCloudTagsDataSource(t *testing.T) {
 	})
 }
 
-func testAccAnxCloudTagsDataSource(resourceName string, page, limit int, query string) string {
+func testAccAnxCloudTagsDataSource(resourceName, query string) string {
 	return fmt.Sprintf(`
 	data "anxcloud_tags" "%s" {
-		page = %d
-		limit = %d
 		query = "%s"
 		sort_ascending = true
 	}
-	`, resourceName, page, limit, query)
+	`, resourceName, query)
 }
 
 func testAccAnxCloudTagsDataSourceExists(n string) resource.TestCheckFunc {

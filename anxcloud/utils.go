@@ -58,3 +58,22 @@ func fieldsComputed(fields ...string) func(schemaMap) {
 		}, fields...)
 	}
 }
+
+func listAllPages[T any](pageRetriever func(int) ([]T, error)) ([]T, error) {
+	var allPages = make([]T, 0)
+
+	for page := 1; true; page++ {
+		singlePage, err := pageRetriever(page)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(singlePage) == 0 {
+			break
+		}
+
+		allPages = append(allPages, singlePage...)
+	}
+
+	return allPages, nil
+}

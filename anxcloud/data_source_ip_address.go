@@ -65,7 +65,9 @@ func dataSourceIPAddressRead(ctx context.Context, d *schema.ResourceData, m inte
 			filters = append(filters, address.PrefixFilter(networkPrefixID.(string)))
 		}
 
-		res, err := a.GetFiltered(ctx, 1, 0, filters...)
+		res, err := listAllPages(func(page int) ([]address.Summary, error) {
+			return a.GetFiltered(ctx, page, 100, filters...)
+		})
 		if err != nil {
 			return diag.FromErr(err)
 		}
