@@ -28,7 +28,7 @@ resource "anxcloud_ip_address" "example" {
 
 ### Required
 
-- `address` (String) IP address that should be created
+- `address` (String) IP address.
 - `network_prefix_id` (String) Identifier of the related network prefix.
 
 ### Optional
