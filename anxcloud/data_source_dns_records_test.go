@@ -3,12 +3,13 @@ package anxcloud
 import (
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
-func TestAccAnxCloudDnsRecordsDataSource(t *testing.T) {
+func TestAccAnxCloudDNSRecordsDataSource(t *testing.T) {
 	resourceName := "acc_test"
 	resourcePath := "data.anxcloud_dns_records." + resourceName
 
@@ -19,17 +20,17 @@ func TestAccAnxCloudDnsRecordsDataSource(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnxCloudDnsRecordsDataSource(resourceName, zoneName),
+				Config: testAccAnxCloudDNSRecordsDataSource(resourceName, zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "zone_name", zoneName),
-					testAccAnxCloudDnsRecordsDataSourceExists(resourcePath),
+					testAccAnxCloudDNSRecordsDataSourceExists(resourcePath),
 				),
 			},
 		},
 	})
 }
 
-func testAccAnxCloudDnsRecordsDataSource(resourceName, zoneName string) string {
+func testAccAnxCloudDNSRecordsDataSource(resourceName, zoneName string) string {
 	return fmt.Sprintf(`
 	data "anxcloud_dns_records" "%s" { 
 		zone_name = "%s" 
@@ -37,7 +38,7 @@ func testAccAnxCloudDnsRecordsDataSource(resourceName, zoneName string) string {
 `, resourceName, zoneName)
 }
 
-func testAccAnxCloudDnsRecordsDataSourceExists(n string) resource.TestCheckFunc {
+func testAccAnxCloudDNSRecordsDataSourceExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

@@ -27,7 +27,7 @@ func dataSourceDNSRecordsRead(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("records", flattenDnsRecords(records)); err != nil {
+	if err := d.Set("records", flattenDNSRecords(records)); err != nil {
 		return diag.FromErr(err)
 	}
 

@@ -109,7 +109,7 @@ func TestFlattenDnsZones(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := flattenDnsZones(tc.Input)
+		output := flattenDNSZones(tc.Input)
 		if diff := cmp.Diff(tc.ExpectedOutput, output); diff != "" {
 			t.Fatalf("Unexpected output from flattener: missmatch (-want +got):\n%s", diff)
 		}

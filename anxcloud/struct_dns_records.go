@@ -2,7 +2,7 @@ package anxcloud
 
 import "go.anx.io/go-anxcloud/pkg/clouddns/zone"
 
-func flattenDnsRecords(records []zone.Record) []interface{} {
+func flattenDNSRecords(records []zone.Record) []interface{} {
 	zoneRecords := make([]interface{}, 0, len(records))
 	if len(records) < 1 {
 		return zoneRecords
