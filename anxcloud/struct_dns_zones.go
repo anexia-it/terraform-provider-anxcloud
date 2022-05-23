@@ -4,7 +4,7 @@ import (
 	clouddnsv1 "go.anx.io/go-anxcloud/pkg/apis/clouddns/v1"
 )
 
-func flattenDnsZones(dnsZones []clouddnsv1.Zone) []interface{} {
+func flattenDNSZones(dnsZones []clouddnsv1.Zone) []interface{} {
 	zones := make([]interface{}, 0, len(dnsZones))
 
 	for _, zone := range dnsZones {

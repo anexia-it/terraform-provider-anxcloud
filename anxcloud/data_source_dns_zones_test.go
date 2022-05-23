@@ -3,12 +3,13 @@ package anxcloud
 import (
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
-func TestAccAnxCloudDnsZonesDataSource(t *testing.T) {
+func TestAccAnxCloudDNSZonesDataSource(t *testing.T) {
 	resourceName := "acc_test"
 	resourcePath := "data.anxcloud_dns_zones." + resourceName
 
@@ -17,22 +18,22 @@ func TestAccAnxCloudDnsZonesDataSource(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnxCloudDnsZonesDataSource(resourceName),
+				Config: testAccAnxCloudDNSZonesDataSource(resourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAnxCloudDnsZonesDataSourceExists(resourcePath),
+					testAccAnxCloudDNSZonesDataSourceExists(resourcePath),
 				),
 			},
 		},
 	})
 }
 
-func testAccAnxCloudDnsZonesDataSource(resourceName string) string {
+func testAccAnxCloudDNSZonesDataSource(resourceName string) string {
 	return fmt.Sprintf(`
 	data "anxcloud_dns_zones" "%s" {}
 `, resourceName)
 }
 
-func testAccAnxCloudDnsZonesDataSourceExists(n string) resource.TestCheckFunc {
+func testAccAnxCloudDNSZonesDataSourceExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

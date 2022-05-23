@@ -39,7 +39,7 @@ func dataSourceDNSZonesRead(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.FromErr(err)
 	}
 
-	if err = d.Set("zones", flattenDnsZones(zones)); err != nil {
+	if err = d.Set("zones", flattenDNSZones(zones)); err != nil {
 		return diag.FromErr(err)
 	}
 
