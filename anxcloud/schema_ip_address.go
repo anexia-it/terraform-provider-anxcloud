@@ -57,6 +57,11 @@ func schemaIPAddresses() map[string]*schema.Schema {
 
 func schemaIPAddress() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"id": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: identifierDescription,
+		},
 		"network_prefix_id": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -67,7 +72,7 @@ func schemaIPAddress() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			ForceNew:    true,
-			Description: "IP address that should be created",
+			Description: "IP address.",
 		},
 		"description_customer": {
 			Type:        schema.TypeString,
