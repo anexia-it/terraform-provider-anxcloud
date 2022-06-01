@@ -1,3 +1,33 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+<!--
+Please add your changelog entry under this comment in the correct category (Security, Fixed, Added, Changed, Deprecated, Removed - in this order).
+
+Changelog entries are best in the following format, where scope is something like "provider", "data-source/anxcloud_dns_zones" or "resource/anxcloud_ip_address".
+If the change isn't user-facing but still relevant enough for a changelog entry, add
+"(internal)" before the scope.
+
+* (internal)? scope: short description (#pr, @author)
+-->
+
+## Fixed
+* resource/anxcloud_virtual_server - removed mentioning of base64 encoding for bootstrap script (#89, @marioreggiori)
+
+## Added
+* data-source/anxcloud_ip_address - allows users to retreive IP objects by id or address (#91, @marioreggiori)
+
+## Changed
+* resource/anxcloud_virtual_server - bootstrap script example added (#89, @marioreggiori)
+* (internal) tools - upgrade golangci-lint to v1.46.2 to support go1.18 (#93, @marioreggiori)
+
+
 ## 0.3.4
 FEATURES
 
