@@ -2,29 +2,42 @@ data "anxcloud_core_location" "anx04" {
   code = "ANX04"
 }
 
-data "anxcloud_template" "anx04" {
-  location_id   = data.anxcloud_core_location.anx04.id
-  template_type = "templates"
-}
-
-locals {
-  debian_11_templates = values({
-    for i, template in data.anxcloud_template.anx04.templates : tostring(i) => template
-    if substr(template.name, 0, 9) == "Debian 11"
-  })
-}
-
 resource "anxcloud_vlan" "example" {
-  count           = 2
-  location_id     = data.anxcloud_core_location.anx04.id
-  vm_provisioning = true
+  location_id          = data.anxcloud_core_location.anx04.id
+  vm_provisioning      = true
+  description_customer = "example-terraform"
+}
+
+resource "anxcloud_network_prefix" "v4" {
+  vlan_id              = anxcloud_vlan.example.id
+  location_id          = data.anxcloud_core_location.anx04.id
+  ip_version           = 4
+  netmask              = 30
+  description_customer = "example-terraform"
+}
+
+resource "anxcloud_network_prefix" "v6" {
+  vlan_id              = anxcloud_vlan.example.id
+  location_id          = data.anxcloud_core_location.anx04.id
+  ip_version           = 6
+  netmask              = 126
+  description_customer = "example-terraform"
+}
+
+resource "anxcloud_ip_address" "v4" {
+  address           = cidrhost(anxcloud_network_prefix.v4.cidr, 2)
+  network_prefix_id = anxcloud_network_prefix.v4.id
+}
+
+resource "anxcloud_ip_address" "v6" {
+  address           = cidrhost(anxcloud_network_prefix.v6.cidr, 2)
+  network_prefix_id = anxcloud_network_prefix.v6.id
 }
 
 resource "anxcloud_virtual_server" "example" {
-  hostname      = "example-terraform"
-  location_id   = data.anxcloud_core_location.anx04.id
-  template_id   = local.debian_11_templates[0].id
-  template_type = "templates"
+  hostname    = "example-terraform"
+  location_id = data.anxcloud_core_location.anx04.id
+  template    = "Debian 11"
 
   cpus   = 4
   memory = 4096
@@ -40,16 +53,10 @@ resource "anxcloud_virtual_server" "example" {
     apt update && apt install -y nginx
     EOT
 
-  # set two network interfaces
-  # NIC 1
+  # Set network interface
   network {
-    vlan_id  = anxcloud_vlan.example[0].id
-    nic_type = "vmxnet3"
-  }
-
-  # NIC 2
-  network {
-    vlan_id  = anxcloud_vlan.example[1].id
+    vlan_id  = anxcloud_vlan.example.id
+    ips      = [anxcloud_ip_address.v4.id, anxcloud_ip_address.v6.id]
     nic_type = "vmxnet3"
   }
 

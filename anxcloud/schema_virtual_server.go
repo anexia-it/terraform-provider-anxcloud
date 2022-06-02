@@ -18,17 +18,35 @@ func schemaVirtualServer() map[string]*schema.Schema {
 			ForceNew:    true,
 			Description: "Location identifier.",
 		},
-		"template_id": {
+		"template": {
+			Type:         schema.TypeString,
+			ForceNew:     true,
+			Optional:     true,
+			ExactlyOneOf: []string{"template_id", "template"},
+			Description: "Named template. Can be used instead of the template_id to select a template. " +
+				"Example: (`Debian 11`, `Windows 2022`).",
+		},
+		"template_build": {
 			Type:        schema.TypeString,
-			Required:    true,
 			ForceNew:    true,
-			Description: "Template identifier.",
+			Optional:    true,
+			Default:     "latest",
+			Description: "Template build identifier optionally used with `template`. Will default to latest build. Example: `b42`",
+		},
+		"template_id": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ExactlyOneOf: []string{"template_id", "template"},
+			Description:  "Template identifier.",
 		},
 		"template_type": {
-			Type:        schema.TypeString,
-			Required:    true,
-			ForceNew:    true,
-			Description: "OS template type.",
+			Type:         schema.TypeString,
+			ForceNew:     true,
+			Description:  "OS template type.",
+			Optional:     true,
+			Default:      "templates",
+			RequiredWith: []string{"template_id"},
 		},
 		"cpus": {
 			Type:        schema.TypeInt,

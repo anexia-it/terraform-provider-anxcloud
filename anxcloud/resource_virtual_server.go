@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-multierror"
 	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/progress"
+	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/templates"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -51,6 +53,11 @@ The virtual_server resource allows you to configure and run virtual machines.
 		},
 		Schema: schemaVirtualServer(),
 		CustomizeDiff: customdiff.All(
+			customdiff.ForceNewIf("template_id", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				// prevent ForceNew when vm-template is controlled by (named) "template" parameter
+				_, exist := d.GetOkExists("template")
+				return !exist
+			}),
 			customdiff.ForceNewIf("network", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				old, newNetworks := d.GetChange("network")
 				oldNets := expandVirtualServerNetworks(old.([]interface{}))
@@ -202,6 +209,9 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		})
 	}
 
+	templateID, _diags := templateIDFromResourceData(ctx, vsphereAPI, d)
+	diags = append(diags, _diags...)
+
 	if len(diags) > 0 {
 		return diags
 	}
@@ -209,7 +219,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 	def := vm.Definition{
 		Location:           locationID,
 		TemplateType:       d.Get("template_type").(string),
-		TemplateID:         d.Get("template_id").(string),
+		TemplateID:         templateID,
 		Hostname:           d.Get("hostname").(string),
 		Memory:             d.Get("memory").(int),
 		CPUs:               d.Get("cpus").(int),
@@ -685,4 +695,56 @@ func updateVirtualServerDisk(ctx context.Context, m providerContext, id string, 
 	}
 
 	return nil
+}
+
+func templateIDFromResourceData(ctx context.Context, a vsphere.API, d *schema.ResourceData) (string, diag.Diagnostics) {
+	if templateID, ok := d.GetOk("template_id"); ok {
+		return templateID.(string), nil
+	}
+
+	// TODO: templates pagination is currently broken (see comments in ENGSUP-4364)
+	// template count is far from 1K but this needs proper pagination as soon as ADC API 2.0 is available
+	templates, err := a.Provisioning().Templates().List(ctx, d.Get("location_id").(string), "templates", 1, 1000)
+	if err != nil {
+		return "", diag.FromErr(err)
+	}
+
+	return findNamedTemplate(d.Get("template").(string), d.Get("template_build").(string), templates)
+}
+
+func findNamedTemplate(name, build string, tpls []templates.Template) (string, diag.Diagnostics) {
+	if build == "" {
+		return "", diag.Errorf("template_build must not be empty string")
+	}
+
+	var (
+		match   = -1
+		buildNo = -1
+		latest  = build == "latest"
+	)
+
+	for i, template := range tpls {
+		if template.Name != name {
+			continue
+		}
+
+		if latest {
+			currentTemplateBuildNo, _ := strconv.Atoi(template.Build[1:])
+
+			if latest && (match < 0 || currentTemplateBuildNo > buildNo) {
+				match = i
+				buildNo = currentTemplateBuildNo
+			}
+		} else if template.Build == build {
+			match = i
+			break
+		}
+
+	}
+
+	if match < 0 {
+		return "", diag.Errorf("named template %q with %q build wasn't found at the specified location", name, build)
+	}
+
+	return tpls[match].ID, nil
 }

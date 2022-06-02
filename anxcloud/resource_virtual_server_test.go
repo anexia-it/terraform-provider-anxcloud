@@ -17,6 +17,7 @@ import (
 	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/recorder"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/vsphere"
@@ -28,7 +29,7 @@ import (
 var buildNumberRegex = regexp.MustCompile(`[bB]?(\d+)`)
 
 const (
-	templateName = "Flatcar Linux"
+	templateName = "Flatcar Linux Stable"
 )
 
 func getVMRecorder(t *testing.T) recorder.VMRecoder {
@@ -46,12 +47,24 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 
 	vmRecorder := getVMRecorder(t)
 	envInfo := environment.GetEnvInfo(t)
-	templateID := vsphereAccTestTemplateByLocationAndPrefix(envInfo.Location, templateName)
+
+	templateID, diag := templateIDFromResourceData(
+		context.TODO(),
+		vsphere.NewAPI(integrationTestClientFromEnv(t)),
+		schema.TestResourceDataRaw(t, schemaVirtualServer(), map[string]interface{}{
+			"template":    templateName,
+			"location_id": envInfo.Location,
+		}),
+	)
+	if diag.HasError() {
+		t.Fatalf("failed to retrieve template: %#v\n", diag)
+	}
+
 	vmDef := vm.Definition{
 		Location:           envInfo.Location,
-		TemplateType:       "templates",
-		TemplateID:         templateID,
 		Hostname:           fmt.Sprintf("terraform-test-%s-create-virtual-server", envInfo.TestRunName),
+		TemplateID:         templateID,
+		TemplateType:       "templates",
 		Memory:             2048,
 		CPUs:               1,
 		CPUPerformanceType: "performance",
@@ -80,7 +93,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 		CheckDestroy:      testAccCheckAnxCloudVirtualServerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDef),
+				Config: testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmDef),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDef),
 					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDef.Location),
@@ -90,14 +103,14 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmAddTag, "newTag"),
+				Config: testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmAddTag, "newTag"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmAddTag),
 					resource.TestCheckResourceAttr(resourcePath, "tags.0", "newTag"),
 				),
 			},
 			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDefUpscale),
+				Config: testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmDefUpscale),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefUpscale),
 					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefUpscale.Location),
@@ -107,7 +120,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDefDownscale),
+				Config: testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmDefDownscale),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefDownscale),
 					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefDownscale.Location),
@@ -120,17 +133,17 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 				ResourceName:            resourcePath,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"cpu_performance_type", "tags.#", "tags.0", "critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template_type", "network"},
+				ImportStateVerifyIgnore: []string{"cpu_performance_type", "tags.#", "tags.0", "critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template", "template_type", "network"},
 			},
 			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmAddTag, "newTag"),
+				Config: testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmAddTag, "newTag"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmAddTag),
 					resource.TestCheckResourceAttr(resourcePath, "tags.0", "newTag"),
 				),
 			},
 			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDefUpscale),
+				Config: testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmDefUpscale),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefUpscale),
 					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefUpscale.Location),
@@ -140,7 +153,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, &vmDefDownscale),
+				Config: testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmDefDownscale),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefDownscale),
 					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefDownscale.Location),
@@ -153,7 +166,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 				ResourceName:            resourcePath,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"cpu_performance_type", "tags.#", "tags.0", "critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template_type", "network"},
+				ImportStateVerifyIgnore: []string{"cpu_performance_type", "tags.#", "tags.0", "critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template", "template_type", "network"},
 			},
 		},
 	})
@@ -329,12 +342,11 @@ func testAccCheckAnxCloudVirtualServerDestroy(s *terraform.State) error {
 }
 
 //nolint:unparam
-func testAccConfigAnxCloudVirtualServer(resourceName string, def *vm.Definition, tags ...string) string {
+func testAccConfigAnxCloudVirtualServer(resourceName string, templateName string, def *vm.Definition, tags ...string) string {
 	return fmt.Sprintf(`
 	resource "anxcloud_virtual_server" "%s" {
 		location_id          = "%s"
-		template_id          = "%s"
-		template_type        = "%s"
+		template             = "%s"
 		hostname             = "%s"
 		cpus                 = %d
 		cpu_performance_type = "%s"
@@ -353,7 +365,7 @@ func testAccConfigAnxCloudVirtualServer(resourceName string, def *vm.Definition,
 		force_restart_if_needed = true
 		critical_operation_confirmed = true
 	}
-	`, resourceName, def.Location, def.TemplateID, def.TemplateType, def.Hostname, def.CPUs, def.CPUPerformanceType, def.Memory,
+	`, resourceName, def.Location, templateName, def.Hostname, def.CPUs, def.CPUPerformanceType, def.Memory,
 		def.Password, generateNetworkSubResourceString(def.Network), generateDisksSubResourceString([]vm.Disk{
 			{
 				SizeGBs: def.Disk,
@@ -567,4 +579,58 @@ func createNewNetworkInterface(info environment.Info) vm.Network {
 		NICType: "vmxnet3",
 		IPs:     []string{info.Prefix.GetNextIP()},
 	}
+}
+
+func mockedTemplateList() []templates.Template {
+	return []templates.Template{
+		{ID: "e9325be9-25b9-468e-851e-56b5c0367e5a", Name: "Ubuntu 21.04", Build: "b72"},
+		{ID: "b21b8b77-30e3-478a-9b6d-1f61d29e9f9a", Name: "Flatcar Linux Stable", Build: "b73"},
+		{ID: "ec547552-d453-42e6-987d-51abe703c439", Name: "Debian 11", Build: "b18"},
+		{ID: "26a47eee-dc9a-4eea-b67a-8fb1baa2fcc0", Name: "Flatcar Linux Stable", Build: "b74"},
+		{ID: "cb16dc94-ec55-4e9a-a1a3-b76a91bbe274", Name: "Windows 2022", Build: "b06"},
+		{ID: "fc3a63c6-6f4e-4193-b368-ebe9e08b4302", Name: "Debian 10", Build: "b80"},
+		{ID: "844ac596-5f62-4ed2-936e-b99ffe0d4f88", Name: "Flatcar Linux Stable", Build: "b72"},
+		{ID: "c3d4f0a6-978a-49fb-a952-7361bf531e4f", Name: "Debian 9", Build: "b92"},
+		{ID: "086c5f99-1be6-46ec-8374-cdc23cedd6a4", Name: "Windows 2022", Build: "b12"},
+		{ID: "9d863fd9-d0d3-4959-b226-e73192f3e43d", Name: "Debian 11", Build: "possibly-valid-build-id"},
+	}
+}
+
+func TestFindNamedTemplate(t *testing.T) {
+	type testCase struct {
+		expectedID         string
+		expectExisting     bool
+		namedTemplate      string
+		namedTemplateBuild string
+	}
+
+	testCases := []testCase{
+		// valid test cases
+		{"844ac596-5f62-4ed2-936e-b99ffe0d4f88", true, "Flatcar Linux Stable", "b72"},
+		{"26a47eee-dc9a-4eea-b67a-8fb1baa2fcc0", true, "Flatcar Linux Stable", "latest"},
+		{"26a47eee-dc9a-4eea-b67a-8fb1baa2fcc0", true, "Flatcar Linux Stable", "b74"},
+		{"b21b8b77-30e3-478a-9b6d-1f61d29e9f9a", true, "Flatcar Linux Stable", "b73"},
+		{"086c5f99-1be6-46ec-8374-cdc23cedd6a4", true, "Windows 2022", "latest"},
+		{"086c5f99-1be6-46ec-8374-cdc23cedd6a4", true, "Windows 2022", "b12"},
+		{"cb16dc94-ec55-4e9a-a1a3-b76a91bbe274", true, "Windows 2022", "b06"},
+		{"9d863fd9-d0d3-4959-b226-e73192f3e43d", true, "Debian 11", "possibly-valid-build-id"},
+
+		// non-existing template name
+		{"", false, "FooOS 22.05", "b01"},
+		{"", false, "FooOS 22.05", "b06"},
+		{"", false, "Bar OS 95", "latest"},
+
+		// non-existing build id
+		{"", false, "Windows 2022", ""},
+		{"", false, "Windows 2022", "b00"},
+	}
+
+	for _, testCase := range testCases {
+		if id, diag := findNamedTemplate(testCase.namedTemplate, testCase.namedTemplateBuild, mockedTemplateList()); testCase.expectExisting == (diag != nil) {
+			t.Errorf("unexpected error: %v", diag)
+		} else if id != testCase.expectedID {
+			t.Errorf("identifier %q expected, got %q", testCase.expectedID, id)
+		}
+	}
+
 }
