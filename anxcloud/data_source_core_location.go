@@ -5,9 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"go.anx.io/go-anxcloud/pkg/api"
-	"go.anx.io/go-anxcloud/pkg/api/types"
-	corev1 "go.anx.io/go-anxcloud/pkg/apis/core/v1"
+	"go.anx.io/go-anxcloud/pkg/core/location"
 )
 
 func dataSourceCoreLocation() *schema.Resource {
@@ -19,42 +17,23 @@ func dataSourceCoreLocation() *schema.Resource {
 }
 
 func dataSourceCoreLocationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	a := apiFromProviderConfig(m)
+	c := m.(providerContext).legacyClient
+	l := location.NewAPI(c)
 
 	code, exists := d.GetOk("code")
 	if !exists {
 		return diag.Errorf("location data-source requires code argument")
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	searchLocation := &corev1.Location{Code: code.(string)}
-	channel := make(types.ObjectChannel)
-	if err := a.List(ctx, searchLocation, api.ObjectChannel(&channel)); err != nil {
+	location, err := l.GetByCode(ctx, code.(string))
+	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	found := false
-	location := &corev1.Location{}
-	for res := range channel {
-		if err := res(location); err != nil {
-			return diag.FromErr(err)
-		}
-		if location.Code == searchLocation.Code {
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		return diag.Errorf("location with specified code not found")
-	}
-
-	var err error
 	var diags []diag.Diagnostic
 
-	d.SetId(location.Identifier)
-	if err = d.Set("identifier", location.Identifier); err != nil {
+	d.SetId(location.ID)
+	if err = d.Set("identifier", location.ID); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 	if err = d.Set("name", location.Name); err != nil {
@@ -63,7 +42,7 @@ func dataSourceCoreLocationRead(ctx context.Context, d *schema.ResourceData, m i
 	if err = d.Set("code", location.Code); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	if err = d.Set("country", location.CountryCode); err != nil {
+	if err = d.Set("country", location.Country); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 	if err = d.Set("city_code", location.CityCode); err != nil {

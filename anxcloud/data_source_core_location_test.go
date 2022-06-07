@@ -21,7 +21,7 @@ func TestAccAnxCloudCoreLocationDataSource(t *testing.T) {
 			},
 			{
 				Config:      testAccAnxCloudCoreLocationDataSource("test", "invalid-code"),
-				ExpectError: regexp.MustCompile("location with specified code not found"),
+				ExpectError: regexp.MustCompile("No Location found for: invalid-code"),
 			},
 			{
 				Config:      `data "anxcloud_core_location" "test" {}`,
