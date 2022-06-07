@@ -2,39 +2,9 @@
 
 <!--- Please leave a helpful description of the pull request here. --->
 
-### Acceptance tests
-- [ ] Have you added an acceptance test for the functionality being added?
-- [ ] Have you run the acceptance tests on this branch?
+### Checklist
 
-Output from acceptance testing:
-
-<!--
-Replace TestAccXXX with a pattern that matches the tests affected by this PR.
-
-For more information on the `-run` flag, see the `go test` documentation at https://tip.golang.org/cmd/go/#hdr-Testing_flags.
--->
-```
-$ make testacc TESTARGS='-run=TestAccXXX'
-...
-```
-
-### Release Note
-Release note for [CHANGELOG](https://github.com/anexia-it/terraform-provider-anxcloud/blob/master/CHANGELOG.md):
-<!--
-If change is not user facing, just write "NONE" in the release-note block below.
-Otherwise use the following format:
- * <resource-type>[/<resource-name>] - <short description of what has been done>
-
-where resource-type can be something like 'resource', 'data', 'all resources', '**New Resource**', '**New Datasource**' 
-
-e.g.
-
-* resource/anxcloud_ip_address - fix IP address cleanup
--->
-
-```release-note
-
-```
+* [ ] added release notes to `Unreleased` section in [CHANGELOG.md](CHANGELOG.md), if user facing change
 
 ### References
 
