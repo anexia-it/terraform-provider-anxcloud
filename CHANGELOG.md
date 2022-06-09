@@ -22,6 +22,7 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 
 ### Added
 * data-source/anxcloud_ip_address: allows users to retreive IP objects by id or address (#91, @marioreggiori)
+* resource/anxcloud_virtual_server: support named vServer templates (#95, @marioreggiori)
 
 ### Changed
 * resource/anxcloud_virtual_server: bootstrap script example added (#89, @marioreggiori)
