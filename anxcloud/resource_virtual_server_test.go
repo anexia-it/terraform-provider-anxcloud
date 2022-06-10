@@ -608,6 +608,7 @@ func TestFindNamedTemplate(t *testing.T) {
 		// valid test cases
 		{"844ac596-5f62-4ed2-936e-b99ffe0d4f88", true, "Flatcar Linux Stable", "b72"},
 		{"26a47eee-dc9a-4eea-b67a-8fb1baa2fcc0", true, "Flatcar Linux Stable", "latest"},
+		{"26a47eee-dc9a-4eea-b67a-8fb1baa2fcc0", true, "Flatcar Linux Stable", ""},
 		{"26a47eee-dc9a-4eea-b67a-8fb1baa2fcc0", true, "Flatcar Linux Stable", "b74"},
 		{"b21b8b77-30e3-478a-9b6d-1f61d29e9f9a", true, "Flatcar Linux Stable", "b73"},
 		{"086c5f99-1be6-46ec-8374-cdc23cedd6a4", true, "Windows 2022", "latest"},
@@ -621,7 +622,7 @@ func TestFindNamedTemplate(t *testing.T) {
 		{"", false, "Bar OS 95", "latest"},
 
 		// non-existing build id
-		{"", false, "Windows 2022", ""},
+		{"", false, "Windows 2022", "foo"},
 		{"", false, "Windows 2022", "b00"},
 	}
 
