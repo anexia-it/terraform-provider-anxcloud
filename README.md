@@ -79,15 +79,23 @@ make testacc TESTARGS='-run=TestAccXXX'
 
 To contribute, please read the contribution guidelines: [Contributing to Terraform - Anexia Cloud Provider](CONTRIBUTING.md)
 
+1. Make your code changes on the branch of your fork of [terraform-provider-anxcloud](https://github.com/anexia-it/terraform-provider-anxcloud)
+2. Create a pull request
+3. Add your changes to the **Unreleased** section in [CHANGELOG.md](CHANGELOG.md)
+
+Additional steps carried out by maintainers:
+
+4. Review pull request and request changes if necessary
+5. Trigger the integration tests via a `/ok-to-test sha=$SHA` comment. The $SHA represents the last commit in the PR.
+6. Merge the PR into the main branch of [terraform-provider-anxcloud](https://github.com/anexia-it/terraform-provider-anxcloud)
 
 ## Releasing
 
-1. Make your code changes on the branch of your fork of [terraform-provider-anxcloud](https://github.com/anexia-it/terraform-provider-anxcloud)
-2. Create a pull request
-3. Trigger the integration tests via a `/ok-to-test sha=$SHA` comment. The $SHA represents the last commit in the PR.
-4. Merge the PR into the main branch of [terraform-provider-anxcloud](https://github.com/anexia-it/terraform-provider-anxcloud)
-5. Create a tag on your fork, eg via `git tag v0.2.4`
-6. Push the tag via `git push upstream --tags` 
+1. Create pull request with entries from **Unreleased** section moved into a newly created release section in [CHANGELOG.md](CHANGELOG.md)
+2. Draft GitHub release with new changes in the description and configured to create a tag with the new version number on publish
+3. Merge previously created pull request into main
+4. Publish prepared release
+5. That's it! `go-releaser` will do the rest. Terraform registry will be automatically notified after binaries have been built via webhook.
 
 => The [release workflow](https://github.com/anexia-it/terraform-provider-anxcloud/blob/main/.github/workflows/release.yml) will create the release
 
