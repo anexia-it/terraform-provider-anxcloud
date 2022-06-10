@@ -343,9 +343,9 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		return diag.FromErr(err)
 	}
 
-	// TODO: we miss information about:
-	// * cpu_performance_type
-
+	if err = d.Set("cpu_performance_type", info.CPUPerformanceType); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
 	if err = d.Set("location_id", info.LocationID); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
@@ -462,8 +462,8 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 		requiresReboot = true
 	}
 
-	// must stay in a separate condition as any endpoint doesn't return info about the current state
-	// thus we lose control over expected and current states
+	// cpu_performance_type might not be set because info endpoint didn't expose it previously
+	// therefore only change it when the argument changes
 	if d.HasChange("cpu_performance_type") {
 		ch.CPUPerformanceType = d.Get("cpu_performance_type").(string)
 	}
