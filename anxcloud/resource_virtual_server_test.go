@@ -84,6 +84,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 	// down scale resources which does not require recreation of the VM
 	vmDefDownscale := vmDefUpscale
 	vmDefDownscale.Memory = 2096
+	vmDefDownscale.CPUPerformanceType = "standard"
 
 	vmAddTag := vmDef
 
@@ -133,7 +134,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 				ResourceName:            resourcePath,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"cpu_performance_type", "tags.#", "tags.0", "critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template", "template_type", "network"},
+				ImportStateVerifyIgnore: []string{"tags.#", "tags.0", "critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template", "template_type", "network"},
 			},
 			{
 				Config: testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmAddTag, "newTag"),
@@ -166,7 +167,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 				ResourceName:            resourcePath,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"cpu_performance_type", "tags.#", "tags.0", "critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template", "template_type", "network"},
+				ImportStateVerifyIgnore: []string{"tags.#", "tags.0", "critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template", "template_type", "network"},
 			},
 		},
 	})
@@ -424,6 +425,9 @@ func testAccCheckAnxCloudVirtualServerExists(n string, def *vm.Definition) resou
 
 		if info.CPU != def.CPUs {
 			return fmt.Errorf("virtual machine cpu does not match, got %d - expected %d", info.CPU, def.CPUs)
+		}
+		if info.CPUPerformanceType != def.CPUPerformanceType {
+			return fmt.Errorf("virtual machine cpu_performance_type does not match, got %s - expected %s", info.CPUPerformanceType, def.CPUPerformanceType)
 		}
 		if info.RAM != def.Memory {
 			return fmt.Errorf("virtual machine memory does not match, got %d - expected %d", info.RAM, def.Memory)

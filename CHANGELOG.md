@@ -19,6 +19,7 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 
 ### Fixed
 * resource/anxcloud_virtual_server: removed mentioning of base64 encoding for bootstrap script (#89, @marioreggiori)
+* resource/anxcloud_virtual_server: `cpu_performance_type` updates on read (#99, @marioreggiori)
 
 ### Added
 * data-source/anxcloud_ip_address: allows users to retreive IP objects by id or address (#91, @marioreggiori)
