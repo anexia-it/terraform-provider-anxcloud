@@ -212,13 +212,18 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 	templateID, _diags := templateIDFromResourceData(ctx, vsphereAPI, d)
 	diags = append(diags, _diags...)
 
+	templateType := "templates"
+	if _, isNamedTemplate := d.GetOk("template"); !isNamedTemplate {
+		templateType = d.Get("template_type").(string)
+	}
+
 	if len(diags) > 0 {
 		return diags
 	}
 
 	def := vm.Definition{
 		Location:           locationID,
-		TemplateType:       d.Get("template_type").(string),
+		TemplateType:       templateType,
 		TemplateID:         templateID,
 		Hostname:           d.Get("hostname").(string),
 		Memory:             d.Get("memory").(int),
@@ -713,14 +718,10 @@ func templateIDFromResourceData(ctx context.Context, a vsphere.API, d *schema.Re
 }
 
 func findNamedTemplate(name, build string, tpls []templates.Template) (string, diag.Diagnostics) {
-	if build == "" {
-		return "", diag.Errorf("template_build must not be empty string")
-	}
-
 	var (
 		match   = -1
 		buildNo = -1
-		latest  = build == "latest"
+		latest  = build == "" || build == "latest"
 	)
 
 	for i, template := range tpls {

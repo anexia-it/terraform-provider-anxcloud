@@ -30,7 +30,6 @@ func schemaVirtualServer() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			ForceNew:    true,
 			Optional:    true,
-			Default:     "latest",
 			Description: "Template build identifier optionally used with `template`. Will default to latest build. Example: `b42`",
 		},
 		"template_id": {
@@ -45,7 +44,6 @@ func schemaVirtualServer() map[string]*schema.Schema {
 			ForceNew:     true,
 			Description:  "OS template type.",
 			Optional:     true,
-			Default:      "templates",
 			RequiredWith: []string{"template_id"},
 		},
 		"cpus": {
