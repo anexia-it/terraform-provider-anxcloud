@@ -17,6 +17,8 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+## [0.3.5] - 2022-06-13
+
 ### Fixed
 * resource/anxcloud_virtual_server: removed mentioning of base64 encoding for bootstrap script (#89, @marioreggiori)
 * resource/anxcloud_virtual_server: `cpu_performance_type` updates on read (#99, @marioreggiori)
