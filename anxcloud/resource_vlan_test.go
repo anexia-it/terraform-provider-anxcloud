@@ -60,6 +60,28 @@ func TestAccAnxCloudVLAN(t *testing.T) {
 	})
 }
 
+func TestAccAnxCloudVLANTags(t *testing.T) {
+	environment.SkipIfNoEnvironment(t)
+	envInfo := environment.GetEnvInfo(t)
+
+	tpl := fmt.Sprintf(`
+	resource "anxcloud_vlan" "foo" {
+		location_id = "%s"
+		description_customer = "tf-acc-tags"
+
+		%%s // tags
+	}`, envInfo.Location)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckAnxCloudVLANDestroy,
+		Steps: testAccAnxCloudCommonResourceTagTestSteps(
+			tpl, "anxcloud_vlan.foo",
+		),
+	})
+}
+
 func testAccCheckAnxCloudVLANDestroy(s *terraform.State) error {
 	c := testAccProvider.Meta().(providerContext).legacyClient
 	v := vlan.NewAPI(c)

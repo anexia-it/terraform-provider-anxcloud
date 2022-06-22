@@ -134,7 +134,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 				ResourceName:            resourcePath,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"tags.#", "tags.0", "critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template", "template_type", "network"},
+				ImportStateVerifyIgnore: []string{"critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template", "template_type", "network"},
 			},
 			{
 				Config: testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmAddTag, "newTag"),
@@ -167,7 +167,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 				ResourceName:            resourcePath,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"tags.#", "tags.0", "critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template", "template_type", "network"},
+				ImportStateVerifyIgnore: []string{"critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template", "template_type", "network"},
 			},
 		},
 	})
@@ -510,17 +510,6 @@ func generateDisksSubResourceString(disks []vm.Disk) string {
 	}
 
 	return output
-}
-
-func generateTagsString(tags ...string) string {
-	if len(tags) == 0 {
-		return ""
-	}
-
-	for i, tag := range tags {
-		tags[i] = fmt.Sprintf("\"%s\",", tag)
-	}
-	return fmt.Sprintf("tags = [\n%s\n]", strings.Join(tags, "\n"))
 }
 
 func vsphereAccTestTemplateByLocationAndPrefix(locationID string, templateNamePrefix string) string {

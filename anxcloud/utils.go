@@ -77,3 +77,25 @@ func listAllPages[T any](pageRetriever func(int) ([]T, error)) ([]T, error) {
 
 	return allPages, nil
 }
+
+func sliceSubstract[T comparable](a, b []T) []T {
+	out := make([]T, 0, len(a))
+outer:
+	for i := range a {
+		for j := range b {
+			if a[i] == b[j] {
+				continue outer
+			}
+		}
+		out = append(out, a[i])
+	}
+	return out
+}
+
+func mustCastInterfaceArray[T any](in []interface{}) []T {
+	out := make([]T, 0, len(in))
+	for _, v := range in {
+		out = append(out, v.(T))
+	}
+	return out
+}

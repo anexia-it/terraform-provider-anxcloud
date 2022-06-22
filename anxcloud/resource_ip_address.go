@@ -20,9 +20,9 @@ const (
 func resourceIPAddress() *schema.Resource {
 	return &schema.Resource{
 		Description:   "This resource allows you to create and configure IP addresses.",
-		CreateContext: resourceIPAddressCreate,
-		ReadContext:   resourceIPAddressRead,
-		UpdateContext: resourceIPAddressUpdate,
+		CreateContext: tagsMiddlewareCreate(resourceIPAddressCreate),
+		ReadContext:   tagsMiddlewareRead(resourceIPAddressRead),
+		UpdateContext: tagsMiddlewareUpdate(resourceIPAddressUpdate),
 		DeleteContext: resourceIPAddressDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -33,7 +33,7 @@ func resourceIPAddress() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
-		Schema: schemaIPAddress(),
+		Schema: withTagsAttribute(schemaIPAddress()),
 	}
 }
 

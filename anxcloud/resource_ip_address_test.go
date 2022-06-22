@@ -74,6 +74,34 @@ func TestAccAnxCloudIPAddressReserved(t *testing.T) {
 	})
 }
 
+func TestAccAnxCloudIPAddressTags(t *testing.T) {
+	environment.SkipIfNoEnvironment(t)
+	envInfo := environment.GetEnvInfo(t)
+
+	prefixID := envInfo.Prefix.ID
+	ipAddress := envInfo.Prefix.GetNextIP()
+	role := "Default"
+
+	tpl := fmt.Sprintf(`
+	resource "anxcloud_ip_address" "foo" {
+		network_prefix_id   = "%s"
+		address = "%s"
+		role = "%s"
+		description_customer = "tf-acc-tags"
+		
+		%%s // tags
+	}`, prefixID, ipAddress, role)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccAnxCloudIPAddressDestroy,
+		Steps: testAccAnxCloudCommonResourceTagTestSteps(
+			tpl, "anxcloud_ip_address.foo",
+		),
+	})
+}
+
 func testAccAnxCloudIPAddress(resourceName, prefixID, ipAddress, role string) string {
 	return fmt.Sprintf(`
 	resource "anxcloud_ip_address" "%s" {

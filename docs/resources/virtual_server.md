@@ -120,7 +120,7 @@ resource "anxcloud_virtual_server" "example" {
 - `script` (String) Script to be executed after provisioning. Consider the corresponding shebang at the beginning of your script. If you want to use PowerShell, the first line should be: #ps1_sysnative.
 - `sockets` (Number) Amount of CPU sockets Number of cores have to be a multiple of sockets, as they will be spread evenly across all sockets. Defaults to number of cores, i.e. one socket per CPU core.
 - `ssh_key` (String) Public key (instead of password, only for Linux systems). Recommended over providing a plaintext password.
-- `tags` (List of String) List of tags attached to the Virtual Server.
+- `tags` (List of String) List of tags attached to the resource.
 - `template` (String) Named template. Can be used instead of the template_id to select a template. Example: (`Debian 11`, `Windows 2022`).
 - `template_build` (String) Template build identifier optionally used with `template`. Will default to latest build. Example: `b42`
 - `template_id` (String) Template identifier.

@@ -34,6 +34,7 @@ resource "anxcloud_vlan" "example" {
 
 - `description_customer` (String) Additional customer description.
 - `id` (String) The ID of this resource.
+- `tags` (List of String) List of tags attached to the resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `vm_provisioning` (Boolean) True if VM provisioning shall be enabled. Defaults to false.
 
@@ -68,3 +69,5 @@ Read-Only:
 - `lat` (String) Location latitude.
 - `lon` (String) Location longitude.
 - `name` (String) Location name.
+
+

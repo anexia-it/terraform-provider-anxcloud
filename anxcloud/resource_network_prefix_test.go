@@ -67,6 +67,32 @@ func TestAccAnxCloudNetworkPrefix(t *testing.T) {
 	})
 }
 
+func TestAccAnxCloudNetworkPrefixTags(t *testing.T) {
+	environment.SkipIfNoEnvironment(t)
+	envInfo := environment.GetEnvInfo(t)
+
+	tpl := fmt.Sprintf(`
+	resource "anxcloud_network_prefix" "foo" {
+		vlan_id     = "%s"
+		location_id = "%s"
+		ip_version  = 4
+		type 				= 1
+		netmask 		= 31
+		description_customer = "tf-acc-tags"
+
+		%%s // tags
+	}`, envInfo.VlanID, envInfo.Location)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckAnxCloudNetworkPrefixDestroy,
+		Steps: testAccAnxCloudCommonResourceTagTestSteps(
+			tpl, "anxcloud_network_prefix.foo",
+		),
+	})
+}
+
 func testAccCheckAnxCloudNetworkPrefixDestroy(s *terraform.State) error {
 	c := testAccProvider.Meta().(providerContext).legacyClient
 	p := prefix.NewAPI(c)

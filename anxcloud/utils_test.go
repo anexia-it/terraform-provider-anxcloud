@@ -71,3 +71,29 @@ func TestListAllPages(t *testing.T) {
 		t.Errorf("expected err to be %s, got %s", testErr, err)
 	}
 }
+
+func TestSliceSubstract(t *testing.T) {
+	a := []string{"a", "b", "c", "d", "e"}
+	b := []string{"d", "e", "f", "g", "h"}
+	c := []string{}
+
+	type testCase struct {
+		actual   []string
+		expected []string
+	}
+
+	testCases := []testCase{
+		{sliceSubstract(a, b), []string{"a", "b", "c"}},
+		{sliceSubstract(b, a), []string{"f", "g", "h"}},
+		{sliceSubstract(a, c), a},
+		{sliceSubstract(a, a), c},
+		{sliceSubstract(c, a), c},
+		{sliceSubstract(c, c), c},
+	}
+
+	for _, testCase := range testCases {
+		if diff := cmp.Diff(testCase.actual, testCase.expected); diff != "" {
+			t.Errorf("(-expected +actual):\n%s", diff)
+		}
+	}
+}

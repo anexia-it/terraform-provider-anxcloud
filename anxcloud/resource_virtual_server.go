@@ -38,9 +38,9 @@ The virtual_server resource allows you to configure and run virtual machines.
 - removal of disks not supported
 - removal of networks not supported
 `,
-		CreateContext: resourceVirtualServerCreate,
-		ReadContext:   resourceVirtualServerRead,
-		UpdateContext: resourceVirtualServerUpdate,
+		CreateContext: tagsMiddlewareCreate(resourceVirtualServerCreate),
+		ReadContext:   tagsMiddlewareRead(resourceVirtualServerRead),
+		UpdateContext: tagsMiddlewareUpdate(resourceVirtualServerUpdate),
 		DeleteContext: resourceVirtualServerDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -51,7 +51,7 @@ The virtual_server resource allows you to configure and run virtual machines.
 			Update: schema.DefaultTimeout(60 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
-		Schema: schemaVirtualServer(),
+		Schema: withTagsAttribute(schemaVirtualServer()),
 		CustomizeDiff: customdiff.All(
 			customdiff.ForceNewIf("template_id", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				// prevent ForceNew when vm-template is controlled by (named) "template" parameter
@@ -274,13 +274,6 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 
 	if err != nil {
 		return diag.FromErr(err)
-	}
-
-	tags := expandTags(d.Get("tags").([]interface{}))
-	for _, t := range tags {
-		if err := attachTag(ctx, provContext, d.Id(), t); err != nil {
-			return diag.FromErr(err)
-		}
 	}
 
 	if len(disks) > 1 {
@@ -512,27 +505,6 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 		ch.AddDisks = addDisks
 	}
 
-	if d.HasChange("tags") {
-		old, new := d.GetChange("tags")
-		oldTags := expandTags(old.([]interface{}))
-		newTags := expandTags(new.([]interface{}))
-
-		dTags := getTagsDifferences(oldTags, newTags)
-		cTags := getTagsDifferences(newTags, oldTags)
-
-		for _, t := range dTags {
-			if err := detachTag(ctx, provContext, d.Id(), t); err != nil {
-				return diag.FromErr(err)
-			}
-		}
-
-		for _, t := range cTags {
-			if err := attachTag(ctx, provContext, d.Id(), t); err != nil {
-				return diag.FromErr(err)
-			}
-		}
-	}
-
 	var response vm.ProvisioningResponse
 	provisioningAPI := vsphereAPI.Provisioning()
 
@@ -615,24 +587,6 @@ func resourceVirtualServerDelete(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	return nil
-}
-
-func getTagsDifferences(tagsA, tagsB []string) []string {
-	var out []string
-
-	for _, a := range tagsA {
-		found := false
-		for _, b := range tagsB {
-			if a == b {
-				found = true
-			}
-		}
-		if !found {
-			out = append(out, a)
-		}
-	}
-
-	return out
 }
 
 func updateVirtualServerDisk(ctx context.Context, m providerContext, id string, expected []Disk, current []Disk) diag.Diagnostics {
