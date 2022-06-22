@@ -12,7 +12,7 @@ import (
 
 func dataSourceCoreLocations() *schema.Resource {
 	return &schema.Resource{
-		Description: "Provides available locations.",
+		Description: "Provides available locations. Use `anxcloud_core_location` data source to retrieve a single location by code.",
 		ReadContext: dataSourceCoreLocationsRead,
 		Schema:      schemaDataSourceLocations(),
 	}

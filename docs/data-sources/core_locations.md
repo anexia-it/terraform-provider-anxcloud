@@ -8,7 +8,7 @@ description: |-
 
 # anxcloud_core_locations (Data Source)
 
-Provides available locations.
+Provides available locations. Use `anxcloud_core_location` data source to retrieve a single location by code.
 
 ## Example Usage
 
