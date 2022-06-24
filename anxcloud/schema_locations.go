@@ -6,18 +6,6 @@ import (
 
 func schemaDataSourceLocations() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"page": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     1,
-			Description: listPageIndexDescription,
-		},
-		"limit": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     1000,
-			Description: listLimitDescription,
-		},
 		"search": {
 			Type:        schema.TypeString,
 			Optional:    true,

@@ -22,7 +22,9 @@ func dataSourceVLANsRead(ctx context.Context, d *schema.ResourceData, m interfac
 	c := m.(providerContext).legacyClient
 	v := vlan.NewAPI(c)
 
-	vlans, err := v.List(ctx, d.Get("page").(int), d.Get("limit").(int), d.Get("search").(string))
+	vlans, err := listAllPages(func(page int) ([]vlan.Summary, error) {
+		return v.List(ctx, page, 100, d.Get("search").(string))
+	})
 	if err != nil {
 		return diag.FromErr(err)
 	}

@@ -1,6 +1,7 @@
 package anxcloud
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -36,5 +37,37 @@ func testSchema() schemaMap {
 		"required":         {Description: "Required Field"},
 		"optional":         {Description: "Optional Field"},
 		"computed":         {Description: "Computed Field"},
+	}
+}
+
+func TestListAllPages(t *testing.T) {
+	testPages := [][]int{
+		{1, 2, 3},
+		{4, 5, 6},
+		{7, 8},
+		{},
+	}
+
+	actual, err := listAllPages(func(page int) ([]int, error) {
+		return testPages[page-1], nil
+	})
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	expected := []int{1, 2, 3, 4, 5, 6, 7, 8}
+
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Errorf("(-expected +actual):\n%s", diff)
+	}
+
+	var testErr = errors.New("test error")
+	_, err = listAllPages(func(page int) ([]int, error) {
+		return nil, testErr
+	})
+
+	if err != testErr {
+		t.Errorf("expected err to be %s, got %s", testErr, err)
 	}
 }

@@ -8,7 +8,7 @@ description: |-
 
 # anxcloud_core_locations (Data Source)
 
-Provides available locations.
+Provides available locations. Use `anxcloud_core_location` data source to retrieve a single location by code.
 
 ## Example Usage
 
@@ -24,8 +24,6 @@ data "anxcloud_core_locations" "example" {
 ### Optional
 
 - `id` (String) The ID of this resource.
-- `limit` (Number) The limit of the list.
-- `page` (Number) The page of the list.
 - `search` (String) An optional string allowing to search through entities.
 
 ### Read-Only

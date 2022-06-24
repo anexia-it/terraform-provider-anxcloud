@@ -1,12 +1,13 @@
 package anxcloud
 
 import (
-	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
 	"log"
 	"math/rand"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
 )
 
 func TestMain(m *testing.M) {

@@ -2,7 +2,6 @@ package anxcloud
 
 import (
 	"fmt"
-	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -13,8 +12,6 @@ func TestAccAnxCloudCoreLocationsDataSource(t *testing.T) {
 	resourceName := "acc_test"
 	resourcePath := "data.anxcloud_core_locations." + resourceName
 
-	page := 1
-	limit := 1
 	search := "IE"
 
 	resource.Test(t, resource.TestCase{
@@ -22,10 +19,8 @@ func TestAccAnxCloudCoreLocationsDataSource(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnxCloudCoreLocationsDataSource(resourceName, page, limit, search),
+				Config: testAccAnxCloudCoreLocationsDataSource(resourceName, search),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourcePath, "page", strconv.Itoa(page)),
-					resource.TestCheckResourceAttr(resourcePath, "limit", strconv.Itoa(limit)),
 					resource.TestCheckResourceAttr(resourcePath, "search", search),
 					testAccAnxCloudCoreLocationsDataSourceExists(resourcePath),
 				),
@@ -34,14 +29,12 @@ func TestAccAnxCloudCoreLocationsDataSource(t *testing.T) {
 	})
 }
 
-func testAccAnxCloudCoreLocationsDataSource(resourceName string, page, limit int, search string) string {
+func testAccAnxCloudCoreLocationsDataSource(resourceName, search string) string {
 	return fmt.Sprintf(`
 	data "anxcloud_core_locations" "%s" {
-		page   = %d
-		limit  = %d
 		search = "%s"
 	}
-	`, resourceName, page, limit, search)
+	`, resourceName, search)
 }
 
 func testAccAnxCloudCoreLocationsDataSourceExists(n string) resource.TestCheckFunc {

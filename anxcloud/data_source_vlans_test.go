@@ -19,8 +19,6 @@ func TestAccAnxCloudVLANsDataSource(t *testing.T) {
 			{
 				Config: testAccAnxCloudVLANsDataSource(resourceName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourcePath, "page", "1"),
-					resource.TestCheckResourceAttr(resourcePath, "limit", "1000"),
 					testAccAnxCloudVLANsDataSourceExists(resourcePath),
 				),
 			},

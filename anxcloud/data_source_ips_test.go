@@ -2,7 +2,6 @@ package anxcloud
 
 import (
 	"fmt"
-	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -13,8 +12,6 @@ func TestAccAnxCloudIPAddressesDataSource(t *testing.T) {
 	resourceName := "acc_test"
 	resourcePath := "data.anxcloud_ip_addresses." + resourceName
 
-	page := 1
-	limit := 1
 	search := "10.244"
 
 	resource.Test(t, resource.TestCase{
@@ -22,10 +19,8 @@ func TestAccAnxCloudIPAddressesDataSource(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnxCloudIPAddressesDataSource(resourceName, page, limit, search),
+				Config: testAccAnxCloudIPAddressesDataSource(resourceName, search),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourcePath, "page", strconv.Itoa(page)),
-					resource.TestCheckResourceAttr(resourcePath, "limit", strconv.Itoa(limit)),
 					resource.TestCheckResourceAttr(resourcePath, "search", search),
 					testAccAnxCloudIPAddressesDataSourceExists(resourcePath),
 				),
@@ -34,14 +29,12 @@ func TestAccAnxCloudIPAddressesDataSource(t *testing.T) {
 	})
 }
 
-func testAccAnxCloudIPAddressesDataSource(resourceName string, page, limit int, search string) string {
+func testAccAnxCloudIPAddressesDataSource(resourceName, search string) string {
 	return fmt.Sprintf(`
 	data "anxcloud_ip_addresses" "%s" {
-		page   = %d
-		limit  = %d
 		search = "%s"
 	}
-	`, resourceName, page, limit, search)
+	`, resourceName, search)
 }
 
 func testAccAnxCloudIPAddressesDataSourceExists(n string) resource.TestCheckFunc {
