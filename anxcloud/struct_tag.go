@@ -4,16 +4,6 @@ import (
 	"go.anx.io/go-anxcloud/pkg/core/tags"
 )
 
-// expanders
-
-func expandTags(p []interface{}) []string {
-	var out []string
-	for _, elem := range p {
-		out = append(out, elem.(string))
-	}
-	return out
-}
-
 // flatteners
 
 func flattenTags(in []tags.Summary) []interface{} {

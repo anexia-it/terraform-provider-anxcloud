@@ -20,9 +20,9 @@ const (
 func resourceNetworkPrefix() *schema.Resource {
 	return &schema.Resource{
 		Description:   "This resource allows you to create and configure network prefix.",
-		CreateContext: resourceNetworkPrefixCreate,
-		ReadContext:   resourceNetworkPrefixRead,
-		UpdateContext: resourceNetworkPrefixUpdate,
+		CreateContext: tagsMiddlewareCreate(resourceNetworkPrefixCreate),
+		ReadContext:   tagsMiddlewareRead(resourceNetworkPrefixRead),
+		UpdateContext: tagsMiddlewareUpdate(resourceNetworkPrefixUpdate),
 		DeleteContext: resourceNetworkPrefixDelete,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
@@ -33,7 +33,7 @@ func resourceNetworkPrefix() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Schema: schemaNetworkPrefix(),
+		Schema: withTagsAttribute(schemaNetworkPrefix()),
 	}
 }
 

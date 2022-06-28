@@ -34,14 +34,15 @@ resource "anxcloud_ip_address" "example" {
 ### Optional
 
 - `description_customer` (String) Additional customer description.
-- `id` (String) The ID of this resource.
 - `organization` (String) Customer of yours. Reseller only.
 - `role` (String) Role of the IP address
+- `tags` (List of String) List of tags attached to the resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
 - `description_internal` (String) Internal description.
+- `id` (String) Identifier of the API resource.
 - `status` (String) Status of the IP address
 - `version` (Number) IP version.
 - `vlan_id` (String) The associated VLAN identifier.

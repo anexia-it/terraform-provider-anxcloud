@@ -19,9 +19,9 @@ const (
 func resourceVLAN() *schema.Resource {
 	return &schema.Resource{
 		Description:   "The VLAN resource allows you to create and configure VLAN.",
-		CreateContext: resourceVLANCreate,
-		ReadContext:   resourceVLANRead,
-		UpdateContext: resourceVLANUpdate,
+		CreateContext: tagsMiddlewareCreate(resourceVLANCreate),
+		ReadContext:   tagsMiddlewareRead(resourceVLANRead),
+		UpdateContext: tagsMiddlewareUpdate(resourceVLANUpdate),
 		DeleteContext: resourceVLANDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -32,7 +32,7 @@ func resourceVLAN() *schema.Resource {
 			Update: schema.DefaultTimeout(15 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
-		Schema: schemaVLAN(),
+		Schema: withTagsAttribute(schemaVLAN()),
 	}
 }
 

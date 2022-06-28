@@ -23,6 +23,15 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
   - anxcloud_ip_addresses
   - anxcloud_tags
   - anxcloud_vlans
+  
+### Fixed
+* resource/anxcloud_virtual_server: tags changed outside of terraform will now get reverted back to terraform config on apply (#101, @marioreggiori)
+
+### Added
+* tagging capabilities to supported resources (#101, @marioreggiori)
+  - anxcloud_ip_address
+  - anxcloud_network_prefix
+  - anxcloud_vlan
 
 ## [0.3.5] - 2022-06-13
 
