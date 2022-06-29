@@ -34,12 +34,12 @@ resource "anxcloud_dns_record" "example" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `ttl` (Number) Region specific TTL. If not set the zone TTL will be used.
 
 ### Read-Only
 
+- `id` (String) The ID of this resource.
 - `identifier` (String) DNS Record identifier. Changes on revision change and therefore shouldn't be used as reference.
 - `immutable` (Boolean) Specifies whether or not a record is immutable.
 - `region` (String) DNS record region (for GeoDNS aware records).

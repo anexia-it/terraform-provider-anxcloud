@@ -23,11 +23,11 @@ data "anxcloud_core_locations" "example" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `search` (String) An optional string allowing to search through entities.
 
 ### Read-Only
 
+- `id` (String) The ID of this resource.
 - `locations` (List of Object) Anexia Cloud Locations. (see [below for nested schema](#nestedatt--locations))
 
 <a id="nestedatt--locations"></a>

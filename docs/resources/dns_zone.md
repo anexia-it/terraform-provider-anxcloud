@@ -42,7 +42,6 @@ resource "anxcloud_dns_zone" "example" {
 ### Optional
 
 - `dns_servers` (Block List) Configured DNS servers. (see [below for nested schema](#nestedblock--dns_servers))
-- `id` (String) The ID of this resource.
 - `master_nameserver` (String) Master nameserver.
 - `notify_allowed_ips` (List of String) IP addresses allowed to initiate domain transfer.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
@@ -50,6 +49,7 @@ resource "anxcloud_dns_zone" "example" {
 ### Read-Only
 
 - `deployment_level` (Number) Current deployment progress in percent.
+- `id` (String) The ID of this resource.
 - `is_editable` (Boolean) Indicator if zone is editable.
 - `validation_level` (Number) Current validation level in percent.
 

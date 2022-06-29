@@ -26,7 +26,6 @@ data "anxcloud_vsphere_locations" "example" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `limit` (Number) The limit of the list.
 - `location_code` (String) Filters locations by country code
 - `organization` (String) Customer identifier
@@ -34,6 +33,7 @@ data "anxcloud_vsphere_locations" "example" {
 
 ### Read-Only
 
+- `id` (String) The ID of this resource.
 - `locations` (List of Object) Anexia Cloud Locations. (see [below for nested schema](#nestedatt--locations))
 
 <a id="nestedatt--locations"></a>

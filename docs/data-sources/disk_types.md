@@ -29,12 +29,9 @@ data "anxcloud_disk_types" "example" {
 
 - `location_id` (String) Location identifier.
 
-### Optional
-
-- `id` (String) The ID of this resource.
-
 ### Read-Only
 
+- `id` (String) The ID of this resource.
 - `types` (List of Object) List of available disk types. (see [below for nested schema](#nestedatt--types))
 
 <a id="nestedatt--types"></a>

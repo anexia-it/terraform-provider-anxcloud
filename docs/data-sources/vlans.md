@@ -23,11 +23,11 @@ data "anxcloud_vlans" "example" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `search` (String) An optional string allowing to search through entities.
 
 ### Read-Only
 
+- `id` (String) The ID of this resource.
 - `vlans` (List of Object) List of available VLANs. (see [below for nested schema](#nestedatt--vlans))
 
 <a id="nestedatt--vlans"></a>

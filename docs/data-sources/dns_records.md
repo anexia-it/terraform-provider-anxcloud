@@ -25,12 +25,9 @@ data "anxcloud_dns_records" "example" {
 
 - `zone_name` (String) Parent zone
 
-### Optional
-
-- `id` (String) The ID of this resource.
-
 ### Read-Only
 
+- `id` (String) The ID of this resource.
 - `records` (List of Object) List of known records on the zone (see [below for nested schema](#nestedatt--records))
 
 <a id="nestedatt--records"></a>

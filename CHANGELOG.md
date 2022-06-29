@@ -26,6 +26,7 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
   
 ### Fixed
 * resource/anxcloud_virtual_server: tags changed outside of terraform will now get reverted back to terraform config on apply (#101, @marioreggiori)
+* docs: implicit `id` fields of data sources are now rendered as read-only instead of optional (#103, @marioreggiori)
 
 ### Added
 * tagging capabilities to supported resources (#101, @marioreggiori)

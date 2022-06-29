@@ -40,11 +40,11 @@ locals {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `template_type` (String) Template type. Defaults to 'templates' and also supports 'from_scratch'.
 
 ### Read-Only
 
+- `id` (String) The ID of this resource.
 - `templates` (List of Object) List of available templates. (see [below for nested schema](#nestedatt--templates))
 
 <a id="nestedatt--templates"></a>

@@ -42,7 +42,6 @@ resource "anxcloud_network_prefix" "example" {
 
 - `create_empty` (Boolean) Whether the prefix should be created with inactive IPs
 - `description_customer` (String) Additional description.
-- `id` (String) The ID of this resource.
 - `ip_version` (Number) The Prefix version: 4 = IPv4, 6 = IPv6.
 - `organization` (String) Customer of yours. Reseller only.
 - `router_redundancy` (Boolean) If router Redundancy shall be enabled.
@@ -55,6 +54,7 @@ resource "anxcloud_network_prefix" "example" {
 
 - `cidr` (String) CIDR of the created prefix.
 - `description_internal` (String) Internal description.
+- `id` (String) The ID of this resource.
 - `locations` (List of Object) Anexia Cloud Locations. (see [below for nested schema](#nestedatt--locations))
 - `role_text` (String) Role of the prefix.
 - `status` (String) Status of the created prefix.

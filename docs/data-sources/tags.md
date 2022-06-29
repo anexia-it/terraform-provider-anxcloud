@@ -24,7 +24,6 @@ data "anxcloud_tags" "example" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `order` (String) The order of the tags.
 - `organization_identifier` (String) The identifier of the organization.
 - `query` (String) An optional string allowing to search through entities.
@@ -33,6 +32,7 @@ data "anxcloud_tags" "example" {
 
 ### Read-Only
 
+- `id` (String) The ID of this resource.
 - `tags` (List of Object) List of tags. (see [below for nested schema](#nestedatt--tags))
 
 <a id="nestedatt--tags"></a>
