@@ -136,39 +136,6 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template", "template_type", "network"},
 			},
-			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmAddTag, "newTag"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmAddTag),
-					resource.TestCheckResourceAttr(resourcePath, "tags.0", "newTag"),
-				),
-			},
-			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmDefUpscale),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefUpscale),
-					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefUpscale.Location),
-					resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefUpscale.TemplateID),
-					resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefUpscale.CPUs)),
-					resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefUpscale.Memory)),
-				),
-			},
-			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmDefDownscale),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefDownscale),
-					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefDownscale.Location),
-					resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefDownscale.TemplateID),
-					resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefDownscale.CPUs)),
-					resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefDownscale.Memory)),
-				),
-			},
-			{
-				ResourceName:            resourcePath,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template", "template_type", "network"},
-			},
 		},
 	})
 }
