@@ -1,20 +1,22 @@
 package anxcloud
 
 import (
+	"context"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-var testAccProviders map[string]func() (*schema.Provider, error)
+var testAccProviderFactories map[string]func() (*schema.Provider, error)
 var testAccProvider *schema.Provider
 
 func init() {
 	testAccProvider = Provider()
-	testAccProviders = map[string]func() (*schema.Provider, error){
+	testAccProviderFactories = map[string]func() (*schema.Provider, error){
 		"anxcloud": func() (*schema.Provider, error) {
-			return testAccProvider, nil
+			return Provider(), nil
 		},
 	}
 }
@@ -32,5 +34,10 @@ func TestProvider_impl(t *testing.T) {
 func testAccPreCheck(t *testing.T) {
 	if err := os.Getenv("ANEXIA_TOKEN"); err == "" {
 		t.Fatal("ANEXIA_TOKEN must be set for acceptance tests")
+	}
+
+	ctx := context.Background()
+	if err := testAccProvider.Configure(ctx, terraform.NewResourceConfigRaw(nil)); err != nil && err.HasError() {
+		t.Fatalf("failed to configure testAccProvider: %#v", err)
 	}
 }

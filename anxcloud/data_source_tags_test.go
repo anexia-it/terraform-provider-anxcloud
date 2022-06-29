@@ -14,9 +14,9 @@ func TestAccAnxCloudTagsDataSource(t *testing.T) {
 
 	query := "test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnxCloudTagsDataSource(resourceName, query),

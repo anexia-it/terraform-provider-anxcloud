@@ -16,9 +16,9 @@ func TestAccAnxCloudIPAddressDataSource(t *testing.T) {
 
 	testResources := testAccAnxCloudIPAddressDataSourceResources(envInfo)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			// Get IPv4 address by it's id
 			{

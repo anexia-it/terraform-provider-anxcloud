@@ -9,9 +9,9 @@ import (
 )
 
 func TestAccAnxCloudCoreLocationDataSource(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnxCloudCoreLocationDataSource("anx04", "ANX04"),

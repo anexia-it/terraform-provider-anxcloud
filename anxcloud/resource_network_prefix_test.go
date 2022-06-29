@@ -23,9 +23,9 @@ func TestAccAnxCloudNetworkPrefix(t *testing.T) {
 	customerDescription := "network prefix acceptance tests: " + envInfo.TestRunName
 	customerDescriptionUpdate := "network prefix acceptance tests update"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAnxCloudNetworkPrefixDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -83,9 +83,9 @@ func TestAccAnxCloudNetworkPrefixTags(t *testing.T) {
 		%%s // tags
 	}`, envInfo.VlanID, envInfo.Location)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAnxCloudNetworkPrefixDestroy,
 		Steps: testAccAnxCloudCommonResourceTagTestSteps(
 			tpl, "anxcloud_network_prefix.foo",

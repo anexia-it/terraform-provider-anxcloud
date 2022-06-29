@@ -13,11 +13,9 @@ func TestAccAnxCloudDNSRecord(t *testing.T) {
 	environment.SkipIfNoEnvironment(t)
 	zoneName := test.RandomHostname() + ".terraform.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-		},
-		ProviderFactories: testAccProviders,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnxDNSZoneAndRecord(zoneName, 0),

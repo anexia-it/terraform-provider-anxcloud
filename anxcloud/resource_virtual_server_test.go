@@ -88,9 +88,9 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 
 	vmAddTag := vmDef
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAnxCloudVirtualServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -213,9 +213,9 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 			SizeGBs: 50,
 		})
 
-		resource.Test(t, resource.TestCase{
+		resource.ParallelTest(t, resource.TestCase{
 			PreCheck:          func() { testAccPreCheck(t) },
-			ProviderFactories: testAccProviders,
+			ProviderFactories: testAccProviderFactories,
 			CheckDestroy:      testAccCheckAnxCloudVirtualServerDestroy,
 			Steps: []resource.TestStep{
 				{
@@ -247,9 +247,9 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 		disksChange[0].SizeGBs = 70
 		disksChange[0].Type = "ENT1"
 
-		resource.Test(t, resource.TestCase{
+		resource.ParallelTest(t, resource.TestCase{
 			PreCheck:          func() { testAccPreCheck(t) },
-			ProviderFactories: testAccProviders,
+			ProviderFactories: testAccProviderFactories,
 			CheckDestroy:      testAccCheckAnxCloudVirtualServerDestroy,
 			Steps: []resource.TestStep{
 				{
@@ -291,9 +291,9 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 		})
 		templateDisksChanged[1].SizeGBs = 60
 
-		resource.Test(t, resource.TestCase{
+		resource.ParallelTest(t, resource.TestCase{
 			PreCheck:          func() { testAccPreCheck(t) },
-			ProviderFactories: testAccProviders,
+			ProviderFactories: testAccProviderFactories,
 			CheckDestroy:      testAccCheckAnxCloudVirtualServerDestroy,
 			Steps: []resource.TestStep{
 				{

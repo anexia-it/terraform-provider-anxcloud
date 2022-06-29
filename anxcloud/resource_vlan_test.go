@@ -22,9 +22,9 @@ func TestAccAnxCloudVLAN(t *testing.T) {
 	customerDescription := "vlan acceptance tests"
 	customerDescriptionUpdate := "vlan acceptance tests update " + environment.GetEnvInfo(t).TestRunName
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAnxCloudVLANDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -72,9 +72,9 @@ func TestAccAnxCloudVLANTags(t *testing.T) {
 		%%s // tags
 	}`, envInfo.Location)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAnxCloudVLANDestroy,
 		Steps: testAccAnxCloudCommonResourceTagTestSteps(
 			tpl, "anxcloud_vlan.foo",

@@ -16,9 +16,9 @@ func TestAccAnxCloudTag(t *testing.T) {
 
 	serviceID := "ff543fc08b3149ee9a8c50ee018b15a6"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAnxCloudTagDestroy,
 		Steps: []resource.TestStep{
 			{

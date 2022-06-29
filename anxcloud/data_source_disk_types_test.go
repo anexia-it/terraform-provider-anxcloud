@@ -2,8 +2,9 @@ package anxcloud
 
 import (
 	"fmt"
-	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
 	"testing"
+
+	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -17,9 +18,9 @@ func TestAccAnxCloudDiskTypeDataSource(t *testing.T) {
 
 	locationID := environment.GetEnvInfo(t).Location
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnxCloudDiskTypeDataSource(resourceName, locationID),
