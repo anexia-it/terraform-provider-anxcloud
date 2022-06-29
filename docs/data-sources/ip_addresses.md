@@ -23,12 +23,12 @@ data "anxcloud_ip_addresses" "example" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `search` (String) An optional string allowing to search through entities.
 
 ### Read-Only
 
 - `addresses` (List of Object) List of available addresses. (see [below for nested schema](#nestedatt--addresses))
+- `id` (String) The ID of this resource.
 
 <a id="nestedatt--addresses"></a>
 ### Nested Schema for `addresses`

@@ -114,7 +114,6 @@ resource "anxcloud_virtual_server" "example" {
 - `dns` (List of String) DNS configuration. Maximum items 4. Defaults to template settings.
 - `enter_bios_setup` (Boolean) Start the VM into BIOS setup on next boot.
 - `force_restart_if_needed` (Boolean) Certain operations may only be performed in powered off state. Such as: shrinking memory, shrinking/adding CPU, removing disk and scaling a disk beyond 2 GB. Passing this value as true will always execute a power off and reboot request after completing all other operations. Without this flag set to true scaling operations requiring a reboot will fail.
-- `id` (String) The ID of this resource.
 - `network` (Block List) Network interface (see [below for nested schema](#nestedblock--network))
 - `password` (String, Sensitive) Plaintext password. Example: ('!anx123mySuperStrongPassword123anx!', 'go3ju0la1ro3', …). For systems that support it, we strongly recommend using a SSH key instead.
 - `script` (String) Script to be executed after provisioning. Consider the corresponding shebang at the beginning of your script. If you want to use PowerShell, the first line should be: #ps1_sysnative.
@@ -129,6 +128,7 @@ resource "anxcloud_virtual_server" "example" {
 
 ### Read-Only
 
+- `id` (String) The ID of this resource.
 - `info` (List of Object) Virtual server info (see [below for nested schema](#nestedatt--info))
 
 <a id="nestedblock--disk"></a>

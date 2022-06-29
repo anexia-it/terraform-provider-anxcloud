@@ -30,11 +30,11 @@ resource "anxcloud_tag" "example" {
 ### Optional
 
 - `customer_id` (String) The identifier of the customer this tag should be assigned to. Leave empty to assign to the organization of the logged in user.
-- `id` (String) The ID of this resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
+- `id` (String) The ID of this resource.
 - `organisation_assignments` (List of Object) Organisation assignments. (see [below for nested schema](#nestedatt--organisation_assignments))
 
 <a id="nestedblock--timeouts"></a>

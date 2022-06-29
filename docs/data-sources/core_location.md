@@ -24,12 +24,12 @@ data "anxcloud_core_location" "anx04" {
 ### Optional
 
 - `code` (String) Location code.
-- `id` (String) The ID of this resource.
 
 ### Read-Only
 
 - `city_code` (String) Location city code.
 - `country` (String) Location country.
+- `id` (String) The ID of this resource.
 - `identifier` (String) Identifier of the API resource.
 - `lat` (String) Location latitude.
 - `lon` (String) Location longitude.
