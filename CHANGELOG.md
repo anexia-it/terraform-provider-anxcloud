@@ -19,9 +19,11 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 
 ### Fixed
 * resource/anxcloud_virtual_server: add delay after `AwaitCompletion` to handle pending changes before read (#111, @marioreggiori)
+* (internal) acceptance tests: make ProviderFactories real factories (#102, @marioreggiori)
 
 ### Changed
 * resource/anxcloud_virtual_server: increase delete timeout (#112, @marioreggiori)
+* (internal) acceptance tests: configured to run parallel (#102, @marioreggiori)
 
 ## [0.4.0] - 2022-07-07
 
@@ -36,16 +38,12 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 ### Fixed
 * resource/anxcloud_virtual_server: tags changed outside of terraform will now get reverted back to terraform config on apply (#101, @marioreggiori)
 * docs: implicit `id` fields of data sources are now rendered as read-only instead of optional (#103, @marioreggiori)
-* (internal) acceptance tests: make ProviderFactories real factories (#102, @marioreggiori)
 
 ### Added
 * tagging capabilities to supported resources (#101, @marioreggiori)
   - anxcloud_ip_address
   - anxcloud_network_prefix
   - anxcloud_vlan
-
-### Changed
-* (internal) acceptance tests: configured to run parallel (#102, @marioreggiori)
 
 ## [0.3.5] - 2022-06-13
 

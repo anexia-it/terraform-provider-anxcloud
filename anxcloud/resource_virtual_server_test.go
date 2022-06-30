@@ -86,57 +86,66 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 	vmDefUpscale.CPUs = 2
 	vmDefDownscale.Memory = 3072
 
-	vmAddTag := vmDef
+	testSteps := []resource.TestStep{
+		// create VM
+		{
+			Config: withoutTags(testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmDef)),
+			Check: resource.ComposeTestCheckFunc(
+				testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDef),
+				resource.TestCheckResourceAttr(resourcePath, "location_id", vmDef.Location),
+				resource.TestCheckResourceAttr(resourcePath, "template_id", vmDef.TemplateID),
+				resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDef.CPUs)),
+				resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDef.Memory)),
+			),
+		},
+	}
+
+	testSteps = append(
+		testSteps,
+		// tagging operations
+		testAccAnxCloudCommonResourceTagTestSteps(
+			testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmDef),
+			resourcePath,
+		)...,
+	)
+
+	testSteps = append(testSteps, []resource.TestStep{
+		// scale cpu & memory up
+		{
+			Config: withoutTags(testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmDefUpscale)),
+			Check: resource.ComposeTestCheckFunc(
+				testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefUpscale),
+				resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefUpscale.Location),
+				resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefUpscale.TemplateID),
+				resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefUpscale.CPUs)),
+				resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefUpscale.Memory)),
+			),
+		},
+		// scale cpu & memory down
+		{
+			Config: withoutTags(testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmDefDownscale)),
+			Check: resource.ComposeTestCheckFunc(
+				testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefDownscale),
+				resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefDownscale.Location),
+				resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefDownscale.TemplateID),
+				resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefDownscale.CPUs)),
+				resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefDownscale.Memory)),
+			),
+		},
+		// check importability
+		{
+			ResourceName:            resourcePath,
+			ImportState:             true,
+			ImportStateVerify:       true,
+			ImportStateVerifyIgnore: []string{"critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template", "template_type", "network"},
+		},
+	}...)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAnxCloudVirtualServerDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmDef),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDef),
-					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDef.Location),
-					resource.TestCheckResourceAttr(resourcePath, "template_id", vmDef.TemplateID),
-					resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDef.CPUs)),
-					resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDef.Memory)),
-				),
-			},
-			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmAddTag, "newTag"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmAddTag),
-					resource.TestCheckResourceAttr(resourcePath, "tags.0", "newTag"),
-				),
-			},
-			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmDefUpscale),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefUpscale),
-					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefUpscale.Location),
-					resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefUpscale.TemplateID),
-					resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefUpscale.CPUs)),
-					resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefUpscale.Memory)),
-				),
-			},
-			{
-				Config: testAccConfigAnxCloudVirtualServer(resourceName, templateName, &vmDefDownscale),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnxCloudVirtualServerExists(resourcePath, &vmDefDownscale),
-					resource.TestCheckResourceAttr(resourcePath, "location_id", vmDefDownscale.Location),
-					resource.TestCheckResourceAttr(resourcePath, "template_id", vmDefDownscale.TemplateID),
-					resource.TestCheckResourceAttr(resourcePath, "cpus", strconv.Itoa(vmDefDownscale.CPUs)),
-					resource.TestCheckResourceAttr(resourcePath, "memory", strconv.Itoa(vmDefDownscale.Memory)),
-				),
-			},
-			{
-				ResourceName:            resourcePath,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"critical_operation_confirmed", "enter_bios_setup", "force_restart_if_needed", "hostname", "password", "template", "template_type", "network"},
-			},
-		},
+		Steps:             testSteps,
 	})
 }
 
@@ -310,7 +319,7 @@ func testAccCheckAnxCloudVirtualServerDestroy(s *terraform.State) error {
 }
 
 //nolint:unparam
-func testAccConfigAnxCloudVirtualServer(resourceName string, templateName string, def *vm.Definition, tags ...string) string {
+func testAccConfigAnxCloudVirtualServer(resourceName string, templateName string, def *vm.Definition) string {
 	return fmt.Sprintf(`
 	resource "anxcloud_virtual_server" "%s" {
 		location_id          = "%s"
@@ -328,7 +337,7 @@ func testAccConfigAnxCloudVirtualServer(resourceName string, templateName string
 		%s
 
 		// generated tags
-		%s
+		%%s
 
 		force_restart_if_needed = true
 		critical_operation_confirmed = true
@@ -339,7 +348,7 @@ func testAccConfigAnxCloudVirtualServer(resourceName string, templateName string
 				SizeGBs: def.Disk,
 				Type:    def.DiskType,
 			},
-		}), generateTagsString(tags...))
+		}))
 }
 
 func testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName string, def *vm.Definition, disks []vm.Disk) string {
