@@ -17,6 +17,8 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+## [0.4.0] - 2022-07-07
+
 ### Breaking
 * manual pagination removed from data sources (#90, @marioreggiori)
   - anxcloud_core_locations
