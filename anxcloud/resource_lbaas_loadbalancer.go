@@ -2,6 +2,7 @@ package anxcloud
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -13,7 +14,11 @@ import (
 
 func resourceLBaaSLoadBalancer() *schema.Resource {
 	return &schema.Resource{
-		Description:   "This resource allows you to create and manage LBaaS LoadBalancer resources.",
+		Description: strings.TrimSpace(`
+This resource allows you to create and manage LBaaS Load Balancer resources.
+
+-> This process is not yet fully automated, we are working on it.
+`),
 		CreateContext: tagsMiddlewareCreate(resourceLBaaSLoadBalancerCreate),
 		ReadContext:   tagsMiddlewareRead(resourceLBaaSLoadBalancerRead),
 		UpdateContext: tagsMiddlewareUpdate(resourceLBaaSLoadBalancerUpdate),
@@ -22,12 +27,12 @@ func resourceLBaaSLoadBalancer() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Read:   schema.DefaultTimeout(time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
+			Create: schema.DefaultTimeout(30 * time.Second),
+			Read:   schema.DefaultTimeout(30 * time.Second),
+			Update: schema.DefaultTimeout(30 * time.Second),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
-		Schema: withTagsAttribute(schemaLBaaSLoadbalancer()),
+		Schema: withTagsAttribute(schemaLBaaSLoadBalancer()),
 	}
 }
 
