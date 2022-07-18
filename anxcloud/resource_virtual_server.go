@@ -245,36 +245,17 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	base64Encoding := true
-	provision, err := vsphereAPI.Provisioning().VM().Provision(ctx, def, base64Encoding)
+	provisioning, err := vsphereAPI.Provisioning().VM().Provision(ctx, def, base64Encoding)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		if d.Id() == "" {
-			p, err := vsphereAPI.Provisioning().Progress().Get(ctx, provision.Identifier)
-			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("unable to get vm progress by ID '%s', %w", provision.Identifier, err))
-			}
-			if p.VMIdentifier != "" && p.Progress < 100 {
-				d.SetId(p.VMIdentifier)
-			} else {
-				return resource.RetryableError(fmt.Errorf("vm with provisioning ID '%s' is not ready yet: %d %%", provision.Identifier, p.Progress))
-			}
-		}
 
-		vmInfo, err := vsphereAPI.Info().Get(ctx, d.Id())
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("unable to get vm  by ID '%s', %w", d.Id(), err))
-		}
-		if vmInfo.Status == vmPoweredOn {
-			return nil
-		}
-		return resource.RetryableError(fmt.Errorf("vm with id '%s' is not %s yet: %s", d.Id(), vmPoweredOn, vmInfo.Status))
-	})
-
+	vmIdentifier, err := vsphereAPI.Provisioning().Progress().AwaitCompletion(ctx, provisioning.Identifier)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("failed to await completion: %s", err)
 	}
+
+	d.SetId(vmIdentifier)
 
 	if len(disks) > 1 {
 		if read := resourceVirtualServerRead(ctx, d, m); read.HasError() {
@@ -445,14 +426,11 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 		Reboot:          d.Get("force_restart_if_needed").(bool),
 		EnableDangerous: d.Get("critical_operation_confirmed").(bool),
 	}
-	requiresReboot := false
 
 	if d.HasChanges("sockets", "memory", "cpus") {
 		ch.CPUs = d.Get("cpus").(int)
 		ch.CPUSockets = d.Get("sockets").(int)
 		ch.MemoryMBs = d.Get("memory").(int)
-
-		requiresReboot = true
 	}
 
 	// cpu_performance_type might not be set because info endpoint didn't expose it previously
@@ -505,44 +483,12 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 		ch.AddDisks = addDisks
 	}
 
-	var response vm.ProvisioningResponse
-	provisioningAPI := vsphereAPI.Provisioning()
-
-	var err error
-	if response, err = provisioningAPI.VM().Update(ctx, d.Id(), ch); err != nil {
+	provisioning, err := vsphereAPI.Provisioning().VM().Update(ctx, d.Id(), ch)
+	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if response.Progress != 100 {
-		if _, err = provisioningAPI.Progress().AwaitCompletion(ctx, response.Identifier); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	delay := 10 * time.Second
-	if requiresReboot {
-		delay = 3 * time.Minute
-	}
-
-	vmState := resource.StateChangeConf{
-		Delay:      delay,
-		Timeout:    d.Timeout(schema.TimeoutUpdate),
-		MinTimeout: 10 * time.Second,
-		Pending: []string{
-			vmPoweredOff,
-		},
-		Target: []string{
-			vmPoweredOn,
-		},
-		Refresh: func() (interface{}, string, error) {
-			info, err := vsphereAPI.Info().Get(ctx, d.Id())
-			if err != nil {
-				return "", "", err
-			}
-			return info, info.Status, nil
-		},
-	}
-	if _, err = vmState.WaitForStateContext(ctx); err != nil {
+	if _, err = vsphereAPI.Provisioning().Progress().AwaitCompletion(ctx, provisioning.Identifier); err != nil {
 		return diag.FromErr(err)
 	}
 

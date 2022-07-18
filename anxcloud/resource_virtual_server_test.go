@@ -66,7 +66,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 		TemplateID:         templateID,
 		TemplateType:       "templates",
 		Memory:             2048,
-		CPUs:               1,
+		CPUs:               2,
 		CPUPerformanceType: "performance",
 		Disk:               50,
 		DiskType:           "ENT6",
@@ -78,13 +78,13 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 
 	// upscale resources
 	vmDefUpscale := vmDef
-	vmDefUpscale.CPUs = 2
+	vmDefUpscale.CPUs = 4
 	vmDefUpscale.Memory = 4096
 
 	// down scale resources which does not require recreation of the VM
 	vmDefDownscale := vmDefUpscale
-	vmDefDownscale.Memory = 2096
-	vmDefDownscale.CPUPerformanceType = "standard"
+	vmDefUpscale.CPUs = 2
+	vmDefDownscale.Memory = 3072
 
 	vmAddTag := vmDef
 
