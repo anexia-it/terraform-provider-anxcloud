@@ -61,3 +61,24 @@ jobs:
 
     - name: run unit tests
       run: make test
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{env.GO_VERSION}}
+
+    - name: run integration tests and post coverage to codeclimate
+      uses: paambaati/codeclimate-action@v3.0.0
+      env:
+        ANEXIA_LOCATION_ID: 52b5f6b2fd3a4a7eaaedf1a7c019e9ea
+        ANEXIA_VLAN_ID: 02f39d20ca0f4adfb5032f88dbc26c39
+        ANEXIA_TOKEN: ${{ secrets.ANEXIA_TOKEN }}
+        CC_TEST_REPORTER_ID: ${{ secrets.CODECLIMATE_COVERAGE_ID }}
+      with:
+        prefix: github.com/anexia-it/terraform-provider-anxcloud
+        coverageCommand: make testacc
+        coverageLocations: coverage.out:gocov

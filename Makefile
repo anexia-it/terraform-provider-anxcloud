@@ -41,7 +41,8 @@ install: build
 
 .PHONY: test
 test: fmtcheck
-	go test ./... -v $(TESTARGS)
+	go test ./... -v -coverprofile coverage.out $(TESTARGS)
+	go tool cover -html=coverage.out -o coverage.html
 
 .PHONY: testacc
 testacc: fmtcheck
@@ -54,7 +55,8 @@ testacc: fmtcheck
 		echo ""; \
 		exit 1; \
 	fi
-	TF_ACC=1 go test ./... -v $(TESTARGS) -timeout 120m
+	TF_ACC=1 go test ./... -v -coverprofile coverage.out $(TESTARGS) -timeout 120m
+	go tool cover -html=coverage.out -o coverage.html
 
 .PHONY: fmt
 fmt:
