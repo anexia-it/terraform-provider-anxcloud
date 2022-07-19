@@ -86,7 +86,7 @@ To contribute, please read the contribution guidelines: [Contributing to Terrafo
 Additional steps carried out by maintainers:
 
 4. Review pull request and request changes if necessary
-5. Trigger the integration tests via a `/ok-to-test sha=$SHA` comment. The $SHA represents the last commit in the PR.
+5. Approve workflow run via GitHub
 6. Merge the PR into the main branch of [terraform-provider-anxcloud](https://github.com/anexia-it/terraform-provider-anxcloud)
 
 ## Releasing
@@ -106,15 +106,7 @@ Additional steps carried out by maintainers:
 
 To run integration tests from fork repositories maintainer must carefully check changes that a PR is trying to make. **It is the maintainer's responsibility to avoid secrets leak.**
 
-Integration tests are executed after adding a comment:
-
-```bash
-/ok-to-test sha=<short-commit>
-```
-
-After the `ok-to-test` job has started, move to the GitHub actions page to see the output from integration-tests jobs (click `ok-to-test` job).
-
-*Note: the `integration-fork` job status is updated on the main PR page once it is finished.*
+Integration tests are executed as part of the workflow, which has to be approved for outside collaborators.
 
 
 ## License

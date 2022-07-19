@@ -2,6 +2,8 @@
 terraform-provider-anxcloud
 bin
 .idea
+coverage.html
+coverage.out
 
 # Ignore direnv file as it contains secrets
 .envrc
