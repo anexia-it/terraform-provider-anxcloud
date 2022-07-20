@@ -12,7 +12,7 @@ Origin (DCO). This document was created by the Linux Kernel community and is a
 simple statement that you, as a contributor, have the legal right to make the
 contribution. See the [DCO](DCO) file for details.
 
-Any copyright notices in this repo should specify the authors as "the Anexia XXX project contributors".
+Any copyright notices in this repo should specify the authors as "the Anexia Terraform provider contributors".
 
 To sign your work, just add a line like this at the end of your commit message:
 
@@ -28,8 +28,7 @@ By doing this you state that you can certify the following (from https://develop
 
 The terraform-provider-anxcloud project currently uses the general email list and forum topics:
 
-- Email: [opensource@anexia-it.com](opensource@anexia-it.com)
-- Forum: [discuss.hashicorp.com](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/)
+- Email: [opensource@anexia-it.com](mailto:opensource@anexia-it.com)
 
 Please avoid emailing maintainers found in the MAINTAINERS file directly. They
 are very busy and read the mailing lists.
@@ -41,18 +40,21 @@ Due to their public nature, GitHub and mailing lists are not appropriate places 
 ## Getting Started
 
 - Fork the repository on GitHub
-- Read the [README](README.md) and [Development](README.md#Development) for build and test instructions
+- Read the [README](README.md) and [Development](README.md#development) for build and test instructions
 - Play with the project, submit bugs, submit patches!
 
 ### Contribution Flow
 
 This is a rough outline of what a contributor's workflow looks like:
 
-- Create a topic branch from where you want to base your work (usually main).
-- Make commits of logical units.
-- Make sure your commit messages are in the proper format (see below).
-- Push your changes to a topic branch in your fork of the repository.
-- Make sure the tests pass, and add any new tests as appropriate.
-- Submit a pull request to the original repository.
+1. Make your code changes on the branch of your fork of [terraform-provider-anxcloud](https://github.com/anexia-it/terraform-provider-anxcloud)
+2. Create a pull request
+3. Add your changes to the **Unreleased** section in [CHANGELOG.md](CHANGELOG.md)
+
+Additional steps carried out by maintainers:
+
+4. Review pull request and request changes if necessary
+5. Approve workflow run via GitHub
+6. Merge the PR into the main branch of [terraform-provider-anxcloud](https://github.com/anexia-it/terraform-provider-anxcloud)
 
 Thanks for your contributions!

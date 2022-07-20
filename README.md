@@ -6,10 +6,9 @@
 
 - Website: [terraform.io](https://terraform.io)
 - Tutorials: [learn.hashicorp.com](https://learn.hashicorp.com/terraform?track=getting-started#getting-started)
-- Forum: [discuss.hashicorp.com](https://discuss.hashicorp.com/c/terraform-providers/tf-anxcloud/)
 - Chat: [gitter](https://gitter.im/hashicorp-terraform/Lobby)
 - Mailing List: [Google Groups](http://groups.google.com/group/terraform-tool)
-- Contact: [opensource@anexia-it.com](opensource@anexia-it.com)
+- Contact: [opensource@anexia-it.com](mailto:opensource@anexia-it.com)
 
 This provider is maintained internally by the Anexia Cloud team.
 
@@ -78,16 +77,6 @@ make testacc TESTARGS='-run=TestAccXXX'
 ## Contributing
 
 To contribute, please read the contribution guidelines: [Contributing to Terraform - Anexia Cloud Provider](CONTRIBUTING.md)
-
-1. Make your code changes on the branch of your fork of [terraform-provider-anxcloud](https://github.com/anexia-it/terraform-provider-anxcloud)
-2. Create a pull request
-3. Add your changes to the **Unreleased** section in [CHANGELOG.md](CHANGELOG.md)
-
-Additional steps carried out by maintainers:
-
-4. Review pull request and request changes if necessary
-5. Approve workflow run via GitHub
-6. Merge the PR into the main branch of [terraform-provider-anxcloud](https://github.com/anexia-it/terraform-provider-anxcloud)
 
 ## Releasing
 
