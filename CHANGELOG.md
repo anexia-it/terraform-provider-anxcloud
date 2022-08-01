@@ -17,6 +17,9 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+### Fixed
+* resource/anxcloud_virtual_server: add delay after `AwaitCompletion` to handle pending changes before read (#111, @marioreggiori)
+
 ### Changed
 * resource/anxcloud_virtual_server: increase delete timeout (#112, @marioreggiori)
 
