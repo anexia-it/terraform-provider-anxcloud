@@ -40,8 +40,16 @@ Due to their public nature, GitHub and mailing lists are not appropriate places 
 ## Getting Started
 
 - Fork the repository on GitHub
+- Enable the [`pre-commit` hook](#pre-commit-hook)
 - Read the [README](README.md) and [Development](README.md#development) for build and test instructions
 - Play with the project, submit bugs, submit patches!
+
+### pre-commit hook
+
+We use [`pre-commit`](https://pre-commit.com/) to run some checks on `git commit`, making sure
+the code is clean before added to the local history. It's probably available in your systems package manager.
+See the link for install instructions. When installed, run `pre-commit install` in the cloned project root directory
+to activate it for your local repository (or `pre-commit install -f` to replace any previous pre-commit configs).
 
 ### Contribution Flow
 
