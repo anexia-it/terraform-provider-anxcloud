@@ -23,11 +23,9 @@ func TestAccAnxCloudIPAddress(t *testing.T) {
 	ipAddress := envInfo.Prefix.GetNextIP()
 	role := "Default"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-		},
-		ProviderFactories: testAccProviders,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccAnxCloudIPAddressDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -53,9 +51,9 @@ func TestAccAnxCloudIPAddressReserved(t *testing.T) {
 	ipAddress := "10.244.2.19"
 	role := "Reserved"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccAnxCloudIPAddressDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -92,9 +90,9 @@ func TestAccAnxCloudIPAddressTags(t *testing.T) {
 		%%s // tags
 	}`, prefixID, ipAddress, role)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccAnxCloudIPAddressDestroy,
 		Steps: testAccAnxCloudCommonResourceTagTestSteps(
 			tpl, "anxcloud_ip_address.foo",

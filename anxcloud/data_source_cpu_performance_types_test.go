@@ -12,9 +12,9 @@ func TestAccAnxCloudCPUPerformanceTypesDataSource(t *testing.T) {
 	resourceName := "acc_cpu_performance_types_test"
 	resourcePath := "data.anxcloud_cpu_performance_types." + resourceName
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnxCloudCPUPerformanceTypesDataSource(resourceName),

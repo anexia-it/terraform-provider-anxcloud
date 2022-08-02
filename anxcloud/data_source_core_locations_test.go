@@ -14,9 +14,9 @@ func TestAccAnxCloudCoreLocationsDataSource(t *testing.T) {
 
 	search := "IE"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnxCloudCoreLocationsDataSource(resourceName, search),

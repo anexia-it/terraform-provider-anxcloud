@@ -14,9 +14,9 @@ func TestAccAnxCloudIPAddressesDataSource(t *testing.T) {
 
 	search := "10.244"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnxCloudIPAddressesDataSource(resourceName, search),
