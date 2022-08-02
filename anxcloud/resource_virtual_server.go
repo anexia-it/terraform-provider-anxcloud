@@ -268,8 +268,10 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		}
 	}
 
-	diags = resourceVirtualServerRead(ctx, d, m)
-	return diags
+	// wait for API to be updated
+	time.Sleep(time.Minute)
+
+	return resourceVirtualServerRead(ctx, d, m)
 }
 
 func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -492,6 +494,9 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 
+	// wait for API to be updated
+	time.Sleep(time.Minute)
+
 	return resourceVirtualServerRead(ctx, d, m)
 }
 
@@ -576,6 +581,9 @@ func updateVirtualServerDisk(ctx context.Context, m providerContext, id string, 
 	if _, err = provisioning.Progress().AwaitCompletion(ctx, response.Identifier); err != nil {
 		return diag.FromErr(err)
 	}
+
+	// wait for API to be updated
+	time.Sleep(time.Minute)
 
 	vmState := resource.StateChangeConf{
 		Delay:      10 * time.Second,
