@@ -49,7 +49,7 @@ The virtual_server resource allows you to configure and run virtual machines.
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Read:   schema.DefaultTimeout(1 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 		Schema: withTagsAttribute(schemaVirtualServer()),
 		CustomizeDiff: customdiff.All(

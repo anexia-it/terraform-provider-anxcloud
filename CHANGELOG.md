@@ -17,6 +17,9 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+### Changed
+* resource/anxcloud_virtual_server: increase delete timeout (#112, @marioreggiori)
+
 ## [0.4.0] - 2022-07-07
 
 ### Breaking
