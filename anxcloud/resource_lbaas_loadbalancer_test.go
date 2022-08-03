@@ -18,9 +18,9 @@ func TestAccAnxCloudLBaaSLoadBalancer(t *testing.T) {
 	resourcePath := "anxcloud_lbaas_loadbalancer.foo"
 	loadBalancerName := envInfo.TestRunName
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnxCloudLBaaSLoadBalancer(loadBalancerName, "foo.test"),
