@@ -25,7 +25,7 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * resource/anxcloud_lbaas_loadbalancer: add a first LBaaS resource (#107, @marioreggiori)
 
 ### Changed
-* resource/anxcloud_virtual_server: increase delete timeout (#112, @marioreggiori)
+* resource/anxcloud_virtual_server: increase delete timeout (#112 & #113, @marioreggiori)
 * (internal) acceptance tests: configured to run parallel (#102, @marioreggiori)
 
 ## [0.4.0] - 2022-07-07
