@@ -17,6 +17,8 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+## [0.4.1] - 2022-08-09
+
 ### Fixed
 * resource/anxcloud_virtual_server: add delay after `AwaitCompletion` to handle pending changes before read (#111, @marioreggiori)
 * (internal) acceptance tests: make ProviderFactories real factories (#102, @marioreggiori)
