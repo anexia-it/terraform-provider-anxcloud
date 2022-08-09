@@ -149,6 +149,41 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 	})
 }
 
+func TestAccAnxCloudVirtualServerFromScratch(t *testing.T) {
+	environment.SkipIfNoEnvironment(t)
+	envInfo := environment.GetEnvInfo(t)
+	vmRecorder := getVMRecorder(t)
+
+	vmDef := vm.Definition{
+		Location:           envInfo.Location,
+		Hostname:           fmt.Sprintf("terraform-test-%s-create-virtual-server-from-scratch", envInfo.TestRunName),
+		TemplateID:         "114", // Debian GNU\/Linux 10, 64 Bit
+		TemplateType:       "from_scratch",
+		Memory:             2048,
+		CPUs:               2,
+		CPUPerformanceType: "performance",
+		Disk:               50,
+		DiskType:           "ENT6",
+		Network:            []vm.Network{createNewNetworkInterface(envInfo)},
+		DNS1:               "8.8.8.8",
+		Password:           "flatcar#1234$%%",
+	}
+
+	vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", vmDef.Hostname))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAnxCloudVirtualServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: withoutTags(testAccConfigAnxCloudVirtualServer("foo", "", &vmDef)),
+				Check:  testAccCheckAnxCloudVirtualServerExists("anxcloud_virtual_server.foo", &vmDef),
+			},
+		},
+	})
+}
+
 func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 	environment.SkipIfNoEnvironment(t)
 	resourceName := "acc_test_vm_test_multi_disk"
@@ -320,10 +355,21 @@ func testAccCheckAnxCloudVirtualServerDestroy(s *terraform.State) error {
 
 //nolint:unparam
 func testAccConfigAnxCloudVirtualServer(resourceName string, templateName string, def *vm.Definition) string {
+	templateConfig := fmt.Sprintf(`template = "%s"`, templateName)
+	if def.TemplateID != "" && def.TemplateType != "" {
+		templateConfig = fmt.Sprintf(`
+		template_id =   "%s"
+		template_type = "%s"
+		`, def.TemplateID, def.TemplateType)
+	}
+
 	return fmt.Sprintf(`
 	resource "anxcloud_virtual_server" "%s" {
 		location_id          = "%s"
-		template             = "%s"
+		
+		// template config
+		%s
+		
 		hostname             = "%s"
 		cpus                 = %d
 		cpu_performance_type = "%s"
@@ -342,7 +388,7 @@ func testAccConfigAnxCloudVirtualServer(resourceName string, templateName string
 		force_restart_if_needed = true
 		critical_operation_confirmed = true
 	}
-	`, resourceName, def.Location, templateName, def.Hostname, def.CPUs, def.CPUPerformanceType, def.Memory,
+	`, resourceName, def.Location, templateConfig, def.Hostname, def.CPUs, def.CPUPerformanceType, def.Memory,
 		def.Password, generateNetworkSubResourceString(def.Network), generateDisksSubResourceString([]vm.Disk{
 			{
 				SizeGBs: def.Disk,

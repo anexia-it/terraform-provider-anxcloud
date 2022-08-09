@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-multierror"
 	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/progress"
 	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/templates"
 
@@ -290,42 +289,18 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		return nil
 	}
 
-	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		info, infoErr := vsphereAPI.Info().Get(ctx, d.Id())
-		if infoErr != nil {
-			if err := handleNotFoundError(infoErr); err != nil {
-				return resource.NonRetryableError(fmt.Errorf("unable to get vm with id '%s': %w", d.Id(), err))
-			}
-			d.SetId("")
-			return nil
+	// `template_id` field isn't set for VMs with "from_scratch" templates
+	// that's why we keep the configured `template_id` if the `template_type` is "from_scratch"
+	if templateType, ok := d.Get("template_type").(string); !ok || templateType != "from_scratch" {
+		if err = d.Set("template_id", info.TemplateID); err != nil {
+			diags = append(diags, diag.FromErr(err)...)
 		}
-		var nicErr error
-		for _, nic := range info.Network {
-			if len(nic.IPv4) == 0 && len(nic.IPv6) == 0 {
-				nicErr = multierror.Append(nicErr, fmt.Errorf("missing IPs for NIC"))
-			}
-		}
-		if nicErr != nil {
-			return resource.RetryableError(nicErr)
-		}
-		return nil
-	})
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	nicTypes, err := nicAPI.List(ctx)
-	if err != nil {
-		return diag.FromErr(err)
 	}
 
 	if err = d.Set("cpu_performance_type", info.CPUPerformanceType); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 	if err = d.Set("location_id", info.LocationID); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
-	if err = d.Set("template_id", info.TemplateID); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 	//if err = d.Set("template_type", info.TemplateType); err != nil {
@@ -361,6 +336,11 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 	flattenedDisks := flattenVirtualServerDisks(disks)
 	if err = d.Set("disk", flattenedDisks); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
+	}
+
+	nicTypes, err := nicAPI.List(ctx)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	specNetworks := expandVirtualServerNetworks(d.Get("network").([]interface{}))
