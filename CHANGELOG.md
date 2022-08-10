@@ -17,6 +17,12 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+### Changed
+* (internal) dependency: upgrade `go-anxcloud` to v0.4.5 (#116, @marioreggiori)
+* data-source/anxcloud_core_location (#116, @marioreggiori)
+  - optionally retrieve location by identifier
+  - (internal) optimize retrieve by code
+
 ## [0.4.1] - 2022-08-09
 
 ### Fixed
