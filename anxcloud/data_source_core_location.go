@@ -5,49 +5,30 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"go.anx.io/go-anxcloud/pkg/api"
-	"go.anx.io/go-anxcloud/pkg/api/types"
 	corev1 "go.anx.io/go-anxcloud/pkg/apis/core/v1"
 )
 
 func dataSourceCoreLocation() *schema.Resource {
 	return &schema.Resource{
-		Description: "Retrieves a location identified by it's `code` as selectable in the Engine. Use this data source to specify the location identifier on other resources and data sources available in this provider.",
+		Description: "Retrieves a location identified by it's `identifier` or human-readable `code` as selectable in the Engine. " +
+			"This data source can be used to lookup a locations `identifier` required by other resources and data sources available in this provider.",
 		ReadContext: dataSourceCoreLocationRead,
-		Schema:      schemaLocation(),
+		Schema: schemaWith(schemaLocation(),
+			fieldsExactlyOneOf("identifier", "code"),
+		),
 	}
 }
 
 func dataSourceCoreLocationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	a := apiFromProviderConfig(m)
 
-	code, exists := d.GetOk("code")
-	if !exists {
-		return diag.Errorf("location data-source requires code argument")
+	location := corev1.Location{
+		Identifier: d.Get("identifier").(string),
+		Code:       d.Get("code").(string),
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	searchLocation := &corev1.Location{Code: code.(string)}
-	channel := make(types.ObjectChannel)
-	if err := a.List(ctx, searchLocation, api.ObjectChannel(&channel)); err != nil {
+	if err := a.Get(ctx, &location); err != nil {
 		return diag.FromErr(err)
-	}
-
-	found := false
-	location := &corev1.Location{}
-	for res := range channel {
-		if err := res(location); err != nil {
-			return diag.FromErr(err)
-		}
-		if location.Code == searchLocation.Code {
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		return diag.Errorf("location with specified code not found")
 	}
 
 	var err error

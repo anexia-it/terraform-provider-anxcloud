@@ -3,12 +3,12 @@
 page_title: "anxcloud_core_location Data Source - terraform-provider-anxcloud"
 subcategory: ""
 description: |-
-  Retrieves a location identified by it's code as selectable in the Engine. Use this data source to specify the location identifier on other resources and data sources available in this provider.
+  Retrieves a location identified by it's identifier or human-readable code as selectable in the Engine. This data source can be used to lookup a locations identifier required by other resources and data sources available in this provider.
 ---
 
 # anxcloud_core_location (Data Source)
 
-Retrieves a location identified by it's `code` as selectable in the Engine. Use this data source to specify the location identifier on other resources and data sources available in this provider.
+Retrieves a location identified by it's `identifier` or human-readable `code` as selectable in the Engine. This data source can be used to lookup a locations `identifier` required by other resources and data sources available in this provider.
 
 ## Example Usage
 
@@ -24,13 +24,13 @@ data "anxcloud_core_location" "anx04" {
 ### Optional
 
 - `code` (String) Location code.
+- `identifier` (String) Identifier of the API resource.
 
 ### Read-Only
 
 - `city_code` (String) Location city code.
 - `country` (String) Location country.
 - `id` (String) The ID of this resource.
-- `identifier` (String) Identifier of the API resource.
 - `lat` (String) Location latitude.
 - `lon` (String) Location longitude.
 - `name` (String) Location name.
