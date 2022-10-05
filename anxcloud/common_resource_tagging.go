@@ -72,7 +72,11 @@ func ensureTagsMiddleware[T schemaContextCreateOrUpdateFunc](wrapped T) T {
 func tagsMiddlewareRead(wrapped schema.ReadContextFunc) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		diags := wrapped(ctx, d, m)
-		if diags.HasError() {
+		// Resources id can be zero-val after read if remote resource
+		// was deleted manually via engine, but is still present in tf state.
+		// Because reading tags from a non-existing resource fails,
+		// we want to skip tagging logic.
+		if diags.HasError() || d.Id() == "" {
 			return diags
 		}
 
