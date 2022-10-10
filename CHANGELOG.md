@@ -17,6 +17,9 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+### Fixed
+* taggable resources: skip reading tags of manually deleted resources on read to prevent error (#117, @marioreggiori)
+
 ### Changed
 * (internal) dependency: upgrade `go-anxcloud` to v0.4.5 (#116, @marioreggiori)
 * data-source/anxcloud_core_location (#116, @marioreggiori)
