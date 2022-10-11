@@ -1,6 +1,9 @@
 package anxcloud
 
 import (
+	"fmt"
+	"regexp"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -98,4 +101,14 @@ func mustCastInterfaceArray[T any](in []interface{}) []T {
 		out = append(out, v.(T))
 	}
 	return out
+}
+
+var kubernetesResourceNameRegexp = regexp.MustCompile(`^[a-z0-9]([-a-z0-9]{0,38}[a-z0-9])?$`)
+
+func validateKubernetesResourceName(val any, key string) (warns []string, errs []error) {
+	v := val.(string)
+	if !kubernetesResourceNameRegexp.Match([]byte(v)) {
+		errs = append(errs, fmt.Errorf("%q isn't a valid name for Anexia Kubernetes Service resources: has to be a lowercase RFC 1123 hostname but with a maximum length of 40 characters", v))
+	}
+	return
 }
