@@ -17,6 +17,8 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+## [0.4.2] - 2022-10-12
+
 ### Fixed
 * taggable resources: skip reading tags of manually deleted resources on read to prevent error (#117, @marioreggiori)
 
