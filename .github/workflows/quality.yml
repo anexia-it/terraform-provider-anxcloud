@@ -78,6 +78,9 @@ jobs:
         ANEXIA_VLAN_ID: 02f39d20ca0f4adfb5032f88dbc26c39
         ANEXIA_TOKEN: ${{ secrets.ANEXIA_TOKEN }}
         CC_TEST_REPORTER_ID: ${{ secrets.CODECLIMATE_COVERAGE_ID }}
+
+        # poor girls ternary operator
+        TESTARGS: ${{ (github.ref_type != 'tag' && github.ref_name != 'main') && '-short' || '' }}
       with:
         prefix: github.com/anexia-it/terraform-provider-anxcloud
         coverageCommand: make testacc

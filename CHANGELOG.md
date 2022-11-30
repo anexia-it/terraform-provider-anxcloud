@@ -17,6 +17,10 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+### Added
+* resource/anxcloud_kubernetes_{cluster,node_pool,kubeconfig} implemented to handle Kubernetes clusters, node pools and kubeconfigs (#118, @marioreggiori)
+* data-source/anxcloud_kubernetes_cluster implemented to retrieve clusters by name (#118, @marioreggiori)
+
 ## [0.4.2] - 2022-10-12
 
 ### Fixed
