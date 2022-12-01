@@ -36,7 +36,7 @@ resource "anxcloud_ip_address" "example" {
 - `description_customer` (String) Additional customer description.
 - `organization` (String) Customer of yours. Reseller only.
 - `role` (String) Role of the IP address
-- `tags` (List of String) List of tags attached to the resource.
+- `tags` (Set of String) Set of tags attached to the resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only

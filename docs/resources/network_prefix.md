@@ -45,7 +45,7 @@ resource "anxcloud_network_prefix" "example" {
 - `ip_version` (Number) The Prefix version: 4 = IPv4, 6 = IPv6.
 - `organization` (String) Customer of yours. Reseller only.
 - `router_redundancy` (Boolean) If router Redundancy shall be enabled.
-- `tags` (List of String) List of tags attached to the resource.
+- `tags` (Set of String) Set of tags attached to the resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `type` (Number) The Prefix type: 0 = Public, 1 = Private.
 - `vlan_id` (String) The corresponding VLAN identifier

@@ -48,7 +48,7 @@ resource "anxcloud_kubernetes_node_pool" "example" {
 
 ### Optional
 
-- `tags` (List of String) List of tags attached to the resource.
+- `tags` (Set of String) Set of tags attached to the resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
