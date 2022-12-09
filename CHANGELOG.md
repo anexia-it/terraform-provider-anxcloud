@@ -17,6 +17,11 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+### Changed
+* resource tagging:
+  * changing only the tags of a resource no longer causes a noop update call of the resource itself (#121, @marioreggiori)
+  * (internal) change type of `tags` field from list to set and remove obsolete code (#121, @marioreggiori)
+
 ## [0.5.0] - 2022-11-30
 
 ### Added

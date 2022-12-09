@@ -51,7 +51,7 @@ resource "anxcloud_kubernetes_node_pool" "example" {
 - `enable_lbaas` (Boolean) If enabled, Service VMs are set up as LBaaS hosts enabling K8s services of type LoadBalancer.
 - `enable_nat_gateways` (Boolean) If enabled, Service VMs are configured as NAT gateways connecting the internal cluster network to the internet.
 - `needs_service_vms` (Boolean) Deploy Service VMs providing load balancers and outbound masquerade.
-- `tags` (List of String) List of tags attached to the resource.
+- `tags` (Set of String) Set of tags attached to the resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `version` (String) Kubernetes version.
 

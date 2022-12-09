@@ -3,8 +3,6 @@ package anxcloud
 import (
 	"context"
 	"fmt"
-	"reflect"
-	"sort"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -14,22 +12,12 @@ import (
 
 func withTagsAttribute(s schemaMap) schemaMap {
 	s["tags"] = &schema.Schema{
-		Type:        schema.TypeList,
+		Type:        schema.TypeSet,
 		Optional:    true,
 		Computed:    true,
-		Description: "List of tags attached to the resource.",
+		Description: "Set of tags attached to the resource.",
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
-		},
-		// suppress diff when only the order has changed
-		DiffSuppressOnRefresh: true,
-		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-			o, n := d.GetChange("tags")
-			oStringArray := mustCastInterfaceArray[string](o.([]interface{}))
-			nStringArray := mustCastInterfaceArray[string](n.([]interface{}))
-			sort.Strings(oStringArray)
-			sort.Strings(nStringArray)
-			return reflect.DeepEqual(oStringArray, nStringArray)
 		},
 	}
 	return s
@@ -49,18 +37,19 @@ func tagsMiddlewareUpdate(wrapped schema.UpdateContextFunc) schema.UpdateContext
 
 func ensureTagsMiddleware[T schemaContextCreateOrUpdateFunc](wrapped T) T {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		diags := wrapped(ctx, d, m)
-		if diags.HasError() {
-			return diags
+		var diags diag.Diagnostics
+
+		if d.HasChangeExcept("tags") {
+			diags = append(diags, wrapped(ctx, d, m)...)
 		}
 
 		// we don't touch remote tags when tags attribute is not set
 		// remote tags are also kept when tags attribute was unset
-		if d.GetRawConfig().GetAttr("tags").IsNull() {
+		if diags.HasError() || d.GetRawConfig().GetAttr("tags").IsNull() {
 			return diags
 		}
 
-		tags := mustCastInterfaceArray[string](d.Get("tags").([]interface{}))
+		tags := mustCastInterfaceArray[string](d.Get("tags").(*schema.Set).List())
 		if err := ensureTags(ctx, m.(providerContext).api, d.Id(), tags); err != nil {
 			diags = append(diags, diag.FromErr(err)...)
 		}
