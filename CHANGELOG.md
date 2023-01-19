@@ -17,6 +17,8 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+## [0.5.1] - 2023-01-19
+
 ### Changed
 * resource tagging:
   * changing only the tags of a resource no longer causes a noop update call of the resource itself (#121, @marioreggiori)
