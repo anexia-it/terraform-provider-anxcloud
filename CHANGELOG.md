@@ -17,6 +17,9 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+### Added
+* anxcloud_kubernetes_cluster: optional fields for using existing prefixes to deploy the cluster into (#123, @marioreggiori)
+
 ## [0.5.1] - 2023-01-19
 
 ### Changed

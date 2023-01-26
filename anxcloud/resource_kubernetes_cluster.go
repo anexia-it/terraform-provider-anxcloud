@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"go.anx.io/go-anxcloud/pkg/api"
+	"go.anx.io/go-anxcloud/pkg/apis/common"
 	"go.anx.io/go-anxcloud/pkg/apis/common/gs"
 	corev1 "go.anx.io/go-anxcloud/pkg/apis/core/v1"
 	kubernetesv1 "go.anx.io/go-anxcloud/pkg/apis/kubernetes/v1"
@@ -50,6 +51,21 @@ func resourceKubernetesClusterCreate(ctx context.Context, d *schema.ResourceData
 		NeedsServiceVMs:   pointer.Bool(d.Get("needs_service_vms").(bool)),
 		EnableNATGateways: pointer.Bool(d.Get("enable_nat_gateways").(bool)),
 		EnableLBaaS:       pointer.Bool(d.Get("enable_lbaas").(bool)),
+	}
+
+	if prefix, ok := d.GetOk("internal_ipv4_prefix"); ok {
+		cluster.InternalIPv4Prefix = &common.PartialResource{Identifier: prefix.(string)}
+		cluster.ManageInternalIPv4Prefix = pointer.Bool(false)
+	}
+
+	if prefix, ok := d.GetOk("external_ipv4_prefix"); ok {
+		cluster.ExternalIPv4Prefix = &common.PartialResource{Identifier: prefix.(string)}
+		cluster.ManageExternalIPv4Prefix = pointer.Bool(false)
+	}
+
+	if prefix, ok := d.GetOk("external_ipv6_prefix"); ok {
+		cluster.ExternalIPv6Prefix = &common.PartialResource{Identifier: prefix.(string)}
+		cluster.ManageExternalIPv6Prefix = pointer.Bool(false)
 	}
 
 	if err := a.Create(ctx, &cluster); err != nil {

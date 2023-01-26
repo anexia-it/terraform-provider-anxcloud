@@ -32,7 +32,10 @@ resource "local_file" "kubeconfig" {
 
 ### Optional
 
+- `external_ipv4_prefix` (String) External IPv4 prefix.
+- `external_ipv6_prefix` (String) External IPv6 prefix.
 - `id` (String) Cluster identifier.
+- `internal_ipv4_prefix` (String) Internal IPv4 prefix.
 - `name` (String) Cluster name.
 - `version` (String) Kubernetes version.
 
