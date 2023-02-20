@@ -1,0 +1,5 @@
+exclude_patterns:
+  - "**/*_test.go"
+  - "**/test/"
+  - "**/tests/"
+  - "anxcloud/internal/mockapi/"

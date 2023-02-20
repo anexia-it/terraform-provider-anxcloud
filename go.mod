@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/go-logr/logr v1.2.3
+	github.com/golang/mock v1.4.4
 	github.com/google/go-cmp v0.5.9
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320

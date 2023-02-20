@@ -6,9 +6,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/internal/mockapi"
 	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
+	"github.com/golang/mock/gomock"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/assert"
+	"go.anx.io/go-anxcloud/pkg/apis/common"
+	"go.anx.io/go-anxcloud/pkg/apis/common/gs"
 	corev1 "go.anx.io/go-anxcloud/pkg/apis/core/v1"
 	kubernetesv1 "go.anx.io/go-anxcloud/pkg/apis/kubernetes/v1"
 	"go.anx.io/go-anxcloud/pkg/utils/pointer"
@@ -251,4 +257,48 @@ func testAccAnxCloudKubernetesNodePoolExists() resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+func Test_resourceKubernetesClusterCreate(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	a := mockapi.NewMockAPI(ctrl)
+
+	a.EXPECT().Create(gomock.Any(), &kubernetesv1.Cluster{
+		Name:     "foo",
+		Location: corev1.Location{Identifier: "test-location-identifier"},
+
+		ManageInternalIPv4Prefix: pointer.Bool(false),
+		InternalIPv4Prefix:       &common.PartialResource{Identifier: "internal ipv4 prefix identifier"},
+		ManageExternalIPv4Prefix: pointer.Bool(false),
+		ExternalIPv4Prefix:       &common.PartialResource{Identifier: "external ipv4 prefix identifier"},
+		ManageExternalIPv6Prefix: pointer.Bool(false),
+		ExternalIPv6Prefix:       &common.PartialResource{Identifier: "external ipv6 prefix identifier"},
+
+		// default: true
+		NeedsServiceVMs:   pointer.Bool(true),
+		EnableNATGateways: pointer.Bool(true),
+		EnableLBaaS:       pointer.Bool(true),
+	}).DoAndReturn(func(_ any, v *kubernetesv1.Cluster, _ ...any) error {
+		v.Identifier = "mocked-cluster-identifier"
+		return nil
+	})
+
+	// get + await completion
+	a.EXPECT().Get(gomock.Any(), gomock.Any()).DoAndReturn(func(_ any, v *kubernetesv1.Cluster, _ ...any) error {
+		v.HasState.State.Type = gs.StateTypeOK
+		return nil
+	}).Times(2)
+
+	rd := schema.TestResourceDataRaw(t, schemaKubernetesCluster(), map[string]interface{}{
+		"name":     "foo",
+		"location": "test-location-identifier",
+
+		"internal_ipv4_prefix": "internal ipv4 prefix identifier",
+		"external_ipv4_prefix": "external ipv4 prefix identifier",
+		"external_ipv6_prefix": "external ipv6 prefix identifier",
+	})
+
+	diags := resourceKubernetesClusterCreate(context.TODO(), rd, providerContext{api: a})
+
+	assert.False(t, diags.HasError(), "diags has errors")
 }
