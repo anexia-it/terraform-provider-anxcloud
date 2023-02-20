@@ -51,6 +51,27 @@ func schemaKubernetesCluster() map[string]*schema.Schema {
 			Default:     true,
 			Optional:    true,
 		},
+		"internal_ipv4_prefix": {
+			Type:        schema.TypeString,
+			Description: "Internal IPv4 prefix.",
+			Optional:    true,
+			Computed:    true,
+			ForceNew:    true,
+		},
+		"external_ipv4_prefix": {
+			Type:        schema.TypeString,
+			Description: "External IPv4 prefix.",
+			Optional:    true,
+			Computed:    true,
+			ForceNew:    true,
+		},
+		"external_ipv6_prefix": {
+			Type:        schema.TypeString,
+			Description: "External IPv6 prefix.",
+			Optional:    true,
+			Computed:    true,
+			ForceNew:    true,
+		},
 	}
 }
 

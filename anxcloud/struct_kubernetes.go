@@ -33,6 +33,21 @@ func setResourceDataFromKubernetesCluster(ctx context.Context, a api.API, d *sch
 	if err := d.Set("enable_lbaas", pointer.BoolVal(cluster.EnableLBaaS)); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
+	if cluster.InternalIPv4Prefix != nil {
+		if err := d.Set("internal_ipv4_prefix", cluster.InternalIPv4Prefix.Identifier); err != nil {
+			diags = append(diags, diag.FromErr(err)...)
+		}
+	}
+	if cluster.ExternalIPv4Prefix != nil {
+		if err := d.Set("external_ipv4_prefix", cluster.ExternalIPv4Prefix.Identifier); err != nil {
+			diags = append(diags, diag.FromErr(err)...)
+		}
+	}
+	if cluster.ExternalIPv6Prefix != nil {
+		if err := d.Set("external_ipv6_prefix", cluster.ExternalIPv6Prefix.Identifier); err != nil {
+			diags = append(diags, diag.FromErr(err)...)
+		}
+	}
 
 	return diags
 }
