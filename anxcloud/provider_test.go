@@ -25,6 +25,8 @@ var testAccProvider *schema.Provider
 func init() {
 	testAccProvider = Provider()
 	testAccProviderFactories = map[string]func() (*schema.Provider, error){
+		//nolint:unparam
+		// ^ signature set by tf framework; test provider does not produce any errors
 		"anxcloud": func() (*schema.Provider, error) {
 			return Provider(), nil
 		},
@@ -50,8 +52,9 @@ func testAccProviderFactoriesWithMockedClient(t tt.T, srv *ghttp.Server) map[str
 	if err != nil {
 		assert.FailNow(t, "failed initializing mock client", err)
 	}
-
 	return map[string]func() (*schema.Provider, error){
+		//nolint:unparam
+		// ^ signature set by tf framework; test provider does not produce any errors
 		"anxcloud": func() (*schema.Provider, error) {
 			provider := Provider()
 			provider.ConfigureContextFunc = func(ctx context.Context, rd *schema.ResourceData) (interface{}, diag.Diagnostics) {

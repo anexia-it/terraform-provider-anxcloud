@@ -21,31 +21,31 @@ func TestAccAnxCloudCoreLocationDataSource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// expected to fail
 			{
-				Config:      testAccAnxCloudCoreLocationDataSource("foo", corev1.Location{Identifier: "DOES-NOT-EXIST"}),
+				Config:      testAccAnxCloudCoreLocationDataSource(corev1.Location{Identifier: "DOES-NOT-EXIST"}),
 				ExpectError: regexp.MustCompile("Not Found"),
 			},
 			{
-				Config:      testAccAnxCloudCoreLocationDataSource("foo", corev1.Location{Code: "ANXDOESNOTEXIST"}),
+				Config:      testAccAnxCloudCoreLocationDataSource(corev1.Location{Code: "ANXDOESNOTEXIST"}),
 				ExpectError: regexp.MustCompile("Not Found"),
 			},
 			{
-				Config:      testAccAnxCloudCoreLocationDataSource("foo", corev1.Location{Identifier: "valid identifier", Code: "valid code"}),
+				Config:      testAccAnxCloudCoreLocationDataSource(corev1.Location{Identifier: "valid identifier", Code: "valid code"}),
 				ExpectError: regexp.MustCompile("only one of `code,identifier` can be specified"),
 			},
 			{
-				Config:      testAccAnxCloudCoreLocationDataSource("foo", corev1.Location{}),
+				Config:      testAccAnxCloudCoreLocationDataSource(corev1.Location{}),
 				ExpectError: regexp.MustCompile("one of `code,identifier` must be specified"),
 			},
 
 			// expected to succeed
 			{
-				Config: testAccAnxCloudCoreLocationDataSource("foo", corev1.Location{Identifier: anx04Identifier}),
+				Config: testAccAnxCloudCoreLocationDataSource(corev1.Location{Identifier: anx04Identifier}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.anxcloud_core_location.foo", "code", anx04Code),
 				),
 			},
 			{
-				Config: testAccAnxCloudCoreLocationDataSource("foo", corev1.Location{Code: anx04Code}),
+				Config: testAccAnxCloudCoreLocationDataSource(corev1.Location{Code: anx04Code}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.anxcloud_core_location.foo", "identifier", anx04Identifier),
 				),
@@ -54,7 +54,7 @@ func TestAccAnxCloudCoreLocationDataSource(t *testing.T) {
 	})
 }
 
-func testAccAnxCloudCoreLocationDataSource(dataSourceName string, location corev1.Location) string {
+func testAccAnxCloudCoreLocationDataSource(location corev1.Location) string {
 	attributes := ""
 	if location.Identifier != "" {
 		attributes += fmt.Sprintf("identifier = %q\n", location.Identifier)
@@ -64,8 +64,8 @@ func testAccAnxCloudCoreLocationDataSource(dataSourceName string, location corev
 	}
 
 	return fmt.Sprintf(`
-	data "anxcloud_core_location" "%s" {
+	data "anxcloud_core_location" "foo" {
 		%s
 	}
-	`, dataSourceName, attributes)
+	`, attributes)
 }

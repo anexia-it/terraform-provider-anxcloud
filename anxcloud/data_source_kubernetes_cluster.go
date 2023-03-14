@@ -73,5 +73,5 @@ func dataSourceKubernetesClusterRead(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(cluster.Identifier)
 
-	return setResourceDataFromKubernetesCluster(ctx, a, d, cluster)
+	return setResourceDataFromKubernetesCluster(d, cluster)
 }

@@ -92,7 +92,7 @@ func resourceKubernetesClusterRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("failed awaiting Kubernetes cluster completion: %s", err)
 	}
 
-	return setResourceDataFromKubernetesCluster(ctx, a, d, cluster)
+	return setResourceDataFromKubernetesCluster(d, cluster)
 }
 
 func resourceKubernetesClusterDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
