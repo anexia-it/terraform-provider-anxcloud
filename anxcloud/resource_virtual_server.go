@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"go.anx.io/go-anxcloud/pkg/ipam/address"
 	"go.anx.io/go-anxcloud/pkg/vsphere"
@@ -495,15 +495,15 @@ func resourceVirtualServerDelete(ctx context.Context, d *schema.ResourceData, m 
 		return nil
 	}
 
-	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		response, err := progressAPI.Get(ctx, response.Identifier)
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("failed to fetch deprovison progress: %w", err))
+			return retry.NonRetryableError(fmt.Errorf("failed to fetch deprovison progress: %w", err))
 		}
 
 		if len(response.Errors) > 0 {
 			joinedErrors := strings.Join(response.Errors, ",")
-			return resource.NonRetryableError(fmt.Errorf("errors during deprovision: [%s]", joinedErrors))
+			return retry.NonRetryableError(fmt.Errorf("errors during deprovision: [%s]", joinedErrors))
 		}
 
 		if response.Progress == 100 {
@@ -511,7 +511,7 @@ func resourceVirtualServerDelete(ctx context.Context, d *schema.ResourceData, m 
 			return nil
 		}
 
-		return resource.RetryableError(fmt.Errorf("waiting for vm with id '%s' to be deleted", d.Id()))
+		return retry.RetryableError(fmt.Errorf("waiting for vm with id '%s' to be deleted", d.Id()))
 	})
 	if err != nil {
 		return diag.FromErr(err)
@@ -565,7 +565,7 @@ func updateVirtualServerDisk(ctx context.Context, m providerContext, id string, 
 	// wait for API to be updated
 	time.Sleep(time.Minute)
 
-	vmState := resource.StateChangeConf{
+	vmState := retry.StateChangeConf{
 		Delay:      10 * time.Second,
 		Timeout:    10 * time.Minute,
 		MinTimeout: 10 * time.Second,

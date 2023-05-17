@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"go.anx.io/go-anxcloud/pkg/ipam/address"
 )
@@ -55,15 +55,15 @@ func resourceIPAddressCreate(ctx context.Context, d *schema.ResourceData, m inte
 	}
 	d.SetId(res.ID)
 
-	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		info, err := a.Get(ctx, d.Id())
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("unable to get ip address with '%s' id: %w", d.Id(), err))
+			return retry.NonRetryableError(fmt.Errorf("unable to get ip address with '%s' id: %w", d.Id(), err))
 		}
 		if info.Status == ipAddressStatusInactive || info.Status == ipAddressStatusActive {
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf("waiting for ip address with '%s' id to be ready", d.Id()))
+		return retry.RetryableError(fmt.Errorf("waiting for ip address with '%s' id to be ready", d.Id()))
 	})
 	if err != nil {
 		return diag.FromErr(err)
@@ -148,11 +148,11 @@ func resourceIPAddressDelete(ctx context.Context, d *schema.ResourceData, m inte
 		return nil
 	}
 
-	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		info, err := a.Get(ctx, d.Id())
 		if err != nil {
 			if err := handleNotFoundError(err); err != nil {
-				return resource.NonRetryableError(fmt.Errorf("unable to get ip address with id '%s': %w", d.Id(), err))
+				return retry.NonRetryableError(fmt.Errorf("unable to get ip address with id '%s': %w", d.Id(), err))
 			}
 			d.SetId("")
 			return nil
@@ -161,7 +161,7 @@ func resourceIPAddressDelete(ctx context.Context, d *schema.ResourceData, m inte
 			d.SetId("")
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf("waiting for ip address with id '%s' to be deleted", d.Id()))
+		return retry.RetryableError(fmt.Errorf("waiting for ip address with id '%s' to be deleted", d.Id()))
 	})
 	if err != nil {
 		return diag.FromErr(err)
