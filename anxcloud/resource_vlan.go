@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"go.anx.io/go-anxcloud/pkg/vlan"
 )
@@ -52,15 +52,15 @@ func resourceVLANCreate(ctx context.Context, d *schema.ResourceData, m interface
 	}
 	d.SetId(res.Identifier)
 
-	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		vlan, err := v.Get(ctx, d.Id())
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("unable to fetch vlan with '%s' id: %w", d.Id(), err))
+			return retry.NonRetryableError(fmt.Errorf("unable to fetch vlan with '%s' id: %w", d.Id(), err))
 		}
 		if vlan.Status == vlanStatusActive && vlan.VMProvisioning == def.VMProvisioning {
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf("waiting for vlan with '%s' id to be '%s' and 'vm_provisioning' to have the desired state", d.Id(), vlanStatusActive))
+		return retry.RetryableError(fmt.Errorf("waiting for vlan with '%s' id to be '%s' and 'vm_provisioning' to have the desired state", d.Id(), vlanStatusActive))
 	})
 	if err != nil {
 		return diag.FromErr(err)
@@ -132,11 +132,11 @@ func resourceVLANUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(err)
 	}
 
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 		vlanInfo, err := vlanAPI.Get(ctx, d.Id())
 		if err != nil {
 			if err := handleNotFoundError(err); err != nil {
-				return resource.NonRetryableError(fmt.Errorf("unable to get vlan with id '%s': %w", d.Id(), err))
+				return retry.NonRetryableError(fmt.Errorf("unable to get vlan with id '%s': %w", d.Id(), err))
 			}
 			d.SetId("")
 			return nil
@@ -144,7 +144,7 @@ func resourceVLANUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		if vlanInfo.VMProvisioning == d.Get("vm_provisioning").(bool) && vlanInfo.CustomerDescription == d.Get("description_customer").(string) {
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf("waiting for vlan with id '%s' to be updated", d.Id()))
+		return retry.RetryableError(fmt.Errorf("waiting for vlan with id '%s' to be updated", d.Id()))
 	})
 	if err != nil {
 		return diag.FromErr(err)
@@ -166,11 +166,11 @@ func resourceVLANDelete(ctx context.Context, d *schema.ResourceData, m interface
 		return nil
 	}
 
-	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		info, err := v.Get(ctx, d.Id())
 		if err != nil {
 			if err := handleNotFoundError(err); err != nil {
-				return resource.NonRetryableError(fmt.Errorf("unable to get vlan with id '%s': %w", d.Id(), err))
+				return retry.NonRetryableError(fmt.Errorf("unable to get vlan with id '%s': %w", d.Id(), err))
 			}
 			d.SetId("")
 			return nil
@@ -179,7 +179,7 @@ func resourceVLANDelete(ctx context.Context, d *schema.ResourceData, m interface
 			d.SetId("")
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf("waiting for vlan with id '%s' to be deleted", d.Id()))
+		return retry.RetryableError(fmt.Errorf("waiting for vlan with id '%s' to be deleted", d.Id()))
 	})
 	if err != nil {
 		return diag.FromErr(err)

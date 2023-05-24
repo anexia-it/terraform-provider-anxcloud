@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"go.anx.io/go-anxcloud/pkg/api"
@@ -106,15 +106,15 @@ func resourceKubernetesClusterDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func retryKubernetesClusterDeletion(ctx context.Context, d *schema.ResourceData, a api.API) error {
-	return resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	return retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		cluster := kubernetesv1.Cluster{Identifier: d.Id()}
 		if err := a.Destroy(ctx, &cluster); api.IgnoreNotFound(err) != nil {
 			if errors.Is(err, io.EOF) {
 				// if we delete the cluster too soon after node pool deletion we receive a io.EOF error for some reason
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

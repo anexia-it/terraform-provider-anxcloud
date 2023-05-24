@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"go.anx.io/go-anxcloud/pkg/ipam/prefix"
 )
@@ -59,15 +59,15 @@ func resourceNetworkPrefixCreate(ctx context.Context, d *schema.ResourceData, m 
 	}
 	d.SetId(res.ID)
 
-	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		pref, err := p.Get(ctx, d.Id())
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("unable to get network prefix with '%s' id", d.Id()))
+			return retry.NonRetryableError(fmt.Errorf("unable to get network prefix with '%s' id", d.Id()))
 		}
 		if pref.Status == prefixStatusActive || pref.Status == prefixStatusFailure {
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf("waiting for network prefix with '%s' id to be: %s", d.Id(), prefixStatusActive))
+		return retry.RetryableError(fmt.Errorf("waiting for network prefix with '%s' id to be: %s", d.Id(), prefixStatusActive))
 	})
 	if err != nil {
 		return diag.FromErr(err)
@@ -172,11 +172,11 @@ func resourceNetworkPrefixDelete(ctx context.Context, d *schema.ResourceData, m 
 		return nil
 	}
 
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		info, err := p.Get(ctx, d.Id())
 		if err != nil {
 			if err := handleNotFoundError(err); err != nil {
-				return resource.NonRetryableError(fmt.Errorf("unable to get network prefix with id '%s': %w", d.Id(), err))
+				return retry.NonRetryableError(fmt.Errorf("unable to get network prefix with id '%s': %w", d.Id(), err))
 			}
 			d.SetId("")
 			return nil
@@ -185,7 +185,7 @@ func resourceNetworkPrefixDelete(ctx context.Context, d *schema.ResourceData, m 
 			d.SetId("")
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf("waiting for network prefix with id '%s' to be deleted", d.Id()))
+		return retry.RetryableError(fmt.Errorf("waiting for network prefix with id '%s' to be deleted", d.Id()))
 	})
 	if err != nil {
 		return diag.FromErr(err)
