@@ -24,7 +24,6 @@ var (
 
 func (i *Info) setup() error {
 	log.Printf("Random Test Name: %s", i.TestRunName)
-	context.Background()
 	prefix, err := CreateTestPrefix(context.Background(), *i)
 	if err != nil {
 		return err
