@@ -309,11 +309,11 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 	if err = d.Set("cpus", info.CPU); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	if v := d.Get("sockets").(int); v != 0 {
-		// TODO: API fix: info.Cores should be info.Sockets, there is info.Cpus which is info.Cores
-		if err = d.Set("sockets", info.Cores); err != nil {
-			diags = append(diags, diag.FromErr(err)...)
-		}
+
+	// engine ensures that the number of CPUs is divisible by the number of sockets
+	// -> floor division is fine
+	if err = d.Set("sockets", info.CPU/info.Cores); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
 	}
 
 	if err = d.Set("memory", info.RAM); err != nil {
