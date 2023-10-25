@@ -67,6 +67,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 		TemplateType:       "templates",
 		Memory:             2048,
 		CPUs:               2,
+		Sockets:            2,
 		CPUPerformanceType: "performance",
 		Disk:               50,
 		DiskType:           "ENT6",
@@ -161,6 +162,7 @@ func TestAccAnxCloudVirtualServerFromScratch(t *testing.T) {
 		TemplateType:       "from_scratch",
 		Memory:             2048,
 		CPUs:               2,
+		Sockets:            2,
 		CPUPerformanceType: "performance",
 		Disk:               50,
 		DiskType:           "ENT6",
@@ -199,6 +201,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 		Hostname:           fmt.Sprintf("terraform-test-%s-multi-disk-scaling", envInfo.TestRunName),
 		Memory:             2048,
 		CPUs:               2,
+		Sockets:            2,
 		CPUPerformanceType: "performance",
 		Network:            []vm.Network{createNewNetworkInterface(envInfo)},
 		DNS1:               "8.8.8.8",
@@ -372,6 +375,7 @@ func testAccConfigAnxCloudVirtualServer(resourceName string, templateName string
 		
 		hostname             = "%s"
 		cpus                 = %d
+		sockets              = %d
 		cpu_performance_type = "%s"
 		memory               = %d
 		password             = "%s"
@@ -388,7 +392,7 @@ func testAccConfigAnxCloudVirtualServer(resourceName string, templateName string
 		force_restart_if_needed = true
 		critical_operation_confirmed = true
 	}
-	`, resourceName, def.Location, templateConfig, def.Hostname, def.CPUs, def.CPUPerformanceType, def.Memory,
+	`, resourceName, def.Location, templateConfig, def.Hostname, def.CPUs, def.Sockets, def.CPUPerformanceType, def.Memory,
 		def.Password, generateNetworkSubResourceString(def.Network), generateDisksSubResourceString([]vm.Disk{
 			{
 				SizeGBs: def.Disk,

@@ -17,6 +17,9 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+### Fixed
+* resource/anxcloud_virtual_server now correctly calculates sockets on read (#136, @anx-mschaefer)
+
 ## [0.5.2] - 2023-02-20
 
 ### Added
