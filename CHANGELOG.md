@@ -24,6 +24,11 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * resources to manage the e5e service: (#142, @anx-mschaefer)
   * `anxcloud_e5e_application`
   * `anxcloud_e5e_function`
+* resources to manage the frontier service: (#139, @anx-mschaefer)
+  * `anxcloud_frontier_api`
+  * `anxcloud_frontier_endpoint`
+  * `anxcloud_frontier_action`
+  * `anxcloud_frontier_deployment`
 
 ## [0.5.5] - 2024-01-12
 

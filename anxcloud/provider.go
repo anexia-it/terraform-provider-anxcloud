@@ -43,6 +43,10 @@ func Provider(version string) *schema.Provider {
 			"anxcloud_kubernetes_kubeconfig": resourceKubernetesKubeconfig(),
 			"anxcloud_e5e_application":       resourceE5EApplication(),
 			"anxcloud_e5e_function":          resourceE5EFunction(),
+			"anxcloud_frontier_api":          resourceFrontierAPI(),
+			"anxcloud_frontier_endpoint":     resourceFrontierEndpoint(),
+			"anxcloud_frontier_action":       resourceFrontierAction(),
+			"anxcloud_frontier_deployment":   resourceFrontierDeployment(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anxcloud_disk_types":            dataSourceDiskTypes(),
