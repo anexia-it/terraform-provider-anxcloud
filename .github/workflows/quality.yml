@@ -81,7 +81,7 @@ jobs:
       uses: paambaati/codeclimate-action@v4.0.0
       env:
         ANEXIA_LOCATION_ID: 52b5f6b2fd3a4a7eaaedf1a7c019e9ea
-        ANEXIA_VLAN_ID: 02f39d20ca0f4adfb5032f88dbc26c39
+        ANEXIA_VLAN_ID: 00a239d617504e4ab49122efe0d27657
         ANEXIA_TOKEN: ${{ secrets.ANEXIA_TOKEN }}
         CC_TEST_REPORTER_ID: ${{ secrets.CODECLIMATE_COVERAGE_ID }}
 
