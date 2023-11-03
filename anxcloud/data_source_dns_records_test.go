@@ -13,7 +13,7 @@ func TestAccAnxCloudDNSRecordsDataSource(t *testing.T) {
 	resourceName := "acc_test"
 	resourcePath := "data.anxcloud_dns_records." + resourceName
 
-	zoneName := "go-sdk.test"
+	zoneName := "ake-dev.go-sdk.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
