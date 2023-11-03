@@ -125,7 +125,7 @@ func testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescription 
 	return fmt.Sprintf(`
 	resource "anxcloud_network_prefix" "%s" {
 		location_id   = "%s"
-		vlan_id = "02f39d20ca0f4adfb5032f88dbc26c39"
+		vlan_id = "00a239d617504e4ab49122efe0d27657"
 		ip_version = 4
 		netmask = 30
 		type = 1
