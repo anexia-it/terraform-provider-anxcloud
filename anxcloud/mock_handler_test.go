@@ -54,7 +54,7 @@ func (m *ghttpMock) appendDeleteClusterHandler() {
 func (m *ghttpMock) appendCreateNodePoolHandler() {
 	m.server.AppendHandlers(ghttp.CombineHandlers(
 		ghttp.VerifyRequest("POST", "/api/kubernetes/v1/node_pool.json"),
-		ghttp.VerifyJSON(`{"name":"foo","replicas":3,"cpus":2,"memory":4294967296,"disk_size":10737418240,"operating_system":"Flatcar Linux","cluster":"test-cluster"}`),
+		ghttp.VerifyJSON(`{"name":"foo","replicas":3,"cpus":2,"memory":4294967296,"disk_size":21474836480,"operating_system":"Flatcar Linux","cluster":"test-cluster"}`),
 		ghttp.RespondWithJSONEncoded(http.StatusOK, map[string]any{
 			"identifier": "test-node-pool-identifier",
 		}),
@@ -71,7 +71,7 @@ func (m *ghttpMock) appendGetNodePoolHandler() {
 			"replicas":         3,
 			"cpus":             2,
 			"memory":           4294967296,
-			"disk_size":        10737418240,
+			"disk_size":        21474836480,
 			"operating_system": "Flatcar Linux",
 			"cluster":          map[string]any{"identifier": "test-cluster"},
 		}),

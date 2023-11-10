@@ -96,7 +96,7 @@ var _ = Describe("Kubernetes Resource", func() {
 						cluster = "test-cluster"
 
 						disk {
-							size_gib = 10
+							size_gib = 20
 						}
 					}
 					`,
@@ -210,7 +210,7 @@ func testAccAnxCloudKubernetesNodePool(nodePool *kubernetesv1.NodePool) string {
 		cluster = anxcloud_kubernetes_cluster.foo.id
 
 		disk {
-			size_gib = 10
+			size_gib = 20
 		}
 	}
 	`,
