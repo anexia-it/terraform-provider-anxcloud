@@ -20,6 +20,11 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 ### Changed
 * (internal) resource/anxcloud_virtual_server: optimize creation of vms with multiple disks (#147, @anx-mschaefer)
 
+### Added
+* resources to manage the e5e service: (#142, @anx-mschaefer)
+  * `anxcloud_e5e_application`
+  * `anxcloud_e5e_function`
+
 ## [0.5.5] - 2024-01-12
 
 ### Fixed

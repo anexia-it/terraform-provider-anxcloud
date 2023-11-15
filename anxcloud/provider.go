@@ -41,6 +41,8 @@ func Provider(version string) *schema.Provider {
 			"anxcloud_kubernetes_cluster":    resourceKubernetesCluster(),
 			"anxcloud_kubernetes_node_pool":  resourceKubernetesNodePool(),
 			"anxcloud_kubernetes_kubeconfig": resourceKubernetesKubeconfig(),
+			"anxcloud_e5e_application":       resourceE5EApplication(),
+			"anxcloud_e5e_function":          resourceE5EFunction(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anxcloud_disk_types":            dataSourceDiskTypes(),
