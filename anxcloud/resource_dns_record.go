@@ -1,12 +1,21 @@
 package anxcloud
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/internal/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"go.anx.io/go-anxcloud/pkg/api"
@@ -15,33 +24,41 @@ import (
 	"go.anx.io/go-anxcloud/pkg/utils/object/compare"
 )
 
-var syncDNSRecordOps sync.Mutex
-var dnsRecordSkipMutexLock = providerContextKey("dns-record-skip-mutex-lock")
-
 func resourceDNSRecord() *schema.Resource {
 	return &schema.Resource{
-		Description:   "This resource allows you to create DNS records for a specified zone. TXT records might behave funny, we are working on it.",
+		Description: "This resource allows you to create DNS records for a specified zone. TXT records might behave funny, we are working on it." +
+			" Create and delete operations will be handled in batches internally. As a side effect this will cause whole batches to fail in case some of the operations are invalid." +
+			" Updating record attributes triggers a replacement (destroy old -> create new).",
 		CreateContext: resourceDNSRecordCreate,
 		ReadContext:   resourceDNSRecordRead,
-		UpdateContext: resourceDNSRecordUpdate,
 		DeleteContext: resourceDNSRecordDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(time.Minute),
+			Create: schema.DefaultTimeout(2 * time.Minute),
 			Read:   schema.DefaultTimeout(time.Minute),
-			Update: schema.DefaultTimeout(time.Minute),
-			Delete: schema.DefaultTimeout(time.Minute),
+			Delete: schema.DefaultTimeout(2 * time.Minute),
 		},
 		Schema: schemaDNSRecord(),
 	}
 }
 
-func resourceDNSRecordCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	defer lockRecordContextIfNeeded(ctx)()
+var resourceDNSRecordBatcherMap sync.Map
 
+func resourceDNSRecordBatcherForZone(a api.API, zoneName string) *utils.Batcher[recordBatchUnit, any] {
+	anyBatcher, _ := resourceDNSRecordBatcherMap.LoadOrStore(zoneName, &utils.Batcher[recordBatchUnit, any]{
+		// this will consume 15 seconds of the 2 minute create/delete budget
+		Wait:      15 * time.Second,
+		BatchFunc: resourceDNSRecordBatch(a, zoneName),
+	})
+
+	return anyBatcher.(*utils.Batcher[recordBatchUnit, any])
+}
+
+func resourceDNSRecordCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	a := apiFromProviderConfig(m)
+	batcher := resourceDNSRecordBatcherForZone(a, d.Get("zone_name").(string))
 
 	r := dnsRecordFromResourceData(d)
 
@@ -56,11 +73,11 @@ func resourceDNSRecordCreate(ctx context.Context, d *schema.ResourceData, m inte
 
 	// not found -> create new zone
 
-	if err := a.Create(ctx, &r); err != nil {
+	if _, err := batcher.Process(ctx, recordBatchUnit{record: r, batchOperation: batchOperationCreate}); err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(r.Identifier)
+	d.SetId(resourceDNSRecordCanonicalIdentifier(r))
 
 	return resourceDNSRecordRead(ctx, d, m)
 }
@@ -111,54 +128,9 @@ func resourceDNSRecordRead(ctx context.Context, d *schema.ResourceData, m interf
 	return diags
 }
 
-func resourceDNSRecordUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	defer lockRecordContextIfNeeded(ctx)()
-
-	a := apiFromProviderConfig(m)
-
-	prevZoneName, _ := d.GetChange("zone_name")
-	prevType, _ := d.GetChange("type")
-	prevName, _ := d.GetChange("name")
-	prevRData, _ := d.GetChange("rdata")
-	prevTTL, _ := d.GetChange("ttl")
-
-	r, err := findDNSRecord(ctx, a, clouddnsv1.Record{
-		ZoneName: prevZoneName.(string),
-		Type:     prevType.(string),
-		Name:     prevName.(string),
-		RData:    prevRData.(string),
-		TTL:      prevTTL.(int),
-	})
-
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if d.HasChange("zone_name") { // cannot change records zone -> recreate
-		err := a.Destroy(ctx, &clouddnsv1.Record{Identifier: r.Identifier, ZoneName: prevZoneName.(string)})
-		if api.IgnoreNotFound(err) != nil {
-			return diag.FromErr(err)
-		}
-		return resourceDNSRecordCreate(context.WithValue(ctx, dnsRecordSkipMutexLock, true), d, m)
-	}
-
-	revRecID := r.Identifier
-	r = dnsRecordFromResourceData(d)
-	r.Identifier = revRecID
-
-	if err := a.Update(ctx, &r); err != nil {
-		return diag.FromErr(err)
-	}
-
-	d.SetId(r.Identifier)
-
-	return resourceDNSRecordRead(ctx, d, m)
-}
-
 func resourceDNSRecordDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	defer lockRecordContextIfNeeded(ctx)()
-
 	a := apiFromProviderConfig(m)
+	batcher := resourceDNSRecordBatcherForZone(a, d.Get("zone_name").(string))
 
 	r := dnsRecordFromResourceData(d)
 	r, err := findDNSRecord(ctx, a, r)
@@ -170,8 +142,7 @@ func resourceDNSRecordDelete(ctx context.Context, d *schema.ResourceData, m inte
 		return nil
 	}
 
-	err = a.Destroy(ctx, &r)
-	if err != nil {
+	if _, err := batcher.Process(ctx, recordBatchUnit{record: r, batchOperation: batchOperationDelete}); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -217,10 +188,157 @@ func findDNSRecord(ctx context.Context, a api.API, r clouddnsv1.Record) (foundRe
 	return foundRecord, api.ErrNotFound
 }
 
-func lockRecordContextIfNeeded(ctx context.Context) func() {
-	if v := ctx.Value(dnsRecordSkipMutexLock); v == nil {
-		syncDNSRecordOps.Lock()
-		return syncDNSRecordOps.Unlock
+type batchOperation string
+
+const (
+	batchOperationCreate batchOperation = "create"
+	batchOperationDelete batchOperation = "delete"
+)
+
+type recordBatchUnit struct {
+	record         clouddnsv1.Record
+	batchOperation batchOperation
+}
+
+func resourceDNSRecordBatch(a api.API, zoneName string) func(ctx context.Context, records []recordBatchUnit) []utils.BatchUnitResult[any] {
+	return func(ctx context.Context, records []recordBatchUnit) []utils.BatchUnitResult[any] {
+		res := make([]utils.BatchUnitResult[any], len(records))
+
+		// ridiculously high timeout -> will be canceld before by schema timeout
+		err := retry.RetryContext(ctx, time.Hour, func() *retry.RetryError {
+			zone := clouddnsv1.Zone{Name: zoneName}
+			if err := a.Get(ctx, &zone); err != nil {
+				return retry.NonRetryableError(err)
+			}
+
+			if !zone.IsEditable {
+				return retry.RetryableError(fmt.Errorf("zone not yet editable"))
+			}
+
+			return nil
+		})
+		if err != nil {
+			for i := range records {
+				res[i].Error = err
+			}
+		}
+
+		changeSet := dnsZoneChangeSet{ZoneName: zoneName}
+		for _, r := range records {
+			changeSetRecord := dnsZoneChangeSetRecord{
+				Name:   r.record.Name,
+				Type:   r.record.Type,
+				Region: r.record.Region,
+				RData:  r.record.RData,
+				TTL:    r.record.TTL,
+			}
+			if r.batchOperation == batchOperationCreate {
+				changeSet.Create = append(changeSet.Create, changeSetRecord)
+			} else if r.batchOperation == batchOperationDelete {
+				changeSet.Delete = append(changeSet.Delete, changeSetRecord)
+			}
+		}
+
+		if err := a.Create(ctx, &changeSet); err != nil {
+			if changeSet.Error != nil {
+				var (
+					createIndex = 0
+					deleteIndex = 0
+				)
+
+				for i := range records {
+					var opErr map[string][]string
+					if changeSet.Error.Create != nil && records[i].batchOperation == batchOperationCreate {
+						opErr = changeSet.Error.Create[createIndex]
+						createIndex++
+					} else if changeSet.Error.Delete != nil && records[i].batchOperation == batchOperationDelete {
+						opErr = changeSet.Error.Delete[deleteIndex]
+						deleteIndex++
+					}
+
+					if len(opErr) > 0 {
+						fieldErrors := make([]string, 0)
+						for fieldName, errors := range opErr {
+							fieldErrors = append(fieldErrors, fmt.Sprintf("[%s: %s]", fieldName, strings.Join(errors, " - ")))
+						}
+						res[i].Error = fmt.Errorf(strings.Join(fieldErrors, " "))
+					} else {
+						res[i].Error = fmt.Errorf("failed to %s dns record as part of batch, because other records are invalid", records[i].batchOperation)
+					}
+				}
+			} else {
+				for i := range records {
+					res[i].Error = err
+				}
+			}
+		}
+
+		return res
 	}
-	return func() { /* noop */ }
+}
+
+type dnsZoneChangeSetRecord struct {
+	Name   string `json:"name"`
+	Type   string `json:"type"`
+	Region string `json:"region,omitempty"`
+	RData  string `json:"rdata"`
+	TTL    int    `json:"ttl"`
+}
+
+type dnsZoneChangeSetError struct {
+	Create []map[string][]string
+	Delete []map[string][]string
+}
+
+// todo: move to go-anxcloud at a later time
+type dnsZoneChangeSet struct {
+	ZoneName string                   `json:"-"`
+	Create   []dnsZoneChangeSetRecord `json:"create"`
+	Delete   []dnsZoneChangeSetRecord `json:"delete"`
+	Error    *dnsZoneChangeSetError   `json:"error,omitempty"`
+}
+
+func (cs *dnsZoneChangeSet) GetIdentifier(ctx context.Context) (string, error) {
+	return "<not-used>", nil
+}
+
+func (cs *dnsZoneChangeSet) EndpointURL(ctx context.Context) (*url.URL, error) {
+	op, err := types.OperationFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if op != types.OperationCreate {
+		return nil, errors.New("helper resource 'dnsZoneChangeSet' only supports Create operations")
+	}
+
+	return url.Parse(fmt.Sprintf("/api/clouddns/v1/zone.json/%s/changeset", cs.ZoneName))
+}
+
+// FilterAPIResponse decodes record errors into the dnsZoneChangeSet so that we can output
+// detailed error messages per zone instead of the same generic error message
+func (cs *dnsZoneChangeSet) FilterAPIResponse(ctx context.Context, res *http.Response) (*http.Response, error) {
+	if res.StatusCode == http.StatusOK {
+		res.StatusCode = http.StatusNoContent
+		res.Body.Close()
+		res.Body = io.NopCloser(&bytes.Buffer{})
+	} else if res.StatusCode == http.StatusBadRequest {
+		if err := json.NewDecoder(res.Body).Decode(cs); err != nil {
+			return nil, fmt.Errorf("unable to decode bad request response: %w", err)
+		}
+	}
+
+	return res, nil
+}
+
+func resourceDNSRecordCanonicalIdentifier(r clouddnsv1.Record) string {
+	return strings.Join([]string{
+		r.Name,
+		r.ZoneName,
+		r.Type,
+		url.QueryEscape(r.RData),
+		fmt.Sprint(r.TTL),
+		r.Region,
+		fmt.Sprint(r.Immutable),
+	}, "_")
 }

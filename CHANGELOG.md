@@ -17,6 +17,11 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+### Changed
+* resource/anxcloud_dns_record:
+  - create and delete operations are now handled in batches internally
+  - attribute changes now trigger a replacement of the resource
+
 ## [0.5.3] - 2023-10-30
 
 ### Fixed
