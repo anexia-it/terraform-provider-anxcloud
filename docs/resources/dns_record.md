@@ -3,12 +3,12 @@
 page_title: "anxcloud_dns_record Resource - terraform-provider-anxcloud"
 subcategory: ""
 description: |-
-  This resource allows you to create DNS records for a specified zone. TXT records might behave funny, we are working on it.
+  This resource allows you to create DNS records for a specified zone. TXT records might behave funny, we are working on it. Create and delete operations will be handled in batches internally. As a side effect this will cause whole batches to fail in case some of the operations are invalid. Updating record attributes triggers a replacement (destroy old -> create new).
 ---
 
 # anxcloud_dns_record (Resource)
 
-This resource allows you to create DNS records for a specified zone. TXT records might behave funny, we are working on it.
+This resource allows you to create DNS records for a specified zone. TXT records might behave funny, we are working on it. Create and delete operations will be handled in batches internally. As a side effect this will cause whole batches to fail in case some of the operations are invalid. Updating record attributes triggers a replacement (destroy old -> create new).
 
 ## Example Usage
 
@@ -52,6 +52,5 @@ Optional:
 - `create` (String)
 - `delete` (String)
 - `read` (String)
-- `update` (String)
 
 
