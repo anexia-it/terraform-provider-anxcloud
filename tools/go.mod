@@ -1,6 +1,6 @@
 module github.com/anexia-it/terraform-provider-anxcloud/tools
 
-go 1.19
+go 1.21
 
 require (
 	github.com/client9/misspell v0.3.4
