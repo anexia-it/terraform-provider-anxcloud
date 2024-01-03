@@ -30,6 +30,7 @@ var buildNumberRegex = regexp.MustCompile(`[bB]?(\d+)`)
 
 const (
 	templateName = "Flatcar Linux Stable"
+	vmPoweredOn  = "poweredOn"
 )
 
 func getVMRecorder(t *testing.T) recorder.VMRecoder {
@@ -287,7 +288,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 		changeDiskDef.Hostname = fmt.Sprintf("terraform-test-%s-multi-disk-template-change", envInfo.TestRunName)
 		changeDiskDef.Network = []vm.Network{createNewNetworkInterface(envInfo)}
 		vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", changeDiskDef.Hostname))
-		changeDiskDef.TemplateID = vsphereAccTestTemplateByLocationAndPrefix(envInfo.Location, "Flatcar Storage Stable")
+		changeDiskDef.TemplateID = vsphereAccTestTemplateByLocationAndPrefix(envInfo.Location, "Debian 11")
 		templateDisks := []vm.Disk{
 			{
 				Type:    "ENT6",
