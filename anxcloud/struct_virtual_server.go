@@ -63,6 +63,17 @@ func expandVirtualServerDisks(p []interface{}) []Disk {
 	return disks
 }
 
+func mapToAdditionalDisks(disks []Disk) []vm.AdditionalDisk {
+	out := make([]vm.AdditionalDisk, 0, len(disks))
+	for _, disk := range disks {
+		out = append(out, vm.AdditionalDisk{
+			SizeGBs: disk.SizeGBs,
+			Type:    disk.Type,
+		})
+	}
+	return out
+}
+
 func expandVirtualServerDNS(p []interface{}) (dns [maxDNSEntries]string) {
 	if len(p) < 1 {
 		return dns

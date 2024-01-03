@@ -22,11 +22,7 @@ import (
 	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/vm"
 )
 
-const (
-	maxDNSEntries = 4
-	vmPoweredOn   = "poweredOn"
-	vmPoweredOff  = "poweredOff"
-)
+const maxDNSEntries = 4
 
 func resourceVirtualServer() *schema.Resource {
 	return &schema.Resource{
@@ -227,8 +223,9 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		Hostname:           d.Get("hostname").(string),
 		Memory:             d.Get("memory").(int),
 		CPUs:               d.Get("cpus").(int),
-		Disk:               disks[0].SizeGBs, //Workaround until Create API supports multi disk
+		Disk:               disks[0].SizeGBs,
 		DiskType:           disks[0].Type,
+		AdditionalDisks:    mapToAdditionalDisks(disks[1:]),
 		CPUPerformanceType: d.Get("cpu_performance_type").(string),
 		Sockets:            d.Get("sockets").(int),
 		Network:            networks,
@@ -255,20 +252,6 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	d.SetId(vmIdentifier)
-
-	if len(disks) > 1 {
-		if read := resourceVirtualServerRead(ctx, d, m); read.HasError() {
-			return read
-		}
-
-		initialDisks := expandVirtualServerDisks(d.Get("disk").([]interface{}))
-		if update := updateVirtualServerDisk(ctx, provContext, d.Id(), disks, initialDisks); update != nil {
-			return update
-		}
-	}
-
-	// wait for API to be updated
-	time.Sleep(time.Minute)
 
 	return resourceVirtualServerRead(ctx, d, m)
 }
@@ -514,76 +497,6 @@ func resourceVirtualServerDelete(ctx context.Context, d *schema.ResourceData, m 
 		return retry.RetryableError(fmt.Errorf("waiting for vm with id '%s' to be deleted", d.Id()))
 	})
 	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	return nil
-}
-
-func updateVirtualServerDisk(ctx context.Context, m providerContext, id string, expected []Disk, current []Disk) diag.Diagnostics {
-	changeDisks := make([]vm.Disk, 0, len(current))
-	addDisks := make([]vm.Disk, 0, len(expected))
-	for diskIndex := range current {
-		if diskIndex >= len(expected) {
-			break
-		}
-		expected[diskIndex].ID = current[diskIndex].ID
-		actualDisk := current[diskIndex]
-		expectedDisk := expected[diskIndex]
-
-		if actualDisk.ExactDiskSize > float64(expectedDisk.SizeGBs) {
-			logger.Error(nil, "Skipping disk %d because expected disk size to small! Expected: %d  -  got: %f", actualDisk.ID, expectedDisk.SizeGBs, actualDisk.ExactDiskSize)
-		}
-		if actualDisk.Type != expectedDisk.Type || actualDisk.ExactDiskSize < float64(expectedDisk.SizeGBs) {
-			changeDisks = append(changeDisks, *expectedDisk.Disk)
-		}
-	}
-
-	if len(expected) > len(current) {
-		for newDiskIndex := len(current); newDiskIndex < len(expected); newDiskIndex++ {
-			addDisks = append(addDisks, *expected[newDiskIndex].Disk)
-		}
-	}
-
-	ch := vm.Change{
-		AddDisks:    addDisks,
-		ChangeDisks: changeDisks,
-	}
-
-	v := vsphere.NewAPI(m.legacyClient)
-	var response vm.ProvisioningResponse
-	provisioning := v.Provisioning()
-	var err error
-	if response, err = provisioning.VM().Update(ctx, id, ch); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if _, err = provisioning.Progress().AwaitCompletion(ctx, response.Identifier); err != nil {
-		return diag.FromErr(err)
-	}
-
-	// wait for API to be updated
-	time.Sleep(time.Minute)
-
-	vmState := retry.StateChangeConf{
-		Delay:      10 * time.Second,
-		Timeout:    10 * time.Minute,
-		MinTimeout: 10 * time.Second,
-		Pending: []string{
-			vmPoweredOff,
-		},
-		Target: []string{
-			vmPoweredOn,
-		},
-		Refresh: func() (interface{}, string, error) {
-			info, err := v.Info().Get(ctx, id)
-			if err != nil {
-				return "", "", err
-			}
-			return info, info.Status, nil
-		},
-	}
-	if _, err = vmState.WaitForStateContext(ctx); err != nil {
 		return diag.FromErr(err)
 	}
 
