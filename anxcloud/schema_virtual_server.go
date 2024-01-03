@@ -115,10 +115,10 @@ func schemaVirtualServer() map[string]*schema.Schema {
 						Description: "Network interface card type.",
 					},
 					"ips": {
-						Type:     schema.TypeList,
+						Type:     schema.TypeSet,
 						Optional: true,
 						ForceNew: true,
-						Description: "Requested list of IPs and IPs identifiers. IPs are ignored when using template_type 'from_scratch'. " +
+						Description: "Requested set of IPs and IPs identifiers. IPs are ignored when using template_type 'from_scratch'. " +
 							"Defaults to free IPs from IP pool attached to VLAN.",
 						Elem: &schema.Schema{
 							Type: schema.TypeString,

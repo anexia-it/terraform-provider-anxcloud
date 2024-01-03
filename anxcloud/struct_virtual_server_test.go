@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"go.anx.io/go-anxcloud/pkg/vsphere/info"
 	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/vm"
 )
@@ -20,12 +21,12 @@ func TestExpanderVirtualServerNetworks(t *testing.T) {
 				map[string]interface{}{
 					"vlan_id":  "38f8561acfe34qc49c336d2af31a5cc3",
 					"nic_type": "vmxnet3",
-					"ips": []interface{}{
+					"ips": schema.NewSet(schema.HashSchema(&schema.Schema{Type: schema.TypeString}), []interface{}{
 						"identifier1",
 						"identifier2",
 						"10.11.12.13",
 						"1.0.0.1",
-					},
+					}),
 				},
 			},
 			[]vm.Network{
@@ -33,10 +34,10 @@ func TestExpanderVirtualServerNetworks(t *testing.T) {
 					VLAN:    "38f8561acfe34qc49c336d2af31a5cc3",
 					NICType: "vmxnet3",
 					IPs: []string{
-						"identifier1",
-						"identifier2",
 						"10.11.12.13",
 						"1.0.0.1",
+						"identifier1",
+						"identifier2",
 					},
 				},
 			},

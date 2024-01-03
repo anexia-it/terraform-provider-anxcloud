@@ -1,6 +1,7 @@
 package anxcloud
 
 import (
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"go.anx.io/go-anxcloud/pkg/vsphere/info"
 	"go.anx.io/go-anxcloud/pkg/vsphere/provisioning/vm"
 )
@@ -24,8 +25,8 @@ func expandVirtualServerNetworks(p []interface{}) []vm.Network {
 			network.NICType = v.(string)
 		}
 		if v, ok := in["ips"]; ok {
-			ips := v.([]interface{})
-			for _, ip := range ips {
+			ips := v.(*schema.Set)
+			for _, ip := range ips.List() {
 				network.IPs = append(network.IPs, ip.(string))
 			}
 		}
