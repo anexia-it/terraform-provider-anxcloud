@@ -17,6 +17,8 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+## [0.5.5] - 2024-01-12
+
 ### Fixed
 * resource/anxcloud_virtual_server now ignores changes in the order of IP addresses returned by the engine (within a network) (#149, @anx-mschaefer)
 
