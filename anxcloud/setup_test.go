@@ -2,16 +2,16 @@ package anxcloud
 
 import (
 	"log"
-	"math/rand"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
+	testutil "go.anx.io/go-anxcloud/pkg/utils/test"
 )
 
 func TestMain(m *testing.M) {
-	rand.Seed(time.Now().UnixNano())
+	testutil.Seed(time.Now().UnixNano())
 
 	// setup test environment
 	var env *environment.Info
