@@ -22,13 +22,15 @@ import (
 var testAccProviderFactories map[string]func() (*schema.Provider, error)
 var testAccProvider *schema.Provider
 
+var providerVersion = "development"
+
 func init() {
-	testAccProvider = Provider()
+	testAccProvider = Provider(providerVersion)
 	testAccProviderFactories = map[string]func() (*schema.Provider, error){
 		//nolint:unparam
 		// ^ signature set by tf framework; test provider does not produce any errors
 		"anxcloud": func() (*schema.Provider, error) {
-			return Provider(), nil
+			return Provider(providerVersion), nil
 		},
 	}
 
@@ -56,7 +58,7 @@ func testAccProviderFactoriesWithMockedClient(t tt.T, srv *ghttp.Server) map[str
 		//nolint:unparam
 		// ^ signature set by tf framework; test provider does not produce any errors
 		"anxcloud": func() (*schema.Provider, error) {
-			provider := Provider()
+			provider := Provider(providerVersion)
 			provider.ConfigureContextFunc = func(ctx context.Context, rd *schema.ResourceData) (interface{}, diag.Diagnostics) {
 				return providerContext{api: c, legacyClient: lc}, nil
 			}
@@ -66,13 +68,13 @@ func testAccProviderFactoriesWithMockedClient(t tt.T, srv *ghttp.Server) map[str
 }
 
 func TestProvider(t *testing.T) {
-	if err := Provider().InternalValidate(); err != nil {
+	if err := Provider(providerVersion).InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
 }
 
 func TestProvider_impl(t *testing.T) {
-	var _ *schema.Provider = Provider()
+	var _ *schema.Provider = Provider(providerVersion)
 }
 
 func testAccPreCheck(t *testing.T) {

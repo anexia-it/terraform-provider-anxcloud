@@ -8,7 +8,7 @@ NAME=anxcloud
 BINARY=terraform-provider-${NAME}
 VERSION=0.3.1
 OS_ARCH=linux_amd64
-GOLDFLAGS= -s -X github.com/anexia-it/terraform-provider-anxcloud/anxcloud.providerVersion=$(VERSION)
+GOLDFLAGS= -s -X github.com/anexia-it/terraform-provider-anxcloud.version=$(VERSION)
 
 GOFMT_FILES  := $(shell find ./anxcloud -name '*.go' |grep -v vendor)
 

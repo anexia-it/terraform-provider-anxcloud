@@ -15,12 +15,10 @@ import (
 	"go.anx.io/go-anxcloud/pkg/client"
 )
 
-var providerVersion = "development"
-
 var logger logr.Logger
 
 // Provider Anexia
-func Provider() *schema.Provider {
+func Provider(version string) *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"token": {
@@ -59,7 +57,7 @@ func Provider() *schema.Provider {
 			"anxcloud_dns_zones":             datasourceDNSZones(),
 			"anxcloud_kubernetes_cluster":    dataSourceKubernetesCluster(),
 		},
-		ConfigureContextFunc: providerConfigure,
+		ConfigureContextFunc: providerConfigure(version),
 	}
 }
 
@@ -68,42 +66,44 @@ type providerContext struct {
 	legacyClient client.Client
 }
 
-func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-	logger = NewTerraformr(log.Default().Writer())
-	var diags diag.Diagnostics
+func providerConfigure(version string) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		logger = NewTerraformr(log.Default().Writer())
+		var diags diag.Diagnostics
 
-	token := d.Get("token").(string)
+		token := d.Get("token").(string)
 
-	opts := []client.Option{
-		client.TokenFromString(token),
-		client.Logger(logger.WithName("client")),
-		client.UserAgent(fmt.Sprintf("%s/%s (%s)", "terraform-provider-anxcloud", providerVersion, runtime.GOOS)),
+		opts := []client.Option{
+			client.TokenFromString(token),
+			client.Logger(logger.WithName("client")),
+			client.UserAgent(fmt.Sprintf("%s/%s (%s)", "terraform-provider-anxcloud", version, runtime.GOOS)),
+		}
+
+		c, err := client.New(opts...)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unable to create Anexia client",
+				Detail:   "Unable to create Anexia client with the given token, either the token is empty or invalid",
+			})
+			return nil, diags
+		}
+
+		apiClient, err := api.NewAPI(api.WithClientOptions(opts...))
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unable to create generic Anexia client",
+				Detail:   "Unable to create generic Anexia client with the given token, either the token is empty or invalid",
+			})
+			return nil, diags
+		}
+
+		return providerContext{
+			api:          apiClient,
+			legacyClient: c,
+		}, diags
 	}
-
-	c, err := client.New(opts...)
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to create Anexia client",
-			Detail:   "Unable to create Anexia client with the given token, either the token is empty or invalid",
-		})
-		return nil, diags
-	}
-
-	apiClient, err := api.NewAPI(api.WithClientOptions(opts...))
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to create generic Anexia client",
-			Detail:   "Unable to create generic Anexia client with the given token, either the token is empty or invalid",
-		})
-		return nil, diags
-	}
-
-	return providerContext{
-		api:          apiClient,
-		legacyClient: c,
-	}, diags
 }
 
 func handleNotFoundError(err error) error {
