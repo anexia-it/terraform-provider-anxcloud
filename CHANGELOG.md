@@ -17,6 +17,17 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+### Breaking
+* anxcloud_virtual_server: (#154, @anx-mschaefer)
+  * reimplemented the resource using `terraform-plugin-framework`
+  * resource is now importable if templates of type "templates" are used
+  * `templates` attribute has been removed. instead use the `template_id` attribute with the `anxcloud_virtual_server_template` datasource
+  * network IPs may no longer be configured using address IDs, but only address names
+  * info attribute has been removed. instead attributes are updated to the engine state when the resource is refreshed
+
+### Added
+* anxcloud_virtual_server_template datasource for retrieving templates by name (#154, @anx-mschaefer)
+
 ### Changed
 * (internal) resource/anxcloud_virtual_server: optimize creation of vms with multiple disks (#147, @anx-mschaefer)
 

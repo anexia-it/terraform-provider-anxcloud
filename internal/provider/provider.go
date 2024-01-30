@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"go.anx.io/go-anxcloud/pkg/api"
 	"go.anx.io/go-anxcloud/pkg/client"
 )
 
@@ -68,16 +69,38 @@ func (p *AnexiaProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		client.UserAgent(fmt.Sprintf("%s/%s (%s)", "terraform-provider-anxcloud", p.version, runtime.GOOS)),
 	}
 
-	resp.ResourceData = opts
-	resp.DataSourceData = opts
+	engine, err := api.NewAPI(api.WithClientOptions(opts...))
+	if err != nil {
+		resp.Diagnostics.AddError("Unable to create generic API client", err.Error())
+	}
+
+	legacyClient, err := client.New(opts...)
+	if err != nil {
+		resp.Diagnostics.AddError("Unable to create legacy API client", err.Error())
+		return
+	}
+
+	providerConfig := providerConfiguration{engine, legacyClient}
+
+	resp.ResourceData = providerConfig
+	resp.DataSourceData = providerConfig
+}
+
+type providerConfiguration struct {
+	engine       api.API
+	legacyClient client.Client
 }
 
 func (p *AnexiaProvider) Resources(ctx context.Context) []func() resource.Resource {
-	return nil
+	return []func() resource.Resource{
+		NewVirtuaServerResource,
+	}
 }
 
 func (p *AnexiaProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return nil
+	return []func() datasource.DataSource{
+		NewVirtuaServerTemplateDataSource,
+	}
 }
 
 func New(version string) func() provider.Provider {
