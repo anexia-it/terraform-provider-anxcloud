@@ -34,10 +34,15 @@ resource "anxcloud_ip_address" "v6" {
   network_prefix_id = anxcloud_network_prefix.v6.id
 }
 
+data "anxcloud_virtual_server_template" "debian11" {
+  name     = "Debian 11"
+  location = data.anxcloud_core_location.anx04.id
+}
+
 resource "anxcloud_virtual_server" "example" {
   hostname    = "example-terraform"
   location_id = data.anxcloud_core_location.anx04.id
-  template    = "Debian 11"
+  template_id = data.anxcloud_virtual_server_template.debian11.id
 
   cpus   = 4
   memory = 4096
@@ -56,7 +61,7 @@ resource "anxcloud_virtual_server" "example" {
   # Set network interface
   network {
     vlan_id  = anxcloud_vlan.example.id
-    ips      = [anxcloud_ip_address.v4.id, anxcloud_ip_address.v6.id]
+    ips      = [anxcloud_ip_address.v4.address, anxcloud_ip_address.v6.address]
     nic_type = "vmxnet3"
   }
 

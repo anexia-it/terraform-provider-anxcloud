@@ -30,7 +30,6 @@ func Provider(version string) *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"anxcloud_virtual_server":        resourceVirtualServer(),
 			"anxcloud_vlan":                  resourceVLAN(),
 			"anxcloud_network_prefix":        resourceNetworkPrefix(),
 			"anxcloud_ip_address":            resourceIPAddress(),

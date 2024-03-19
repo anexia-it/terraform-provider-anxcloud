@@ -1,4 +1,4 @@
-package anxcloud
+package provider
 
 import (
 	"log"

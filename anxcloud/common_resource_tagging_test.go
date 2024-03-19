@@ -105,7 +105,3 @@ func generateTagsString(tags ...string) string {
 	ret.WriteString("]\n")
 	return ret.String()
 }
-
-func withoutTags(tpl string) string {
-	return fmt.Sprintf(tpl, "")
-}

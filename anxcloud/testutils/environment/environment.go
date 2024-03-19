@@ -2,12 +2,14 @@ package environment
 
 import (
 	"context"
-	"errors"
-	"github.com/goombaio/namegenerator"
 	"log"
 	"os"
+	"sync"
 	"testing"
 	"time"
+
+	"github.com/goombaio/namegenerator"
+	testutil "go.anx.io/go-anxcloud/pkg/utils/test"
 )
 
 type Info struct {
@@ -55,29 +57,39 @@ func shouldRunWithTestEnvironment() bool {
 	return anexiaTokenPresent && runAcceptanceTest
 }
 
-func InitEnvironment() (*Info, error) {
+var initEnvironmentOnce sync.Once
+
+func InitEnvironment() *Info {
 	if !shouldRunWithTestEnvironment() {
-		return nil, nil
+		return nil
 	}
 
 	var locationID, vlanID string
 	var isSet bool
 	if locationID, isSet = os.LookupEnv("ANEXIA_LOCATION_ID"); !isSet {
-		return nil, errors.New("'ANEXIA_LOCATION_ID' is not set")
+		log.Fatal("'ANEXIA_LOCATION_ID' is not set")
 	}
 	if vlanID, isSet = os.LookupEnv("ANEXIA_VLAN_ID"); !isSet {
-		return nil, errors.New("'ANEXIA_VLAN_ID' is not set")
+		log.Fatal("'ANEXIA_VLAN_ID' is not set")
 	}
 
 	log.Println("Setting up new test environment")
-	// we create a new environment
-	envInfo = &Info{
-		TestRunName: namegenerator.NewNameGenerator(time.Now().UnixNano()).Generate(),
-		VlanID:      vlanID,
-		Location:    locationID,
-	}
 
-	return envInfo, envInfo.setup()
+	initEnvironmentOnce.Do(func() {
+		testutil.Seed(time.Now().UnixNano())
+		// we create a new environment
+		envInfo = &Info{
+			TestRunName: namegenerator.NewNameGenerator(time.Now().UnixNano()).Generate(),
+			VlanID:      vlanID,
+			Location:    locationID,
+		}
+
+		if err := envInfo.setup(); err != nil {
+			log.Fatal(err)
+		}
+	})
+
+	return envInfo
 }
 
 func SkipIfNoEnvironment(t *testing.T) {
