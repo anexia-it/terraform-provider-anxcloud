@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -67,6 +68,9 @@ func TestAccAnxCloudFrontier(t *testing.T) {
 			if !ok {
 				return fmt.Errorf("anxcloud_frontier_api.foo not found in state")
 			}
+
+			// wait a few seconds for frontier to update
+			time.Sleep(20 * time.Second)
 
 			resp, err := http.Get(fmt.Sprintf("https://frontier.anexia-it.com/%s/foo/bar/baz", api.Primary.ID))
 			if err != nil {
