@@ -94,7 +94,7 @@ resource "anxcloud_frontier_deployment" "v1" {
   api  = anxcloud_frontier_api.example.id
 
   # Changes to the `revision` attribute will trigger a new deployment
-  # TODO(user): value should be replaced by something more suitible in production (e.g. commit hash passed in via variable)
+  # TODO(user): value should be replaced with something more suitible in production (e.g. commit hash passed in via variable)
   revision = random_id.revision.hex
 
   depends_on = [
