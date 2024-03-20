@@ -17,6 +17,8 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+## [0.6.0] - 2024-03-21
+
 ### Changed
 * (internal) resource/anxcloud_virtual_server: optimize creation of vms with multiple disks (#147, @anx-mschaefer)
 
