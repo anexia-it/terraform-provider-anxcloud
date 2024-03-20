@@ -69,7 +69,7 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 		Memory:             2048,
 		CPUs:               2,
 		Sockets:            2,
-		CPUPerformanceType: "performance",
+		CPUPerformanceType: "performance-intel",
 		Disk:               50,
 		DiskType:           "ENT6",
 		Network:            []vm.Network{createNewNetworkInterface(envInfo)},
@@ -164,7 +164,7 @@ func TestAccAnxCloudVirtualServerFromScratch(t *testing.T) {
 		Memory:             2048,
 		CPUs:               2,
 		Sockets:            2,
-		CPUPerformanceType: "performance",
+		CPUPerformanceType: "performance-intel",
 		Disk:               50,
 		DiskType:           "ENT6",
 		Network:            []vm.Network{createNewNetworkInterface(envInfo)},
@@ -203,7 +203,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 		Memory:             2048,
 		CPUs:               2,
 		Sockets:            2,
-		CPUPerformanceType: "performance",
+		CPUPerformanceType: "performance-intel",
 		Network:            []vm.Network{createNewNetworkInterface(envInfo)},
 		DNS1:               "8.8.8.8",
 		Password:           "flatcar#1234$%%",
@@ -405,13 +405,14 @@ func testAccConfigAnxCloudVirtualServer(resourceName string, templateName string
 func testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName string, def *vm.Definition, disks []vm.Disk) string {
 	return fmt.Sprintf(`
 	resource "anxcloud_virtual_server" "%s" {
-		location_id   = "%s"
-		template_id   = "%s"
-		template_type = "%s"
-		hostname      = "%s"
-		cpus          = %d
-		memory        = %d
-		password      = "%s"
+		location_id          = "%s"
+		template_id          = "%s"
+		template_type        = "%s"
+		hostname             = "%s"
+		cpus                 = %d
+		cpu_performance_type = "%s"
+		memory               = %d
+		password             = "%s"
 
 		// generated network string
 		%s
@@ -422,7 +423,7 @@ func testAccConfigAnxCloudVirtualServerMultiDiskSupport(resourceName string, def
 		force_restart_if_needed = true
 		critical_operation_confirmed = true
 	}
-	`, resourceName, def.Location, def.TemplateID, def.TemplateType, def.Hostname, def.CPUs, def.Memory,
+	`, resourceName, def.Location, def.TemplateID, def.TemplateType, def.Hostname, def.CPUs, def.CPUPerformanceType, def.Memory,
 		def.Password, generateNetworkSubResourceString(def.Network), generateDisksSubResourceString(disks))
 }
 
