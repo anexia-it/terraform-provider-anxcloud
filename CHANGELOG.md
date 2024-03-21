@@ -17,8 +17,14 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+## [0.6.0] - 2024-03-21
+
+### Breaking
+* terraform cli 1.0 or later required from now on (#153, @anx-mschaefer)
+
 ### Changed
 * (internal) resource/anxcloud_virtual_server: optimize creation of vms with multiple disks (#147, @anx-mschaefer)
+* provider server: updated to protocol version 6 (#153, @anx-mschaefer)
 
 ### Added
 * resources to manage the e5e service: (#142, @anx-mschaefer)
