@@ -30,6 +30,9 @@ func setResourceDataFromKubernetesCluster(d *schema.ResourceData, cluster kubern
 	if err := d.Set("enable_lbaas", pointer.BoolVal(cluster.EnableLBaaS)); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
+	if err := d.Set("enable_autoscaling", pointer.BoolVal(cluster.EnableAutoscaling)); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
 	if cluster.InternalIPv4Prefix != nil {
 		if err := d.Set("internal_ipv4_prefix", cluster.InternalIPv4Prefix.Identifier); err != nil {
 			diags = append(diags, diag.FromErr(err)...)

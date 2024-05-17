@@ -51,6 +51,7 @@ func resourceKubernetesClusterCreate(ctx context.Context, d *schema.ResourceData
 		NeedsServiceVMs:   pointer.Bool(d.Get("needs_service_vms").(bool)),
 		EnableNATGateways: pointer.Bool(d.Get("enable_nat_gateways").(bool)),
 		EnableLBaaS:       pointer.Bool(d.Get("enable_lbaas").(bool)),
+		EnableAutoscaling: pointer.Bool(d.Get("enable_autoscaling").(bool)),
 	}
 
 	if prefix, ok := d.GetOk("internal_ipv4_prefix"); ok {

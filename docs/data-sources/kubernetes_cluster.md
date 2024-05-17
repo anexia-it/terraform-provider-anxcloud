@@ -32,6 +32,9 @@ resource "local_file" "kubeconfig" {
 
 ### Optional
 
+- `enable_autoscaling` (Boolean) Enable autoscaling for this cluster. Defaults to false if unset.
+			
+-> You will need to explicitly configure your node pools for autoscaling. Please check the provided [autoscaling documentation](https://engine.anexia-it.com/docs/en/module/kubernetes/user-guide/autoscaling) for details.
 - `external_ipv4_prefix` (String) External IPv4 prefix.
 - `external_ipv6_prefix` (String) External IPv6 prefix.
 - `id` (String) Cluster identifier.

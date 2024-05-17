@@ -23,7 +23,7 @@ func (m *ghttpMock) appendGetTagsHandler(id string) {
 func (m *ghttpMock) appendCreateClusterHandler() {
 	m.server.AppendHandlers(ghttp.CombineHandlers(
 		ghttp.VerifyRequest("POST", "/api/kubernetes/v1/cluster.json"),
-		ghttp.VerifyJSON(`{"name":"foo","needs_service_vms":true,"enable_nat_gateways":true,"enable_lbaas":true,"location":"test-location"}`),
+		ghttp.VerifyJSON(`{"name":"foo","needs_service_vms":true,"enable_nat_gateways":true,"enable_lbaas":true,"location":"test-location", "autoscaling": true}`),
 		ghttp.RespondWithJSONEncoded(http.StatusOK, map[string]any{
 			"identifier": "test-cluster-identifier",
 		}),
@@ -40,6 +40,7 @@ func (m *ghttpMock) appendGetClusterHandler() {
 			"needs_service_vms":   true,
 			"enable_nat_gateways": true,
 			"enable_lbaas":        true,
+			"autoscaling":         true,
 			"location":            map[string]any{"identifier": "test-location"},
 		}),
 	))
