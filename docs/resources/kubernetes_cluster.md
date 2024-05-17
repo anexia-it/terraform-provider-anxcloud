@@ -116,6 +116,9 @@ resource "anxcloud_kubernetes_cluster" "foo" {
 
 ### Optional
 
+- `enable_autoscaling` (Boolean) Enable autoscaling for this cluster. Defaults to false if unset.
+			
+-> You will need to explicitly configure your node pools for autoscaling. Please check the provided [autoscaling documentation](https://engine.anexia-it.com/docs/en/module/kubernetes/user-guide/autoscaling) for details.
 - `enable_lbaas` (Boolean) If enabled, Service VMs are set up as LBaaS hosts enabling K8s services of type LoadBalancer.
 - `enable_nat_gateways` (Boolean) If enabled, Service VMs are configured as NAT gateways connecting the internal cluster network to the internet.
 - `external_ipv4_prefix` (String) External IPv4 prefix.

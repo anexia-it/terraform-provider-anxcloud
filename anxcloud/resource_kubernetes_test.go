@@ -59,6 +59,7 @@ var _ = Describe("Kubernetes Resource", func() {
 						name = "foo"
 						location = "test-location"
 						needs_service_vms = true
+						enable_autoscaling = true
 					}
 					`,
 				},
@@ -278,6 +279,7 @@ func Test_resourceKubernetesClusterCreate(t *testing.T) {
 		NeedsServiceVMs:   pointer.Bool(true),
 		EnableNATGateways: pointer.Bool(true),
 		EnableLBaaS:       pointer.Bool(true),
+		EnableAutoscaling: pointer.Bool(false),
 	}).DoAndReturn(func(_ any, v *kubernetesv1.Cluster, _ ...any) error {
 		v.Identifier = "mocked-cluster-identifier"
 		return nil

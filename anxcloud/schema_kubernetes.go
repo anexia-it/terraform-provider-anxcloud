@@ -72,6 +72,15 @@ func schemaKubernetesCluster() map[string]*schema.Schema {
 			Computed:    true,
 			ForceNew:    true,
 		},
+		"enable_autoscaling": {
+			Type: schema.TypeBool,
+			Description: `
+Enable autoscaling for this cluster. Defaults to false if unset.
+
+-> You will need to explicitly configure your node pools for autoscaling. Please check the provided [autoscaling documentation](https://engine.anexia-it.com/docs/en/module/kubernetes/user-guide/autoscaling) for details.`,
+			Optional: true,
+			ForceNew: true,
+		},
 	}
 }
 
