@@ -174,9 +174,13 @@ func TestAccAnxCloudKubernetesResourcesCombined(t *testing.T) {
 					cluster_ca_certificate = anxcloud_kubernetes_kubeconfig.foo.cluster_ca_certificate
 				}
 				
-				resource "kubernetes_namespace" "foo" {
+				resource "kubernetes_config_map" "foo" {
 					metadata {
 						name = "foo"
+					}
+
+					data = {
+						foo = "bar"
 					}
 				}
 
