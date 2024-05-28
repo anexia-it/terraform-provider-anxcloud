@@ -18,8 +18,10 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 -->
 
 ### Added
+* anxcloud_kubernetes_cluster: add `enable_autoscaling` to enable/disable autoscaling (#160, @nachtjasmin)
 
-* kubernetes_cluster: add `enable_autoscaling` to enable/disable autoscaling (#160, @nachtjasmin)
+### Changed
+* resource/anxcloud_kubernetes_cluster: increase create timeout (#161, @anx-mschaefer)
 
 ## [0.6.1] - 2024-03-21
 
