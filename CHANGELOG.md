@@ -17,6 +17,8 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+## [0.6.2] - 2024-05-28
+
 ### Added
 * anxcloud_kubernetes_cluster: add `enable_autoscaling` to enable/disable autoscaling (#160, @nachtjasmin)
 
