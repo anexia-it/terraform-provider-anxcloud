@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"go.anx.io/go-anxcloud/pkg/ipam/address"
+	"go.anx.io/go-anxcloud/pkg/vlan"
 )
 
 const (
@@ -19,7 +20,8 @@ const (
 
 func resourceIPAddress() *schema.Resource {
 	return &schema.Resource{
-		Description:   "This resource allows you to create and configure IP addresses.",
+		Description: "This resource allows you to create and configure IP addresses. " +
+			"Addresses created without the `address` attribute will expire if the reservation period exceeds before assigned to a VM.",
 		CreateContext: tagsMiddlewareCreate(resourceIPAddressCreate),
 		ReadContext:   tagsMiddlewareRead(resourceIPAddressRead),
 		UpdateContext: tagsMiddlewareUpdate(resourceIPAddressUpdate),
@@ -33,18 +35,144 @@ func resourceIPAddress() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
-		Schema: withTagsAttribute(schemaIPAddress()),
+		Schema: withTagsAttribute(
+			map[string]*schema.Schema{
+				"id": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: identifierDescription,
+				},
+				"address": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					Description:  "IP address.",
+					ExactlyOneOf: []string{"address", "vlan_id"},
+					RequiredWith: []string{"network_prefix_id"}, // network_prefix_id is required if address is set
+				},
+				"vlan_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					Description:  "The associated VLAN identifier.",
+					ExactlyOneOf: []string{"address", "vlan_id"},
+				},
+				"network_prefix_id": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Computed:    true,
+					ForceNew:    true,
+					Description: "Identifier of the related network prefix.",
+				},
+				"version": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Computed:    true,
+					ForceNew:    true,
+					Description: "IP version.",
+				},
+				"description_customer": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					Description:   "Additional customer description.",
+					ConflictsWith: []string{"vlan_id"},
+				},
+				"description_internal": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Internal description.",
+				},
+				"role": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Default:       "Default",
+					Description:   "Role of the IP address",
+					ConflictsWith: []string{"vlan_id"},
+				},
+				"organization": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					Description:   "Customer of yours. Reseller only.",
+					ConflictsWith: []string{"vlan_id"},
+				},
+				"status": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Status of the IP address",
+				},
+				"reservation_period_seconds": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ConflictsWith: []string{"address"},
+					Description:   "Period for the requested reservation in seconds. Defaults to 30 minutes if not set.",
+				},
+			},
+		),
 	}
 }
 
 func resourceIPAddressCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(providerContext).legacyClient
 	a := address.NewAPI(c)
-	prefixID := d.Get("network_prefix_id").(string)
+	v := vlan.NewAPI(c)
 
+	// if `vlan_id` was provided, we will perform an ip reservation
+	if vlanID, ok := d.GetOk("vlan_id"); ok {
+		vlan, err := v.Get(ctx, vlanID.(string))
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("fetch vlan: %w", err))
+		} else if len(vlan.Locations) < 1 {
+			return diag.Errorf("vlan has no locations specified")
+		}
+
+		reserveOpts := address.ReserveRandom{
+			VlanID:     vlan.Identifier,
+			LocationID: vlan.Locations[0].Identifier,
+			Count:      1,
+		}
+
+		if reservationPeriodSeconds, ok := d.GetOk("reservation_period_seconds"); ok {
+			reserveOpts.ReservationPeriod = uint(reservationPeriodSeconds.(int))
+		}
+
+		if prefixID, ok := d.GetOk("network_prefix_id"); ok {
+			reserveOpts.PrefixID = prefixID.(string)
+		} else if ipVersion, ok := d.GetOk("version"); ok {
+			reserveOpts.IPVersion = address.IPReserveVersionLimit(ipVersion.(int))
+		}
+
+		reserveSummary, err := a.ReserveRandom(ctx, reserveOpts)
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("reserve address: %w", err))
+		} else if len(reserveSummary.Data) < 1 {
+			return diag.Errorf("reserve endpoint didn't return any addresses")
+		}
+
+		d.SetId(reserveSummary.Data[0].ID)
+
+		if err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+			if addr, err := a.Get(ctx, reserveSummary.Data[0].ID); err != nil {
+				return retry.NonRetryableError(err)
+			} else if addr.VLANID == "" {
+				return retry.RetryableError(fmt.Errorf("VLAN id is not set"))
+			}
+
+			return nil
+		}); err != nil {
+			return diag.FromErr(fmt.Errorf("wait for VLAN to be set on address resource: %w", err))
+		}
+
+		return resourceIPAddressRead(ctx, d, m)
+	}
+
+	// create specific address
 	def := address.Create{
-		PrefixID:            prefixID,
 		Address:             d.Get("address").(string),
+		PrefixID:            d.Get("network_prefix_id").(string),
 		DescriptionCustomer: d.Get("description_customer").(string),
 		Role:                d.Get("role").(string),
 		Organization:        d.Get("organization").(string),
@@ -138,6 +266,24 @@ func resourceIPAddressUpdate(ctx context.Context, d *schema.ResourceData, m inte
 func resourceIPAddressDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(providerContext).legacyClient
 	a := address.NewAPI(c)
+
+	if addr, err := a.Get(ctx, d.Id()); isLegacyNotFoundError(err) {
+		// handle not found error by just deleting the resource
+		d.SetId("")
+		return nil
+	} else if err != nil {
+		// return unhandled error
+		return diag.FromErr(err)
+	} else if addr.DescriptionInternal == "reserved" {
+		d.SetId("")
+		var diags diag.Diagnostics
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "Could not delete reserved address",
+			Detail:   "Reserved addresses cannot be deleted manually. They'll expire eventually.",
+		})
+		return diags
+	}
 
 	err := a.Delete(ctx, d.Id())
 	if err != nil {

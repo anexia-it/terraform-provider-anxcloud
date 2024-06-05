@@ -20,21 +20,62 @@ Retrieves an IP address.
 - When using the address argument, only IP addresses unique to the scope of your access token for Anexia Cloud can be retrieved. You can however get a unique result by specifying the related VLAN or network prefix.
 `,
 		ReadContext: dataSourceIPAddressRead,
-		Schema: schemaWith(schemaIPAddress(),
-			fieldsExactlyOneOf("id", "address"),
-			fieldsOptional(
-				"vlan_id",
-				"network_prefix_id",
-			),
-			fieldsComputed(
-				"description_customer",
-				"description_internal",
-				"role",
-				"version",
-				"status",
-				"organization",
-			),
-		),
+		Schema: map[string]*schema.Schema{
+			"id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  identifierDescription,
+				ExactlyOneOf: []string{"id", "address"},
+			},
+			"network_prefix_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Identifier of the related network prefix.",
+			},
+			"address": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "IP address.",
+			},
+			"vlan_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "The associated VLAN identifier.",
+			},
+
+			"description_customer": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Additional customer description.",
+			},
+			"description_internal": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Internal description.",
+			},
+			"role": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Role of the IP address",
+			},
+			"organization": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Customer of yours. Reseller only.",
+			},
+			"version": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "IP version.",
+			},
+			"status": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Status of the IP address",
+			},
+		},
 	}
 }
 
