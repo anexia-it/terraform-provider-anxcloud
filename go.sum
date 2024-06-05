@@ -212,8 +212,8 @@ github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 github.com/zclconf/go-cty v1.14.1 h1:t9fyA35fwjjUMcmL5hLER+e/rEPqrbCK1/OSE4SI9KA=
 github.com/zclconf/go-cty v1.14.1/go.mod h1:VvMs5i0vgZdhYawQNq5kePSpLAoz8u1xvZgrPIxfnZE=
-go.anx.io/go-anxcloud v0.7.0 h1:9qFz+1kxTo6HpB0+RTiDUjEq7T+q3luxZjrlwnQMrVI=
-go.anx.io/go-anxcloud v0.7.0/go.mod h1:2RZ9hF/KTzGOr9MMa4rN+OJ9kgPT4PgGPbNa6qIeIn8=
+go.anx.io/go-anxcloud v0.7.1 h1:6n0V+bI794j9vkG5k8w61hv1kOCQmcdMHorHtf+6Oag=
+go.anx.io/go-anxcloud v0.7.1/go.mod h1:2RZ9hF/KTzGOr9MMa4rN+OJ9kgPT4PgGPbNa6qIeIn8=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=

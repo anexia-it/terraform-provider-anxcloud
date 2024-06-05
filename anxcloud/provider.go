@@ -120,6 +120,16 @@ func handleNotFoundError(err error) error {
 	return err
 }
 
+// isLegacyNotFoundError returns true, if the provided [err]
+// is a "Not Found" status error returned by the legacy api client
+func isLegacyNotFoundError(err error) bool {
+	var respErr *client.ResponseError
+	if errors.As(err, &respErr) && respErr.ErrorData.Code == http.StatusNotFound {
+		return true
+	}
+	return false
+}
+
 func apiFromProviderConfig(m interface{}) api.API {
 	return m.(providerContext).api
 }
