@@ -73,7 +73,7 @@ resource "anxcloud_virtual_server" "webserver" {
   network {
     vlan_id  = anxcloud_vlan.example.id
     ips      = [anxcloud_ip_address.v4.id, anxcloud_ip_address.v6.id]
-    nic_type = "vmxnet3"
+    nic_type = "virtio"
   }
 
   disk {

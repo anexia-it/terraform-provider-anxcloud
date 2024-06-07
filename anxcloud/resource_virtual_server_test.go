@@ -152,6 +152,8 @@ func TestAccAnxCloudVirtualServer(t *testing.T) {
 }
 
 func TestAccAnxCloudVirtualServerFromScratch(t *testing.T) {
+	t.Skip("specific from_scratch templates no longer available")
+
 	environment.SkipIfNoEnvironment(t)
 	envInfo := environment.GetEnvInfo(t)
 	vmRecorder := getVMRecorder(t)
@@ -597,7 +599,7 @@ func TestVersionParsing(t *testing.T) {
 func createNewNetworkInterface(info environment.Info) vm.Network {
 	return vm.Network{
 		VLAN:    info.VlanID,
-		NICType: "vmxnet3",
+		NICType: "virtio",
 		IPs:     []string{info.Prefix.GetNextIP()},
 	}
 }
