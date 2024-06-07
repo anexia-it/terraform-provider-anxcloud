@@ -76,7 +76,7 @@ resource "anxcloud_virtual_server" "example" {
   network {
     vlan_id  = anxcloud_vlan.example.id
     ips      = [anxcloud_ip_address.v4.id, anxcloud_ip_address.v6.id]
-    nic_type = "vmxnet3"
+    nic_type = "virtio"
   }
 
   # Disk 1

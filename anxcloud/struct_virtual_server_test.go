@@ -20,7 +20,7 @@ func TestExpanderVirtualServerNetworks(t *testing.T) {
 			[]interface{}{
 				map[string]interface{}{
 					"vlan_id":  "38f8561acfe34qc49c336d2af31a5cc3",
-					"nic_type": "vmxnet3",
+					"nic_type": "virtio",
 					"ips": schema.NewSet(schema.HashSchema(&schema.Schema{Type: schema.TypeString}), []interface{}{
 						"identifier1",
 						"identifier2",
@@ -32,7 +32,7 @@ func TestExpanderVirtualServerNetworks(t *testing.T) {
 			[]vm.Network{
 				{
 					VLAN:    "38f8561acfe34qc49c336d2af31a5cc3",
-					NICType: "vmxnet3",
+					NICType: "virtio",
 					IPs: []string{
 						"10.11.12.13",
 						"1.0.0.1",
@@ -284,7 +284,7 @@ func TestFlattenVirtualServerNetwork(t *testing.T) {
 			[]vm.Network{
 				{
 					VLAN:    "38f8561acfe34qc49c336d2af31a5cc3",
-					NICType: "vmxnet3",
+					NICType: "virtio",
 					IPs: []string{
 						"identifier1",
 						"identifier2",
@@ -296,7 +296,7 @@ func TestFlattenVirtualServerNetwork(t *testing.T) {
 			[]interface{}{
 				map[string]interface{}{
 					"vlan_id":  "38f8561acfe34qc49c336d2af31a5cc3",
-					"nic_type": "vmxnet3",
+					"nic_type": "virtio",
 					"ips": []string{
 						"identifier1",
 						"identifier2",
