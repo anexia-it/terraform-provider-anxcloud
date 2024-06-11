@@ -189,20 +189,21 @@ func resourceIPAddressReserveAvailableAddress(ctx context.Context, d *schema.Res
 	var reserveSummary address.ReserveRandomSummary
 	if err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var (
-			err     error
-			respErr *client.ResponseError
+			err      error
+			respErr  *client.ResponseError
+			retryErr *retry.RetryError
 		)
 
 		if reserveSummary, err = a.ReserveRandom(ctx, reserveOpts); errors.As(err, &respErr) && respErr.ErrorData.Code == http.StatusConflict {
 			// vlan or prefix might not be ready yet even though they are active
-			return retry.RetryableError(err)
+			retryErr = retry.RetryableError(err)
 		} else if err != nil {
-			return retry.NonRetryableError(fmt.Errorf("reserve endpoint returned an error: %w", err))
+			retryErr = retry.NonRetryableError(fmt.Errorf("reserve endpoint returned an error: %w", err))
 		} else if len(reserveSummary.Data) < 1 {
-			return retry.NonRetryableError(fmt.Errorf("reserve endpoint didn't return any addresses"))
+			retryErr = retry.NonRetryableError(fmt.Errorf("reserve endpoint didn't return any addresses"))
 		}
 
-		return nil
+		return retryErr
 	}); err != nil {
 		return diag.FromErr(fmt.Errorf("(re)try to reserve address: %w", err))
 	}
@@ -210,13 +211,14 @@ func resourceIPAddressReserveAvailableAddress(ctx context.Context, d *schema.Res
 	d.SetId(reserveSummary.Data[0].ID)
 
 	if err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+		var retryErr *retry.RetryError
 		if addr, err := a.Get(ctx, reserveSummary.Data[0].ID); err != nil {
-			return retry.NonRetryableError(err)
+			retryErr = retry.NonRetryableError(err)
 		} else if addr.VLANID == "" {
-			return retry.RetryableError(fmt.Errorf("VLAN id is not set"))
+			retryErr = retry.RetryableError(fmt.Errorf("VLAN id is not set"))
 		}
 
-		return nil
+		return retryErr
 	}); err != nil {
 		return diag.FromErr(fmt.Errorf("wait for VLAN to be set on address resource: %w", err))
 	}
