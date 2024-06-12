@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -118,75 +120,41 @@ func resourceIPAddress() *schema.Resource {
 	}
 }
 
-func resourceIPAddressCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(providerContext).legacyClient
-	a := address.NewAPI(c)
-	v := vlan.NewAPI(c)
+const (
+	addressStateSuccess   = "success"
+	addressStateReserving = "reserving address"
+	addressStateWaitReady = "waiting for address to be ready"
+	addressStateError     = "error"
+)
 
-	// if `vlan_id` was provided, we will perform an ip reservation
-	if vlanID, ok := d.GetOk("vlan_id"); ok {
-		vlan, err := v.Get(ctx, vlanID.(string))
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("fetch vlan: %w", err))
-		} else if len(vlan.Locations) < 1 {
-			return diag.Errorf("vlan has no locations specified")
-		}
+func immediateErrorReturnRefreshFunc(err error) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		return nil, addressStateError, err
+	}
+}
 
-		reserveOpts := address.ReserveRandom{
-			VlanID:     vlan.Identifier,
-			LocationID: vlan.Locations[0].Identifier,
-			Count:      1,
-		}
-
-		if reservationPeriodSeconds, ok := d.GetOk("reservation_period_seconds"); ok {
-			reserveOpts.ReservationPeriod = uint(reservationPeriodSeconds.(int))
-		}
-
-		if prefixID, ok := d.GetOk("network_prefix_id"); ok {
-			reserveOpts.PrefixID = prefixID.(string)
-		} else if ipVersion, ok := d.GetOk("version"); ok {
-			reserveOpts.IPVersion = address.IPReserveVersionLimit(ipVersion.(int))
-		}
-
-		var reserveSummary address.ReserveRandomSummary
-		if err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
-			var (
-				err     error
-				respErr *client.ResponseError
-			)
-
-			if reserveSummary, err = a.ReserveRandom(ctx, reserveOpts); errors.As(err, &respErr) && respErr.ErrorData.Code == http.StatusConflict {
-				// vlan or prefix might not be ready yet even though they are active
-				return retry.RetryableError(err)
-			} else if err != nil {
-				return retry.NonRetryableError(fmt.Errorf("reserve address: %w", err))
-			} else if len(reserveSummary.Data) < 1 {
-				return retry.NonRetryableError(fmt.Errorf("reserve endpoint didn't return any addresses"))
-			}
-
-			return nil
-		}); err != nil {
-			return diag.FromErr(err)
-		}
-
-		d.SetId(reserveSummary.Data[0].ID)
-
-		if err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
-			if addr, err := a.Get(ctx, reserveSummary.Data[0].ID); err != nil {
-				return retry.NonRetryableError(err)
-			} else if addr.VLANID == "" {
-				return retry.RetryableError(fmt.Errorf("VLAN id is not set"))
-			}
-
-			return nil
-		}); err != nil {
-			return diag.FromErr(fmt.Errorf("wait for VLAN to be set on address resource: %w", err))
-		}
-
-		return resourceIPAddressRead(ctx, d, m)
+func refreshAddressReadyState(ctx context.Context, addressClient address.API, id string, expectedStatus []string) (any, string, error) {
+	addr, err := addressClient.Get(ctx, id)
+	if err != nil {
+		return nil, addressStateError, err
+	} else if addr.VLANID == "" {
+		return addr, addressStateWaitReady, nil
 	}
 
-	// create specific address
+	if len(expectedStatus) > 0 {
+		sort.Strings(expectedStatus)
+
+		if idx := sort.SearchStrings(expectedStatus, addr.Status); idx >= len(expectedStatus) || expectedStatus[idx] != addr.Status {
+			return addr, addressStateWaitReady, nil
+		}
+	}
+
+	return addr, addressStateSuccess, nil
+}
+
+func createAddress(ctx context.Context, pc providerContext, d *schema.ResourceData) retry.StateRefreshFunc {
+	addressClient := address.NewAPI(pc.legacyClient)
+
 	def := address.Create{
 		Address:             d.Get("address").(string),
 		PrefixID:            d.Get("network_prefix_id").(string),
@@ -194,32 +162,133 @@ func resourceIPAddressCreate(ctx context.Context, d *schema.ResourceData, m inte
 		Role:                d.Get("role").(string),
 		Organization:        d.Get("organization").(string),
 	}
-	res, err := a.Create(ctx, def)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	d.SetId(res.ID)
 
-	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
-		info, err := a.Get(ctx, d.Id())
-		if err != nil {
-			return retry.NonRetryableError(fmt.Errorf("unable to get ip address with '%s' id: %w", d.Id(), err))
-		}
-		if info.Status == ipAddressStatusInactive || info.Status == ipAddressStatusActive {
-			return nil
-		}
-		return retry.RetryableError(fmt.Errorf("waiting for ip address with '%s' id to be ready", d.Id()))
-	})
+	res, err := addressClient.Create(ctx, def)
 	if err != nil {
-		return diag.FromErr(err)
+		return immediateErrorReturnRefreshFunc(fmt.Errorf("error creating address: %w", err))
 	}
 
-	return resourceIPAddressRead(ctx, d, m)
+	return func() (any, string, error) {
+		return refreshAddressReadyState(ctx, addressClient, res.ID, []string{ipAddressStatusActive, ipAddressStatusInactive})
+	}
+}
+
+func reserveAddress(ctx context.Context, pc providerContext, d *schema.ResourceData) retry.StateRefreshFunc {
+	addressClient := address.NewAPI(pc.legacyClient)
+	vlanClient := vlan.NewAPI(pc.legacyClient)
+
+	vlan, err := vlanClient.Get(ctx, d.Get("vlan_id").(string))
+	if err != nil {
+		return immediateErrorReturnRefreshFunc(fmt.Errorf("error fetching vlan: %w", err))
+	} else if len(vlan.Locations) < 1 {
+		return immediateErrorReturnRefreshFunc(fmt.Errorf("vlan has no locations specified"))
+	}
+
+	reserveOpts := address.ReserveRandom{
+		VlanID:     vlan.Identifier,
+		LocationID: vlan.Locations[0].Identifier,
+		Count:      1,
+	}
+
+	if reservationPeriodSeconds, ok := d.GetOk("reservation_period_seconds"); ok {
+		reserveOpts.ReservationPeriod = uint(reservationPeriodSeconds.(int))
+	}
+
+	if prefixID, ok := d.GetOk("network_prefix_id"); ok {
+		reserveOpts.PrefixID = prefixID.(string)
+	} else if ipVersion, ok := d.GetOk("version"); ok {
+		reserveOpts.IPVersion = address.IPReserveVersionLimit(ipVersion.(int))
+	}
+
+	var successReserveSummary *address.ReserveRandomSummary
+
+	return func() (any, string, error) {
+		if successReserveSummary == nil {
+			reserveSummary, err := addressClient.ReserveRandom(ctx, reserveOpts)
+
+			var respErr *client.ResponseError
+			if errors.As(err, &respErr) && respErr.ErrorData.Code == http.StatusConflict {
+				// vlan or prefix might not be ready yet even though they are active
+				return nil, addressStateReserving, nil
+			} else if err != nil {
+				return nil, addressStateError, fmt.Errorf("reserve endpoint returned an error: %w", err)
+			} else if len(reserveSummary.Data) < 1 {
+				return nil, addressStateError, fmt.Errorf("reserve endpoint didn't return any addresses")
+			}
+
+			successReserveSummary = &reserveSummary
+		}
+
+		return refreshAddressReadyState(ctx, addressClient, successReserveSummary.Data[0].ID, nil)
+	}
+}
+
+func resourceIPAddressCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	wait := retry.StateChangeConf{
+		Timeout:        d.Timeout(schema.TimeoutCreate),
+		Target:         []string{addressStateSuccess},
+		NotFoundChecks: math.MaxInt,
+	}
+
+	if _, ok := d.GetOk("address"); !ok {
+		// if no `address` was provided, we will automatically reserve one
+		wait.Refresh = reserveAddress(ctx, m.(providerContext), d)
+		wait.Pending = []string{addressStateReserving, addressStateWaitReady}
+	} else {
+		// `address` was provided, so we create the specified address
+		wait.Refresh = createAddress(ctx, m.(providerContext), d)
+		wait.Pending = []string{addressStateWaitReady}
+	}
+
+	diags := make(diag.Diagnostics, 0)
+
+	waitResult, err := wait.WaitForStateContext(ctx)
+	if err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+
+	if waitResult != nil {
+		diags = append(diags, addressIntoResourceData(waitResult.(address.Address), d)...)
+	}
+
+	return diags
+}
+
+func addressIntoResourceData(a address.Address, d *schema.ResourceData) diag.Diagnostics {
+	var diags []diag.Diagnostic
+
+	d.SetId(a.ID)
+
+	if err := d.Set("address", a.Name); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+	if err := d.Set("network_prefix_id", a.PrefixID); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+	if err := d.Set("status", a.Status); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+	if err := d.Set("description_customer", a.DescriptionCustomer); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+	if err := d.Set("description_internal", a.DescriptionInternal); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+	// TODO: API require 'role' arg and returns 'role_text' arg, this must be fixed
+	if err := d.Set("role", a.Role); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+	if err := d.Set("version", a.Version); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+	if err := d.Set("vlan_id", a.VLANID); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+
+	return diags
 }
 
 func resourceIPAddressRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags []diag.Diagnostic
-
 	c := m.(providerContext).legacyClient
 	a := address.NewAPI(c)
 
@@ -232,33 +301,7 @@ func resourceIPAddressRead(ctx context.Context, d *schema.ResourceData, m interf
 		return nil
 	}
 
-	if err := d.Set("address", info.Name); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
-	if err := d.Set("network_prefix_id", info.PrefixID); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
-	if err := d.Set("status", info.Status); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
-	if err := d.Set("description_customer", info.DescriptionCustomer); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
-	if err := d.Set("description_internal", info.DescriptionInternal); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
-	// TODO: API require 'role' arg and returns 'role_text' arg, this must be fixed
-	if err := d.Set("role", info.Role); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
-	if err := d.Set("version", info.Version); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
-	if err := d.Set("vlan_id", info.VLANID); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
-
-	return diags
+	return addressIntoResourceData(info, d)
 }
 
 func resourceIPAddressUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
