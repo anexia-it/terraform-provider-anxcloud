@@ -2,12 +2,15 @@ package anxcloud
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"go.anx.io/go-anxcloud/pkg/client"
 	"go.anx.io/go-anxcloud/pkg/ipam/address"
 	"go.anx.io/go-anxcloud/pkg/vlan"
 )
@@ -30,7 +33,7 @@ func resourceIPAddress() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
+			Create: schema.DefaultTimeout(10 * time.Minute),
 			Read:   schema.DefaultTimeout(1 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
@@ -145,11 +148,25 @@ func resourceIPAddressCreate(ctx context.Context, d *schema.ResourceData, m inte
 			reserveOpts.IPVersion = address.IPReserveVersionLimit(ipVersion.(int))
 		}
 
-		reserveSummary, err := a.ReserveRandom(ctx, reserveOpts)
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("reserve address: %w", err))
-		} else if len(reserveSummary.Data) < 1 {
-			return diag.Errorf("reserve endpoint didn't return any addresses")
+		var reserveSummary address.ReserveRandomSummary
+		if err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+			var (
+				err     error
+				respErr *client.ResponseError
+			)
+
+			if reserveSummary, err = a.ReserveRandom(ctx, reserveOpts); errors.As(err, &respErr) && respErr.ErrorData.Code == http.StatusConflict {
+				// vlan or prefix might not be ready yet even though they are active
+				return retry.RetryableError(err)
+			} else if err != nil {
+				return retry.NonRetryableError(fmt.Errorf("reserve address: %w", err))
+			} else if len(reserveSummary.Data) < 1 {
+				return retry.NonRetryableError(fmt.Errorf("reserve endpoint didn't return any addresses"))
+			}
+
+			return nil
+		}); err != nil {
+			return diag.FromErr(err)
 		}
 
 		d.SetId(reserveSummary.Data[0].ID)
