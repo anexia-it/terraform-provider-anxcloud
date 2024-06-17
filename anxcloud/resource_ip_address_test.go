@@ -93,78 +93,74 @@ func TestAccAnxCloudIPAddressReserveAvailable(t *testing.T) {
 						test_run_name = %q
 					}
 
-					data "anxcloud_core_location" "anx04" {
-					  code = "ANX04"
-					}
-
 					resource "anxcloud_vlan" "foo" {
-					  location_id          = data.anxcloud_core_location.anx04.id
-					  vm_provisioning      = true
-					  description_customer = "tf-acc-test ${local.test_run_name} anxcloud_ip_address reserve"
+						location_id          = %q
+						vm_provisioning      = true
+						description_customer = "tf-acc-test ${local.test_run_name} anxcloud_ip_address reserve"
 					}
 
 					resource "anxcloud_network_prefix" "v4" {
-					  location_id          = data.anxcloud_core_location.anx04.id
-					  netmask              = 28
-					  vlan_id              = anxcloud_vlan.foo.id
-					  ip_version           = 4
-					  type                 = 1
-					  description_customer = "tf-acc-test ${local.test_run_name} anxcloud_ip_address reserve"
-					  create_empty         = true
+						location_id          = anxcloud_vlan.foo.location_id
+						netmask              = 28
+						vlan_id              = anxcloud_vlan.foo.id
+						ip_version           = 4
+						type                 = 1
+						description_customer = "tf-acc-test ${local.test_run_name} anxcloud_ip_address reserve"
+						create_empty         = true
 					}
 
 					resource "anxcloud_network_prefix" "v6" {
-					  location_id          = data.anxcloud_core_location.anx04.id
-					  netmask              = 64
-					  vlan_id              = anxcloud_vlan.foo.id
-					  ip_version           = 6
-					  type                 = 1
-					  description_customer = "tf-acc-test ${local.test_run_name} anxcloud_ip_address reserve"
-					  create_empty         = true
+						location_id          = anxcloud_vlan.foo.location_id
+						netmask              = 64
+						vlan_id              = anxcloud_vlan.foo.id
+						ip_version           = 6
+						type                 = 1
+						description_customer = "tf-acc-test ${local.test_run_name} anxcloud_ip_address reserve"
+						create_empty         = true
 					}
 
 					resource "anxcloud_ip_address" "v4version" {
-					  vlan_id = anxcloud_vlan.foo.id
-					  version = 4
-					  reservation_period_seconds = 60
+						vlan_id = anxcloud_vlan.foo.id
+						version = 4
+						reservation_period_seconds = 60
 
-					  depends_on = [
-						anxcloud_network_prefix.v4,
-					  ]
+						depends_on = [
+							anxcloud_network_prefix.v4,
+						]
 					}
 
 					resource "anxcloud_ip_address" "v6version" {
-					  vlan_id = anxcloud_vlan.foo.id
-					  version = 6
-					  reservation_period_seconds = 60
+						vlan_id = anxcloud_vlan.foo.id
+						version = 6
+						reservation_period_seconds = 60
 
-					  depends_on = [
-						anxcloud_network_prefix.v6,
-					  ]
+						depends_on = [
+							anxcloud_network_prefix.v6,
+						]
 					}
 
 					resource "anxcloud_ip_address" "v4prefix" {
-					  vlan_id           = anxcloud_vlan.foo.id
-					  network_prefix_id = anxcloud_network_prefix.v4.id
-					  reservation_period_seconds = 60
+						vlan_id           = anxcloud_vlan.foo.id
+						network_prefix_id = anxcloud_network_prefix.v4.id
+						reservation_period_seconds = 60
 					}
 
 					resource "anxcloud_ip_address" "v6prefix" {
-					  vlan_id           = anxcloud_vlan.foo.id
-					  network_prefix_id = anxcloud_network_prefix.v6.id
-					  reservation_period_seconds = 60
+						vlan_id           = anxcloud_vlan.foo.id
+						network_prefix_id = anxcloud_network_prefix.v6.id
+						reservation_period_seconds = 60
 					}
 
 					resource "anxcloud_ip_address" "anyprefixorversion" {
-					  vlan_id = anxcloud_vlan.foo.id
-					  reservation_period_seconds = 60
+						vlan_id = anxcloud_vlan.foo.id
+						reservation_period_seconds = 60
 
-					  depends_on = [
-						anxcloud_network_prefix.v4,
-						anxcloud_network_prefix.v6,
-					  ]
+						depends_on = [
+							anxcloud_network_prefix.v4,
+							anxcloud_network_prefix.v6,
+						]
 					}
-				`, envInfo.TestRunName),
+				`, envInfo.TestRunName, envInfo.Location),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrWith("anxcloud_network_prefix.v4", "cidr", func(value string) error {
 						v4TestPrefix = netip.MustParsePrefix(value)
@@ -220,7 +216,7 @@ func TestAccAnxCloudIPAddressTags(t *testing.T) {
 		address = "%s"
 		role = "%s"
 		description_customer = "tf-acc-tags"
-		
+
 		%%s // tags
 	}`, prefixID, ipAddress, role)
 
