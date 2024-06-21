@@ -42,6 +42,10 @@ func TestAccAnxCloudVLANDataSource(t *testing.T) {
 				Config:      `data "anxcloud_vlan" "foo" {}`,
 				ExpectError: regexp.MustCompile("one of `id,name` must be specified"),
 			},
+			{
+				Config:      `data "anxcloud_vlan" "foo" { id = "" }`,
+				ExpectError: regexp.MustCompile(`Either provide a non-empty "id" or "name" to query a VLAN.`),
+			},
 
 			// expected to succeed
 			{
