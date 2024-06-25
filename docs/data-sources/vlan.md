@@ -48,5 +48,3 @@ Read-Only:
 - `lat` (String)
 - `lon` (String)
 - `name` (String)
-
-
