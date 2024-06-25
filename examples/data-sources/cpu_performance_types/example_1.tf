@@ -1,0 +1,1 @@
+data "anxcloud_cpu_performance_types" "example" {}
