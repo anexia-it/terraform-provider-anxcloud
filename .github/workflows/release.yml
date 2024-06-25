@@ -15,6 +15,13 @@ on:
     tags:
     - 'v*'
 
+  # To test GoReleaser workflows, we also run the release workflow on Pull Requests.
+  # However, GoReleaser will run in dry-mode, so no actual releases are made.
+  pull_request:
+    paths:
+    - '.github/workflows/release.yml'
+    - '.goreleaser.yml'
+
 env:
   GO_VERSION: 1.21
 
@@ -39,11 +46,24 @@ jobs:
         GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
         PASSPHRASE: ${{ secrets.PASSPHRASE }}
 
-    - name: Run GoReleaser
-      uses: goreleaser/goreleaser-action@v2
+    # Although we don't publish as part of the GoReleaser workflow, the validation step is
+    # kept as close to the documentation as possible to prevent surprises in the future.
+    - name: Run GoReleaser (dry-run)
+      uses: goreleaser/goreleaser-action@v6
+      if: "${{ startsWith(github.event_name, 'pull_request') }}"
       with:
-        version: latest
-        args: release --rm-dist
+        args: release --skip=publish --clean --snapshot
+        version: "~> v2"
+      env:
+        GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+
+    - name: Run GoReleaser
+      uses: goreleaser/goreleaser-action@v6
+      if: ${{ startsWith(github.ref, 'refs/tags/') }}
+      with:
+        args: release --clean
+        version: "~> v2"
       env:
         GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
         GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
