@@ -16,6 +16,13 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 
 * (internal)? scope: short description (#pr, @author)
 -->
+## [0.6.4] - 2024-06-27
+
+The v0.6.3 release wasn't published because there was an issue in our release workflow.
+Check [0.6.3](#063---2024-06-25) to see what has changed since the last published release.
+
+### Fixed
+* (internal) Update GoReleaser to fix release workflow (#168, @nachtjasmin)
 
 ## [0.6.3] - 2024-06-25
 
