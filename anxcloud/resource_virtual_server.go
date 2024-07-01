@@ -392,9 +392,13 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 		EnableDangerous: d.Get("critical_operation_confirmed").(bool),
 	}
 
-	if d.HasChanges("sockets", "memory", "cpus") {
+	if d.HasChange("cpus") {
 		ch.CPUs = d.Get("cpus").(int)
+	}
+	if d.HasChange("sockets") {
 		ch.CPUSockets = d.Get("sockets").(int)
+	}
+	if d.HasChange("memory") {
 		ch.MemoryMBs = d.Get("memory").(int)
 	}
 
