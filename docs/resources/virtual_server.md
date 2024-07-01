@@ -117,7 +117,7 @@ resource "anxcloud_virtual_server" "example" {
 - `network` (Block List) Network interface (see [below for nested schema](#nestedblock--network))
 - `password` (String, Sensitive) Plaintext password. Example: ('!anx123mySuperStrongPassword123anx!', 'go3ju0la1ro3', …). For systems that support it, we strongly recommend using a SSH key instead.
 - `script` (String) Script to be executed after provisioning. Consider the corresponding shebang at the beginning of your script. If you want to use PowerShell, the first line should be: #ps1_sysnative.
-- `sockets` (Number) Amount of CPU sockets Number of cores have to be a multiple of sockets, as they will be spread evenly across all sockets. Defaults to number of cores, i.e. one socket per CPU core.
+- `sockets` (Number) Amount of CPU sockets Number of cores have to be a multiple of sockets, as they will be spread evenly across all sockets.
 - `ssh_key` (String) Public key (instead of password, only for Linux systems). Recommended over providing a plaintext password.
 - `tags` (Set of String) Set of tags attached to the resource.
 - `template` (String) Named template. Can be used instead of the template_id to select a template. Example: (`Debian 11`, `Windows 2022`).
@@ -158,7 +158,7 @@ Required:
 
 Optional:
 
-- `ips` (List of String) Requested list of IPs and IPs identifiers. IPs are ignored when using template_type 'from_scratch'. Defaults to free IPs from IP pool attached to VLAN.
+- `ips` (Set of String) Requested set of IPs and IPs identifiers. IPs are ignored when using template_type 'from_scratch'. Defaults to free IPs from IP pool attached to VLAN.
 
 
 <a id="nestedblock--timeouts"></a>

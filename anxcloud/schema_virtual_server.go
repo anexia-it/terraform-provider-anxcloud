@@ -58,11 +58,10 @@ func schemaVirtualServer() map[string]*schema.Schema {
 			Description: "CPU type. Example: (`best-effort`, `standard`, `enterprise`, `performance`), defaults to `standard`.",
 		},
 		"sockets": {
-			Type:     schema.TypeInt,
-			Optional: true,
-			Computed: true,
-			Description: "Amount of CPU sockets Number of cores have to be a multiple of sockets, as they will be spread evenly across all sockets. " +
-				"Defaults to number of cores, i.e. one socket per CPU core.",
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Computed:    true,
+			Description: "Amount of CPU sockets Number of cores have to be a multiple of sockets, as they will be spread evenly across all sockets.",
 		},
 		"memory": {
 			Type:        schema.TypeInt,
