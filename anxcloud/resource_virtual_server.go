@@ -293,9 +293,15 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
-	// engine ensures that the number of CPUs is divisible by the number of sockets
-	// -> floor division is fine
-	if err = d.Set("sockets", info.CPU/info.Cores); err != nil {
+	var sockets int
+	if info.Cores > 0 {
+		// engine ensures that the number of CPUs is divisible by the number of sockets
+		// -> floor division is fine
+		sockets = info.CPU / info.Cores
+	} else {
+		diags = append(diags, diag.Errorf("The engine didn't report any cores for this VM. This is likely a temporary issue. Please try again.")...)
+	}
+	if err = d.Set("sockets", sockets); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 

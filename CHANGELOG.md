@@ -16,6 +16,10 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 
 * (internal)? scope: short description (#pr, @author)
 -->
+
+### Fixed
+* resource/anxcloud_virtual_server: Handle missing VM info more gracefully to prevent division by zero panic (#170, @anx-mschaefer)
+
 ## [0.6.4] - 2024-06-27
 
 The v0.6.3 release wasn't published because there was an issue in our release workflow.
