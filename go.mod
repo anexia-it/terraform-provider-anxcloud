@@ -10,7 +10,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
-	github.com/hashicorp/terraform-plugin-framework v1.10.0
+	github.com/hashicorp/terraform-plugin-framework v1.11.0
 	github.com/hashicorp/terraform-plugin-go v0.23.0
 	github.com/hashicorp/terraform-plugin-mux v0.16.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.34.0
