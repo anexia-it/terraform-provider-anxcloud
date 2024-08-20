@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/internal/utils"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -257,11 +258,11 @@ func resourceDNSRecordBatch(a api.API, zoneName string) func(ctx context.Context
 					}
 
 					if len(opErr) > 0 {
-						fieldErrors := make([]string, 0)
+						var combined *multierror.Error
 						for fieldName, errors := range opErr {
-							fieldErrors = append(fieldErrors, fmt.Sprintf("[%s: %s]", fieldName, strings.Join(errors, " - ")))
+							combined = multierror.Append(combined, fmt.Errorf("[%s: %s]", fieldName, strings.Join(errors, " - ")))
 						}
-						res[i].Error = fmt.Errorf(strings.Join(fieldErrors, " "))
+						res[i].Error = combined
 					} else {
 						res[i].Error = fmt.Errorf("failed to %s dns record as part of batch, because other records are invalid", records[i].batchOperation)
 					}
