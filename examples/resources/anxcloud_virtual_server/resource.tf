@@ -58,6 +58,7 @@ resource "anxcloud_virtual_server" "example" {
     vlan_id  = anxcloud_vlan.example.id
     ips      = [anxcloud_ip_address.v4.id, anxcloud_ip_address.v6.id]
     nic_type = "virtio"
+    bandwidth_limit = 1000
   }
 
   # Disk 1
