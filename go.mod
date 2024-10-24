@@ -20,7 +20,7 @@ require (
 	github.com/onsi/gomega v1.34.2
 	github.com/satori/go.uuid v1.2.1-0.20181028125025-b2ce2384e17b
 	github.com/stretchr/testify v1.9.0
-	go.anx.io/go-anxcloud v0.7.4
+	go.anx.io/go-anxcloud v0.7.5
 	k8s.io/client-go v0.31.1
 )
 
