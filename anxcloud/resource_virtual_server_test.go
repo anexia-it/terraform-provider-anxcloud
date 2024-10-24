@@ -598,9 +598,10 @@ func TestVersionParsing(t *testing.T) {
 
 func createNewNetworkInterface(info environment.Info) vm.Network {
 	return vm.Network{
-		VLAN:    info.VlanID,
-		NICType: "virtio",
-		IPs:     []string{info.Prefix.GetNextIP()},
+		VLAN:           info.VlanID,
+		NICType:        "virtio",
+		IPs:            []string{info.Prefix.GetNextIP()},
+		BandwidthLimit: 1000,
 	}
 }
 
