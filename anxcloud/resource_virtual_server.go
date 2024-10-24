@@ -94,7 +94,7 @@ The virtual_server resource allows you to configure and run virtual machines.
 					}
 					if newNet.BandwidthLimit != oldNets[i].BandwidthLimit {
 						key := fmt.Sprintf("network.%d.bandwidth_limit", i)
-						if err := d.ForceNew(key); err != nil {
+						if err := d.SetNew(key, newNet.BandwidthLimit); err != nil {
 							log.Fatalf("[ERROR] unable to force new '%s': %v", key, err)
 						}
 					}
