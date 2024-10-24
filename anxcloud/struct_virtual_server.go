@@ -24,6 +24,9 @@ func expandVirtualServerNetworks(p []interface{}) []vm.Network {
 		if v, ok := in["nic_type"]; ok {
 			network.NICType = v.(string)
 		}
+		if v, ok := in["bandwidth_limit"]; ok {
+			network.BandwidthLimit = v.(int)
+		}
 		if v, ok := in["ips"]; ok {
 			ips := v.(*schema.Set)
 			for _, ip := range ips.List() {

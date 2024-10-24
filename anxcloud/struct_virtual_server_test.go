@@ -19,8 +19,9 @@ func TestExpanderVirtualServerNetworks(t *testing.T) {
 		{
 			[]interface{}{
 				map[string]interface{}{
-					"vlan_id":  "38f8561acfe34qc49c336d2af31a5cc3",
-					"nic_type": "virtio",
+					"vlan_id":         "38f8561acfe34qc49c336d2af31a5cc3",
+					"nic_type":        "virtio",
+					"bandwidth_limit": 1000,
 					"ips": schema.NewSet(schema.HashSchema(&schema.Schema{Type: schema.TypeString}), []interface{}{
 						"identifier1",
 						"identifier2",
@@ -31,8 +32,9 @@ func TestExpanderVirtualServerNetworks(t *testing.T) {
 			},
 			[]vm.Network{
 				{
-					VLAN:    "38f8561acfe34qc49c336d2af31a5cc3",
-					NICType: "virtio",
+					VLAN:           "38f8561acfe34qc49c336d2af31a5cc3",
+					NICType:        "virtio",
+					BandwidthLimit: 1000,
 					IPs: []string{
 						"10.11.12.13",
 						"1.0.0.1",

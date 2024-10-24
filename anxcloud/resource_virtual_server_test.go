@@ -522,10 +522,10 @@ func testAccCheckAnxCloudVirtualServerDisks(n string, expectedDisks []vm.Disk) r
 
 func generateNetworkSubResourceString(networks []vm.Network) string {
 	var output string
-	template := "\nnetwork {\n\tvlan_id = \"%s\"\n\tnic_type = \"%s\"\n\tips = [\"%s\"]\n}\n"
+	template := "\nnetwork {\n\tvlan_id = \"%s\"\n\tnic_type = \"%s\"\n\tbandwidth_limit = \"%s\"\n\tips = [\"%s\"]\n}\n"
 
 	for _, n := range networks {
-		output += fmt.Sprintf(template, n.VLAN, n.NICType, n.IPs[0])
+		output += fmt.Sprintf(template, n.VLAN, n.NICType, fmt.Sprint(n.BandwidthLimit), n.IPs[0])
 	}
 
 	return output
@@ -598,9 +598,10 @@ func TestVersionParsing(t *testing.T) {
 
 func createNewNetworkInterface(info environment.Info) vm.Network {
 	return vm.Network{
-		VLAN:    info.VlanID,
-		NICType: "virtio",
-		IPs:     []string{info.Prefix.GetNextIP()},
+		VLAN:           info.VlanID,
+		NICType:        "virtio",
+		IPs:            []string{info.Prefix.GetNextIP()},
+		BandwidthLimit: 1000,
 	}
 }
 

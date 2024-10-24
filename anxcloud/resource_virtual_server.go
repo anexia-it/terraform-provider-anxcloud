@@ -92,6 +92,12 @@ The virtual_server resource allows you to configure and run virtual machines.
 							log.Fatalf("[ERROR] unable to force new '%s': %v", key, err)
 						}
 					}
+					if newNet.BandwidthLimit != oldNets[i].BandwidthLimit {
+						key := fmt.Sprintf("network.%d.bandwidth_limit", i)
+						if err := d.SetNew(key, newNet.BandwidthLimit); err != nil {
+							log.Fatalf("[ERROR] unable to force new '%s': %v", key, err)
+						}
+					}
 
 					if len(newNet.IPs) < len(oldNets[i].IPs) {
 						// IPs are missing
