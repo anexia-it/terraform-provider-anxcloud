@@ -278,9 +278,13 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 		return nil
 	}
 
-	// `template_id` field isn't set for VMs with "from_scratch" templates
-	// that's why we keep the configured `template_id` if the `template_type` is "from_scratch"
-	if templateType, ok := d.Get("template_type").(string); !ok || templateType != "from_scratch" {
+	// Template Type and ID:
+	// the API never returns the TemplateType and in some cases returns a TemplateID.
+	// TemplateType = "from_scratch" : we expect the TemplateID to be empty
+	// TemplateType = "templates" (default): we expect the TemplateID to be set and match resourceData
+
+	// only update the resource if the API returns a TemplateID
+	if info.TemplateID != "" {
 		if err = d.Set("template_id", info.TemplateID); err != nil {
 			diags = append(diags, diag.FromErr(err)...)
 		}
@@ -292,9 +296,6 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 	if err = d.Set("location_id", info.LocationID); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	//if err = d.Set("template_type", info.TemplateType); err != nil {
-	//	diags = append(diags, diag.FromErr(err)...)
-	//}
 	if err = d.Set("cpus", info.CPU); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
