@@ -16,6 +16,8 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 
 * (internal)? scope: short description (#pr, @author)
 -->
+## Added
+* Add ability to set the bandwidth limit per network interface on the server resource (#206 @89q12)
 
 ### Fixed
 * resource/anxcloud_virtual_server: Handle missing VM info more gracefully to prevent division by zero panic (#170, @anx-mschaefer)

@@ -114,6 +114,12 @@ func schemaVirtualServer() map[string]*schema.Schema {
 						Required:    true,
 						Description: "Network interface card type.",
 					},
+					"bandwidth_limit": {
+						Type:        schema.TypeInt,
+						Optional:    true,
+						Default:     1000,
+						Description: "Network interface bandwidth limit in Megabit/s, default: 1000",
+					},
 					"ips": {
 						Type:     schema.TypeSet,
 						Optional: true,
@@ -327,6 +333,11 @@ func schemaVirtualServer() map[string]*schema.Schema {
 									Type:        schema.TypeInt,
 									Computed:    true,
 									Description: "NIC type number.",
+								},
+								"bandwidth_limit": {
+									Type:        schema.TypeInt,
+									Computed:    true,
+									Description: "Bandwidth limit of the interface in Megabit/s",
 								},
 								"vlan": {
 									Type:        schema.TypeString,

@@ -93,6 +93,12 @@ The virtual_server resource allows you to configure and run virtual machines.
 						}
 					}
 
+					if newNet.BandwidthLimit != oldNets[i].BandwidthLimit {
+						key := fmt.Sprintf("network.%d.bandwidth_limit", i)
+						if err := d.ForceNew(key); err != nil {
+							log.Fatalf("[ERROR] unable to force new '%s': %v", key, err)
+						}
+					}
 					if len(newNet.IPs) < len(oldNets[i].IPs) {
 						// IPs are missing
 						key := fmt.Sprintf("network.%d.ips", i)
@@ -351,8 +357,9 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 			}
 
 			network := vm.Network{
-				NICType: nicTypes[net.NIC-1],
-				VLAN:    net.VLAN,
+				NICType:        nicTypes[net.NIC-1],
+				VLAN:           net.VLAN,
+				BandwidthLimit: net.BandwidthLimit,
 			}
 
 			for _, ipv4 := range net.IPv4 {
@@ -415,6 +422,7 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 		oldNets := expandVirtualServerNetworks(old.([]interface{}))
 		newNets := expandVirtualServerNetworks(new.([]interface{}))
 
+		// We would want to check here as well that nothing else but `bandwidth_limit` got changed on each network to support partially updating it.
 		if len(oldNets) < len(newNets) {
 			ch.AddNICs = newNets[len(oldNets):]
 		} else {
