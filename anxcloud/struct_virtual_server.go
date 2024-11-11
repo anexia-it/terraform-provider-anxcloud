@@ -24,6 +24,9 @@ func expandVirtualServerNetworks(p []interface{}) []vm.Network {
 		if v, ok := in["nic_type"]; ok {
 			network.NICType = v.(string)
 		}
+		if v, ok := in["bandwidth_limit"]; ok {
+			network.BandwidthLimit = v.(int)
+		}
 		if v, ok := in["ips"]; ok {
 			ips := v.(*schema.Set)
 			for _, ip := range ips.List() {
@@ -230,6 +233,7 @@ func flattenVirtualServerNetwork(in []vm.Network) []interface{} {
 		net["vlan_id"] = n.VLAN
 		net["nic_type"] = n.NICType
 		net["ips"] = n.IPs
+		net["bandwidth_limit"] = n.BandwidthLimit
 		att = append(att, net)
 	}
 
@@ -281,6 +285,7 @@ func flattenVirtualServerInfo(in *info.Info) []interface{} {
 		ni["mac_address"] = n.MACAddress
 		ni["ip_v4"] = n.IPv4
 		ni["ip_v6"] = n.IPv6
+		ni["bandwidth_limit"] = n.BandwidthLimit
 		networkInfo = append(networkInfo, ni)
 	}
 	att["network"] = networkInfo

@@ -13,6 +13,7 @@ The virtual_server resource allows you to configure and run virtual machines.
 ### Known limitations
 - removal of disks not supported
 - removal of networks not supported
+- changing the speed on a network interface forces a replacement of the VM
 
 ## Example Usage
 
@@ -74,9 +75,10 @@ resource "anxcloud_virtual_server" "example" {
 
   # Set network interface
   network {
-    vlan_id  = anxcloud_vlan.example.id
-    ips      = [anxcloud_ip_address.v4.id, anxcloud_ip_address.v6.id]
-    nic_type = "virtio"
+    vlan_id         = anxcloud_vlan.example.id
+    ips             = [anxcloud_ip_address.v4.id, anxcloud_ip_address.v6.id]
+    nic_type        = "virtio"
+    bandwidth_limit = 1000
   }
 
   # Disk 1
@@ -158,8 +160,8 @@ Required:
 
 Optional:
 
-- `ips` (List of String) Requested list of IPs and IPs identifiers. IPs are ignored when using template_type 'from_scratch'. Defaults to free IPs from IP pool attached to VLAN.
-
+- `bandwidth_limit` (Number) Network interface bandwidth limit in Megabit/s, default: 1000
+- `ips` (Set of String) Requested set of IPs and IPs identifiers. IPs are ignored when using template_type 'from_scratch'. Defaults to free IPs from IP pool attached to VLAN.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
@@ -220,5 +222,6 @@ Read-Only:
 - `mac_address` (String) MAC address of the NIC.
 - `nic` (Number) NIC type number.
 - `vlan` (String) VLAN identifier.
+- `bandwidth_limit` (Number) Network interface bandwidth limit in Megabit/s, default: 1000
 
 

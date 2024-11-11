@@ -19,8 +19,9 @@ func TestExpanderVirtualServerNetworks(t *testing.T) {
 		{
 			[]interface{}{
 				map[string]interface{}{
-					"vlan_id":  "38f8561acfe34qc49c336d2af31a5cc3",
-					"nic_type": "virtio",
+					"vlan_id":         "38f8561acfe34qc49c336d2af31a5cc3",
+					"nic_type":        "virtio",
+					"bandwidth_limit": 1000,
 					"ips": schema.NewSet(schema.HashSchema(&schema.Schema{Type: schema.TypeString}), []interface{}{
 						"identifier1",
 						"identifier2",
@@ -31,8 +32,9 @@ func TestExpanderVirtualServerNetworks(t *testing.T) {
 			},
 			[]vm.Network{
 				{
-					VLAN:    "38f8561acfe34qc49c336d2af31a5cc3",
-					NICType: "virtio",
+					VLAN:           "38f8561acfe34qc49c336d2af31a5cc3",
+					NICType:        "virtio",
+					BandwidthLimit: 1000,
 					IPs: []string{
 						"10.11.12.13",
 						"1.0.0.1",
@@ -283,8 +285,9 @@ func TestFlattenVirtualServerNetwork(t *testing.T) {
 		{
 			[]vm.Network{
 				{
-					VLAN:    "38f8561acfe34qc49c336d2af31a5cc3",
-					NICType: "virtio",
+					VLAN:           "38f8561acfe34qc49c336d2af31a5cc3",
+					NICType:        "virtio",
+					BandwidthLimit: 1000,
 					IPs: []string{
 						"identifier1",
 						"identifier2",
@@ -295,8 +298,9 @@ func TestFlattenVirtualServerNetwork(t *testing.T) {
 			},
 			[]interface{}{
 				map[string]interface{}{
-					"vlan_id":  "38f8561acfe34qc49c336d2af31a5cc3",
-					"nic_type": "virtio",
+					"vlan_id":         "38f8561acfe34qc49c336d2af31a5cc3",
+					"nic_type":        "virtio",
+					"bandwidth_limit": 1000,
 					"ips": []string{
 						"identifier1",
 						"identifier2",
@@ -336,12 +340,13 @@ func TestFlattenVirtualServerInfo(t *testing.T) {
 				Cores:           4,
 				Network: []info.Network{
 					{
-						NIC:        3,
-						ID:         4000,
-						VLAN:       "111111111111111111111",
-						MACAddress: "00:50:56:bb:c0:81",
-						IPv4:       []string{"1.1.1.1"},
-						IPv6:       []string{"2001:db8::8a2e:370:7334"},
+						NIC:            3,
+						BandwidthLimit: 1000,
+						ID:             4000,
+						VLAN:           "111111111111111111111",
+						MACAddress:     "00:50:56:bb:c0:81",
+						IPv4:           []string{"1.1.1.1"},
+						IPv6:           []string{"2001:db8::8a2e:370:7334"},
 					},
 				},
 				Disks: 1,
@@ -372,12 +377,13 @@ func TestFlattenVirtualServerInfo(t *testing.T) {
 					"status":           "poweredOn",
 					"network": []interface{}{
 						map[string]interface{}{
-							"nic":         3,
-							"id":          4000,
-							"vlan":        "111111111111111111111",
-							"mac_address": "00:50:56:bb:c0:81",
-							"ip_v4":       []string{"1.1.1.1"},
-							"ip_v6":       []string{"2001:db8::8a2e:370:7334"},
+							"nic":             3,
+							"bandwidth_limit": 1000,
+							"id":              4000,
+							"vlan":            "111111111111111111111",
+							"mac_address":     "00:50:56:bb:c0:81",
+							"ip_v4":           []string{"1.1.1.1"},
+							"ip_v6":           []string{"2001:db8::8a2e:370:7334"},
 						},
 					},
 					"ram":          4096,
