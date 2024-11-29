@@ -20,6 +20,7 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * Add ability to set the bandwidth limit per network interface on the server resource (#206 @89q12)
 
 ### Fixed
+* resource/anxcloud_virtual_server: Handle empty template_id from API and make integration-test pass (#208, @drpsychick)
 * resource/anxcloud_virtual_server: Handle missing VM info more gracefully to prevent division by zero panic (#170, @anx-mschaefer)
 
 ## [0.6.4] - 2024-06-27

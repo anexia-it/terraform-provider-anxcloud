@@ -41,7 +41,7 @@ func getVMRecorder(t *testing.T) recorder.VMRecoder {
 	return vmRecorder
 }
 
-func TestAccAnxCloudVirtualServer(t *testing.T) {
+func TestAccAnxCloudVirtualServerScale(t *testing.T) {
 	environment.SkipIfNoEnvironment(t)
 	resourceName := "acc_test_vm_test"
 	resourcePath := "anxcloud_virtual_server." + resourceName
@@ -210,7 +210,6 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 		DNS1:               "8.8.8.8",
 		Password:           "flatcar#1234$%%",
 	}
-	vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", vmDef.Hostname))
 
 	disks := []vm.Disk{
 		{
@@ -223,6 +222,7 @@ func TestAccAnxCloudVirtualServerMultiDiskScaling(t *testing.T) {
 		addDiskDef := vmDef
 		addDiskDef.Hostname = fmt.Sprintf("terraform-test-%s-add-disk", envInfo.TestRunName)
 		addDiskDef.Network = []vm.Network{createNewNetworkInterface(envInfo)}
+		vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", vmDef.Hostname))
 
 		disksAdd := append(disks, vm.Disk{
 
