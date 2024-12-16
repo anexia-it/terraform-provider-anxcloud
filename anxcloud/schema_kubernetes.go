@@ -83,7 +83,7 @@ Enable autoscaling for this cluster. Defaults to false if unset.
 		},
 		"apiserver_allowlist": {
 			Type:        schema.TypeList,
-			Description: "A list of CIDRs that should be allowed access to the kubernetes API server, by default there is no IP restriction.",
+			Description: "A list of CIDRs that should be allowed access to the kubernetes API server. By default there are no IP restrictions.",
 			Optional:    true,
 			Computed:    true,
 			ForceNew:    false,
