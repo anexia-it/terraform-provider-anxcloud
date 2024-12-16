@@ -54,6 +54,13 @@ func resourceKubernetesClusterCreate(ctx context.Context, d *schema.ResourceData
 		EnableAutoscaling: pointer.Bool(d.Get("enable_autoscaling").(bool)),
 	}
 
+	allowlistAsInterfaces := d.Get("apiserver_allowlist").([]interface{})
+	allowlist := make([]string, 0, len(allowlistAsInterfaces))
+	for _, v := range allowlistAsInterfaces {
+		allowlist = append(allowlist, v.(string))
+	}
+	cluster.ApiServerAllowlist = strings.Join(allowlist, " ")
+
 	if prefix, ok := d.GetOk("internal_ipv4_prefix"); ok {
 		cluster.InternalIPv4Prefix = &common.PartialResource{Identifier: prefix.(string)}
 		cluster.ManageInternalIPv4Prefix = pointer.Bool(false)
