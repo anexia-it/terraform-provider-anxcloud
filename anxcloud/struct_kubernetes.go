@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	kubernetesv1 "go.anx.io/go-anxcloud/pkg/apis/kubernetes/v1"
 	"go.anx.io/go-anxcloud/pkg/utils/pointer"
+	"strings"
 )
 
 const gibiFactor = 1073741824 // math.Pow(2, 30)
@@ -47,6 +48,9 @@ func setResourceDataFromKubernetesCluster(d *schema.ResourceData, cluster kubern
 		if err := d.Set("external_ipv6_prefix", cluster.ExternalIPv6Prefix.Identifier); err != nil {
 			diags = append(diags, diag.FromErr(err)...)
 		}
+	}
+	if err := d.Set("apiserver_allowlist", strings.Split(cluster.ApiServerAllowlist, " ")); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
 	}
 
 	return diags

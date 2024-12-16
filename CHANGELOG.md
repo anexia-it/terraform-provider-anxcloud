@@ -18,6 +18,7 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 -->
 ## Added
 * Add ability to set the bandwidth limit per network interface on the server resource (#206 @89q12)
+* Add ability to limit kubernetes API server access via CIDRs (#228 @drpsychick))
 
 ### Fixed
 * resource/anxcloud_virtual_server: Handle empty template_id from API and make integration-test pass (#208, @drpsychick)
