@@ -16,9 +16,15 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 
 * (internal)? scope: short description (#pr, @author)
 -->
-## Added
+
+
+## [0.7.0] - 2024-12-16
+
+### Added
+* Add ability to limit kubernetes API server access via CIDRs (#228 @drpsychick)
 * Add ability to set the bandwidth limit per network interface on the server resource (#206 @89q12)
-* Add ability to limit kubernetes API server access via CIDRs (#228 @drpsychick))
+
+## [0.6.5] - 2024-11-12
 
 ### Fixed
 * resource/anxcloud_virtual_server: Handle empty template_id from API and make integration-test pass (#208, @drpsychick)

@@ -12,6 +12,9 @@ description: |-
 Resource to create Kubernetes clusters.
 			Updates are currently not supported.
 
+### Known limitations
+- updating a cluster is currently not supported and forces a replacement of the Cluster
+
 ## Example Usage
 
 ```terraform
@@ -125,6 +128,7 @@ resource "anxcloud_kubernetes_cluster" "foo" {
 - `external_ipv6_prefix` (String) External IPv6 prefix.
 - `internal_ipv4_prefix` (String) Internal IPv4 prefix.
 - `needs_service_vms` (Boolean) Deploy Service VMs providing load balancers and outbound masquerade.
+- `apiserver_allowlist` ([]String) Limits access to the kubernetes API server to the given CIDRs.
 - `tags` (Set of String) Set of tags attached to the resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `version` (String) Kubernetes version.
