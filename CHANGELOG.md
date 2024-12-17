@@ -16,13 +16,24 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 
 * (internal)? scope: short description (#pr, @author)
 -->
-## Added
-* Add ability to set the bandwidth limit per network interface on the server resource (#206 @89q12)
-* Add ability to limit kubernetes API server access via CIDRs (#228 @drpsychick))
+
+## [0.6.6] - 2024-12-17
+
+### Added
+* resource/anxcloud_kubernetes_cluster: add `apiserver_allowlist` attribute to configure CIDRs allowed to access the apiserver (#228 @drpsychick)
+
+## [0.6.5] - 2024-11-12
 
 ### Fixed
 * resource/anxcloud_virtual_server: Handle empty template_id from API and make integration-test pass (#208, @drpsychick)
 * resource/anxcloud_virtual_server: Handle missing VM info more gracefully to prevent division by zero panic (#170, @anx-mschaefer)
+
+### Added
+* resource/anxcloud_virtual_server: add `bandwidth_limit` attribute to networks (#206 @89q12)
+
+### Notes
+
+This release is based on a commit that was apparently rebased before getting merged to main.
 
 ## [0.6.4] - 2024-06-27
 
