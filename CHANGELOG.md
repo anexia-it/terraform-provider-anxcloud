@@ -17,6 +17,10 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * (internal)? scope: short description (#pr, @author)
 -->
 
+### Fixed
+
+* golang/x/net: update to 0.33.0 due to CVE-2024-45338 (#236, @drpsychick)
+
 ## [0.6.6] - 2024-12-17
 
 ### Added
