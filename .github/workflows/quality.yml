@@ -77,17 +77,9 @@ jobs:
       with:
         go-version: ${{env.GO_VERSION}}
 
-    - name: run integration tests and post coverage to codeclimate
-      uses: paambaati/codeclimate-action@v9.0.0
+    - name: Run acceptance tests
+      run: make testacc
       env:
+        ANEXIA_TOKEN: ${{ secrets.ANEXIA_TOKEN }}
         ANEXIA_LOCATION_ID: 52b5f6b2fd3a4a7eaaedf1a7c019e9ea
         ANEXIA_VLAN_ID: 00a239d617504e4ab49122efe0d27657
-        ANEXIA_TOKEN: ${{ secrets.ANEXIA_TOKEN }}
-        CC_TEST_REPORTER_ID: ${{ secrets.CODECLIMATE_COVERAGE_ID }}
-
-        # poor girls ternary operator
-        TESTARGS: ${{ (github.ref_type != 'tag' && github.ref_name != 'main') && '-short' || '' }}
-      with:
-        prefix: github.com/anexia-it/terraform-provider-anxcloud
-        coverageCommand: make testacc
-        coverageLocations: coverage.out:gocov
