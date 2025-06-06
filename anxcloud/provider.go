@@ -96,7 +96,11 @@ func providerConfigure(version string) func(context.Context, *schema.ResourceDat
 			return nil, diags
 		}
 
-		apiClient, err := api.NewAPI(api.WithClientOptions(opts...))
+		apiClient, err := api.NewAPI(
+			api.WithClientOptions(opts...),
+			api.WithRequestOptions(api.EnvironmentOption("kubernetes/v1", "kubernetes-stage", false)),
+		)
+
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
