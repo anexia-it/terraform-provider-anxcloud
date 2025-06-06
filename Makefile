@@ -2,7 +2,7 @@ export GOPATH?=$(shell go env GOPATH)
 export GOPROXY=https://proxy.golang.org
 export GO111MODULE=on
 
-HOSTNAME=hashicorp.com
+HOSTNAME=terraform.local-dev
 NAMESPACE=anexia-it
 NAME=anxcloud
 BINARY=terraform-provider-${NAME}
