@@ -1,8 +1,6 @@
 module github.com/anexia-it/terraform-provider-anxcloud
 
-go 1.22.0
-
-toolchain go1.22.4
+go 1.23.0
 
 require (
 	github.com/go-logr/logr v1.4.2
@@ -82,7 +80,7 @@ require (
 	github.com/zclconf/go-cty v1.15.0 // indirect
 	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/mod v0.22.0 // indirect
-	golang.org/x/oauth2 v0.23.0 // indirect
+	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/term v0.28.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
