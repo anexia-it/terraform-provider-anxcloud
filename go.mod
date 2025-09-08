@@ -20,9 +20,11 @@ require (
 	github.com/onsi/gomega v1.36.2
 	github.com/satori/go.uuid v1.2.1-0.20181028125025-b2ce2384e17b
 	github.com/stretchr/testify v1.10.0
-	go.anx.io/go-anxcloud v0.7.7
+	go.anx.io/go-anxcloud v0.7.9
 	k8s.io/client-go v0.31.3
 )
+
+replace go.anx.io/go-anxcloud => /home/rweselowski/PhpstormProjects/go-anxcloud
 
 require (
 	github.com/go-logr/stdr v1.2.2 // indirect
