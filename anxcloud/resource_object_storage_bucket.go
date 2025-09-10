@@ -56,6 +56,11 @@ func schemaObjectStorageBucket() map[string]*schema.Schema {
 				Computed:    true,
 				Description: "Collective size of objects in the bucket.",
 			},
+			"object_lock_lifetime_in_days": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Number of days for object lock lifetime. When set, objects in this bucket will be protected from deletion and modification for the specified duration.",
+			},
 		},
 	)
 }
@@ -74,6 +79,11 @@ func resourceObjectStorageBucketCreate(ctx context.Context, d *schema.ResourceDa
 		Tenant: common.PartialResource{
 			Identifier: d.Get("tenant").(string),
 		},
+	}
+
+	if v, ok := d.GetOk("object_lock_lifetime_in_days"); ok {
+		lifetime := v.(int)
+		bucket.ObjectLockLifetime = &lifetime
 	}
 
 	// Set common fields
@@ -116,6 +126,12 @@ func resourceObjectStorageBucketRead(ctx context.Context, d *schema.ResourceData
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
+	if bucket.ObjectLockLifetime != nil {
+		if err := d.Set("object_lock_lifetime_in_days", *bucket.ObjectLockLifetime); err != nil {
+			diags = append(diags, diag.FromErr(err)...)
+		}
+	}
+
 	if objectCount, err := bucket.GetObjectCount(); err == nil {
 		if err := d.Set("object_count", objectCount); err != nil {
 			diags = append(diags, diag.FromErr(err)...)
@@ -149,6 +165,11 @@ func resourceObjectStorageBucketUpdate(ctx context.Context, d *schema.ResourceDa
 		Tenant: common.PartialResource{
 			Identifier: d.Get("tenant").(string),
 		},
+	}
+
+	if v, ok := d.GetOk("object_lock_lifetime_in_days"); ok {
+		lifetime := v.(int)
+		bucket.ObjectLockLifetime = &lifetime
 	}
 
 	// Set common fields
