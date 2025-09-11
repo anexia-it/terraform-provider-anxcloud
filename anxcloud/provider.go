@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"runtime"
 
 	"github.com/go-logr/logr"
@@ -47,6 +48,14 @@ func Provider(version string) *schema.Provider {
 			"anxcloud_frontier_endpoint":     resourceFrontierEndpoint(),
 			"anxcloud_frontier_action":       resourceFrontierAction(),
 			"anxcloud_frontier_deployment":   resourceFrontierDeployment(),
+			// Object Storage resources
+			"anxcloud_object_storage_endpoint": resourceObjectStorageEndpoint(),
+			"anxcloud_object_storage_backend":  resourceObjectStorageBackend(),
+			"anxcloud_object_storage_tenant":   resourceObjectStorageTenant(),
+			"anxcloud_object_storage_bucket":   resourceObjectStorageBucket(),
+			"anxcloud_object_storage_user":     resourceObjectStorageUser(),
+			"anxcloud_object_storage_key":      resourceObjectStorageKey(),
+			"anxcloud_object_storage_region":   resourceObjectStorageRegion(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anxcloud_disk_types":            dataSourceDiskTypes(),
@@ -63,6 +72,10 @@ func Provider(version string) *schema.Provider {
 			"anxcloud_dns_records":           dataSourceDNSRecords(),
 			"anxcloud_dns_zones":             datasourceDNSZones(),
 			"anxcloud_kubernetes_cluster":    dataSourceKubernetesCluster(),
+			// Object Storage data sources
+			"anxcloud_object_storage_endpoints": dataSourceObjectStorageEndpoints(),
+			"anxcloud_object_storage_backends":  dataSourceObjectStorageBackends(),
+			"anxcloud_object_storage_regions":   dataSourceObjectStorageRegions(),
 		},
 		ConfigureContextFunc: providerConfigure(version),
 	}
@@ -84,6 +97,11 @@ func providerConfigure(version string) func(context.Context, *schema.ResourceDat
 			client.TokenFromString(token),
 			client.Logger(logger.WithName("client")),
 			client.UserAgent(fmt.Sprintf("%s/%s (%s)", "terraform-provider-anxcloud", version, runtime.GOOS)),
+		}
+
+		// Check for custom base URL from environment variable
+		if baseURL := os.Getenv("ANEXIA_BASE_URL"); baseURL != "" {
+			opts = append(opts, client.BaseURL(baseURL))
 		}
 
 		c, err := client.New(opts...)
