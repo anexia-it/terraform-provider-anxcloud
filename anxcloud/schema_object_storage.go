@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	objectstoragev2 "go.anx.io/go-anxcloud/pkg/apis/objectstorage/v2"
 )
 
@@ -52,12 +51,8 @@ func schemaObjectStorageCommon() map[string]*schema.Schema {
 func schemaObjectStorageState() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"state": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-			ValidateFunc: validation.StringInSlice([]string{
-				"0", "1",
-			}, false),
+			Type:        schema.TypeString,
+			Computed:    true,
 			Description: "State of the resource. 0 = OK, 1 = Error.",
 		},
 	}

@@ -121,9 +121,8 @@ func resourceObjectStorageUserRead(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if err := d.Set("backend", user.Backend.Identifier); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
+	// Skip setting backend as this is a "write once" field
+	// and the API's get endpoint doesn't return it properly
 
 	if err := d.Set("tenant", user.Tenant.Identifier); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
