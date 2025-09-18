@@ -72,13 +72,19 @@ func resourceDNSRecordCreate(ctx context.Context, d *schema.ResourceData, m inte
 		return resourceDNSRecordRead(ctx, d, m)
 	}
 
-	// not found -> create new zone
+	// not found -> create new record
 
 	if _, err := batcher.Process(ctx, recordBatchUnit{record: r, batchOperation: batchOperationCreate}); err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(resourceDNSRecordCanonicalIdentifier(r))
+	// After successful creation, find the record to get its stable identifier
+	createdRecord, err := findDNSRecord(ctx, a, r)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("failed to find created DNS record: %w", err))
+	}
+
+	d.SetId(createdRecord.Identifier)
 
 	return resourceDNSRecordRead(ctx, d, m)
 }
@@ -89,13 +95,39 @@ func resourceDNSRecordRead(ctx context.Context, d *schema.ResourceData, m interf
 	a := apiFromProviderConfig(m)
 
 	r := dnsRecordFromResourceData(d)
-	r, err := findDNSRecord(ctx, a, r)
 
-	if api.IgnoreNotFound(err) != nil {
-		return diag.FromErr(err)
-	} else if err != nil {
-		d.SetId("")
-		return diags
+	// If we have a stable identifier, try to find by ID first
+	if d.Id() != "" && d.Id() != resourceDNSRecordCanonicalIdentifier(r) {
+		// We have a stable identifier, try to find by ID
+		idRecord := clouddnsv1.Record{
+			Identifier: d.Id(),
+			ZoneName:   r.ZoneName, // Still need zone context
+		}
+		if found, err := findDNSRecord(ctx, a, idRecord); err == nil {
+			r = found
+		} else if api.IgnoreNotFound(err) != nil {
+			return diag.FromErr(err)
+		} else {
+			// ID-based lookup failed, fall back to content-based search
+			if found, err := findDNSRecord(ctx, a, r); err == nil {
+				r = found
+			} else if api.IgnoreNotFound(err) != nil {
+				return diag.FromErr(err)
+			} else {
+				d.SetId("")
+				return diags
+			}
+		}
+	} else {
+		// Legacy behavior: find by content
+		var err error
+		r, err = findDNSRecord(ctx, a, r)
+		if api.IgnoreNotFound(err) != nil {
+			return diag.FromErr(err)
+		} else if err != nil {
+			d.SetId("")
+			return diags
+		}
 	}
 
 	// remove quotes from txt rdata to prevent double, tripple, ... quoted data (SYSENG-816)
@@ -104,6 +136,9 @@ func resourceDNSRecordRead(ctx context.Context, d *schema.ResourceData, m interf
 		rData = rData[1 : len(rData)-1]
 	}
 
+	if err := d.Set("identifier", r.Identifier); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
 	if err := d.Set("rdata", rData); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
@@ -134,13 +169,39 @@ func resourceDNSRecordDelete(ctx context.Context, d *schema.ResourceData, m inte
 	batcher := resourceDNSRecordBatcherForZone(a, d.Get("zone_name").(string))
 
 	r := dnsRecordFromResourceData(d)
-	r, err := findDNSRecord(ctx, a, r)
 
-	if api.IgnoreNotFound(err) != nil {
-		return diag.FromErr(err)
-	} else if err != nil {
-		d.SetId("")
-		return nil
+	// If we have a stable identifier, try to find by ID first
+	if d.Id() != "" && d.Id() != resourceDNSRecordCanonicalIdentifier(r) {
+		// We have a stable identifier, try to find by ID
+		idRecord := clouddnsv1.Record{
+			Identifier: d.Id(),
+			ZoneName:   r.ZoneName, // Still need zone context
+		}
+		if found, err := findDNSRecord(ctx, a, idRecord); err == nil {
+			r = found
+		} else if api.IgnoreNotFound(err) != nil {
+			return diag.FromErr(err)
+		} else {
+			// ID-based lookup failed, fall back to content-based search
+			if found, err := findDNSRecord(ctx, a, r); err == nil {
+				r = found
+			} else if api.IgnoreNotFound(err) != nil {
+				return diag.FromErr(err)
+			} else {
+				d.SetId("")
+				return nil
+			}
+		}
+	} else {
+		// Legacy behavior: find by content
+		var err error
+		r, err = findDNSRecord(ctx, a, r)
+		if api.IgnoreNotFound(err) != nil {
+			return diag.FromErr(err)
+		} else if err != nil {
+			d.SetId("")
+			return nil
+		}
 	}
 
 	if _, err := batcher.Process(ctx, recordBatchUnit{record: r, batchOperation: batchOperationDelete}); err != nil {
@@ -172,20 +233,35 @@ func findDNSRecord(ctx context.Context, a api.API, r clouddnsv1.Record) (foundRe
 	var pageIter types.PageInfo
 	err = a.List(ctx, &r, api.Paged(1, 100, &pageIter))
 	if err != nil {
-		return
+		foundRecord = clouddnsv1.Record{}
+		return foundRecord, err
 	}
 
 	var pagedRecords []clouddnsv1.Record
 	for pageIter.Next(&pagedRecords) {
+		// If we have an identifier, search by identifier first (most efficient)
+		if r.Identifier != "" {
+			for _, record := range pagedRecords {
+				if record.Identifier == r.Identifier {
+					foundRecord = record
+					return foundRecord, nil
+				}
+			}
+		}
+
+		// Fall back to content-based search
 		idx, err := compare.Search(&r, pagedRecords, "Type", "Name", "RData", "TTL")
 		if err != nil {
+			foundRecord = clouddnsv1.Record{}
 			return foundRecord, err
 		}
 		if idx > -1 {
-			return pagedRecords[idx], nil
+			foundRecord = pagedRecords[idx]
+			return foundRecord, nil
 		}
 	}
 
+	foundRecord = clouddnsv1.Record{}
 	return foundRecord, api.ErrNotFound
 }
 

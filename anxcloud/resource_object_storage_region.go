@@ -95,11 +95,8 @@ func resourceObjectStorageRegionRead(ctx context.Context, d *schema.ResourceData
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
-	if region.Backend != nil {
-		if err := d.Set("backend", region.Backend.Identifier); err != nil {
-			diags = append(diags, diag.FromErr(err)...)
-		}
-	}
+	// Skip setting backend as this is a "write once" field
+	// and the API's get endpoint doesn't return it properly
 
 	setObjectStorageCommonFieldsFromAPI(&region, d, &diags)
 	setObjectStorageStateFieldFromAPI(&region, d, &diags)

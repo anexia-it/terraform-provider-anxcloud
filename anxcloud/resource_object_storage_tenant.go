@@ -135,9 +135,8 @@ func resourceObjectStorageTenantRead(ctx context.Context, d *schema.ResourceData
 	if err := d.Set("user_name", tenant.UserName); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	if err := d.Set("backend", tenant.Backend.Identifier); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
+	// Skip setting backend as this is a "write once" field
+	// and the API's get endpoint doesn't return it properly
 
 	if tenant.Quota != nil {
 		if err := d.Set("quota", *tenant.Quota); err != nil {

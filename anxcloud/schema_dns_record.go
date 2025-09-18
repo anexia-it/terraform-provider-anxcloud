@@ -7,7 +7,7 @@ func schemaDNSRecord() map[string]*schema.Schema {
 		"identifier": {
 			Type:        schema.TypeString,
 			Computed:    true,
-			Description: "DNS Record identifier. Changes on revision change and therefore shouldn't be used as reference.",
+			Description: "DNS Record stable identifier. This is a unique UUID that persists across record updates and can be used for importing existing records.",
 		},
 		"type": {
 			Type:        schema.TypeString,
