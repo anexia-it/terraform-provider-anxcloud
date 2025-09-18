@@ -57,12 +57,6 @@ func resourceObjectStorageKey() *schema.Resource {
 					Computed:    true,
 					Description: "Remote identifier of the key.",
 				},
-				"secret": {
-					Type:        schema.TypeString,
-					Computed:    true,
-					Sensitive:   true,
-					Description: "Secret key for authentication.",
-				},
 				"secret_url": {
 					Type:        schema.TypeString,
 					Computed:    true,
@@ -136,11 +130,8 @@ func resourceObjectStorageKeyRead(ctx context.Context, d *schema.ResourceData, m
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
-	if key.Backend != nil {
-		if err := d.Set("backend", key.Backend.Identifier); err != nil {
-			diags = append(diags, diag.FromErr(err)...)
-		}
-	}
+	// Skip setting backend as this is a "write once" field
+	// and the API's get endpoint doesn't return it properly
 
 	if key.Tenant != nil {
 		if err := d.Set("tenant", key.Tenant.Identifier); err != nil {
@@ -164,10 +155,6 @@ func resourceObjectStorageKeyRead(ctx context.Context, d *schema.ResourceData, m
 		if err := d.Set("remote_id", *key.RemoteID); err != nil {
 			diags = append(diags, diag.FromErr(err)...)
 		}
-	}
-
-	if err := d.Set("secret", key.Secret); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
 	}
 
 	if err := d.Set("secret_url", key.SecretURL); err != nil {
