@@ -83,8 +83,13 @@ case "${1:-help}" in
 
     "init")
         echo "📦 Initializing $TF_CMD..."
-        TF_CLI_CONFIG_FILE=./dev.tfrc $TF_CMD init
-        echo "✅ $TF_CMD initialized"
+        if [ -f "dev.tfrc" ]; then
+            echo "ℹ️  Using dev_overrides - skipping init (not needed)"
+            echo "✅ $TF_CMD ready with development overrides"
+        else
+            $TF_CMD init
+            echo "✅ $TF_CMD initialized"
+        fi
         ;;
 
     "create")
