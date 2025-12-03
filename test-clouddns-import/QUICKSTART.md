@@ -1,5 +1,7 @@
 # Quick Start Guide - CloudDNS Import Testing
 
+> **Note**: This script works with both Terraform and OpenTofu. It will auto-detect which one you have installed.
+
 ## 🚀 Quick Test (Automated)
 
 ```bash

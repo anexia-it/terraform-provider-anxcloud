@@ -6,7 +6,7 @@ This directory contains a simple Terraform configuration to test the CloudDNS re
 
 1. **AnxCloud API Access**: You need access to the AnxCloud integration environment
 2. **API Token**: Set the `ANEXIA_TOKEN` environment variable with your API token
-3. **Terraform**: Install Terraform (version 1.x recommended)
+3. **Terraform or OpenTofu**: Install either Terraform (version 1.x) or OpenTofu (the script auto-detects which one you have)
 4. **Local Provider Build**: Build and install the local provider from the `feature/clouddns-stable-identifiers` branch
 
 ## Setup
