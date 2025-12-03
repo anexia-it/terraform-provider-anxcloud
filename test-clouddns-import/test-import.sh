@@ -116,7 +116,7 @@ case "${1:-help}" in
     "test-import")
         echo "🧪 Testing import functionality..."
 
-        # Get the identifier
+        # Get the identifier BEFORE removing from state
         IDENTIFIER=$(TF_CLI_CONFIG_FILE=./dev.tfrc get_identifier)
         if [ -z "$IDENTIFIER" ] || [ "$IDENTIFIER" = "null" ]; then
             echo "❌ Error: Could not find identifier. Make sure resources are created first."
@@ -124,6 +124,11 @@ case "${1:-help}" in
         fi
 
         echo "📋 Found identifier: $IDENTIFIER"
+
+        # Construct the import ID in the new format: zone_name/identifier
+        ZONE_NAME="test-import-zone.terraform.example"
+        IMPORT_ID="${ZONE_NAME}/${IDENTIFIER}"
+        echo "📋 Using import ID: $IMPORT_ID"
 
         # Remove from state (but keep in API)
         echo "🗑️  Removing from $TF_CMD state..."

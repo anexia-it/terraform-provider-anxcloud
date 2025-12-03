@@ -109,6 +109,16 @@ The output should show no changes, confirming that:
 2. The stable identifier is being used
 3. The resource state matches the API state
 
+## Development Testing
+
+For development testing with local provider builds:
+
+1. **Setup**: Run `./setup.sh` to validate environment
+2. **Build**: Run `./test-import.sh build` to build and install provider
+3. **Test**: Run `./test-import.sh full-test` for complete E2E testing
+
+The test uses `dev_overrides` to bypass checksum verification during development.
+
 ## Cleanup
 
 Remove the test resources:
