@@ -84,8 +84,8 @@ test-import-zone.terraform.example/dc813ec2-1ecb-4d22-ba9d-a8403c32e60a
 
 The test uses:
 - **Source**: `hashicorp.com/anexia-it/anxcloud`
-- **Version**: `0.7.5-dev` (development version)
-- **Location**: `~/.terraform.d/plugins/hashicorp.com/anexia-it/anxcloud/0.7.5-dev/linux_amd64/`
+- **Version**: `~> 0.7.0` (allows development versions)
+- **Development Overrides**: Uses `dev.tfrc` to bypass checksum verification
 - **SDK Version**: `go.anx.io/go-anxcloud v0.9.2-alpha`
 
-This matches the Makefile configuration for local development.
+The `dev.tfrc` file configures development overrides that allow the test to use your local provider build without checksum conflicts. This is the recommended approach for Terraform/OpenTofu provider development.

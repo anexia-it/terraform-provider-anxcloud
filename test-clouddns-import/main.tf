@@ -2,7 +2,7 @@ terraform {
   required_providers {
     anxcloud = {
       source  = "hashicorp.com/anexia-it/anxcloud"
-      version = "0.7.5-dev"
+      version = "~> 0.7.0"
     }
   }
 }

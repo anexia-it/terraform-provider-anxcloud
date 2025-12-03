@@ -69,7 +69,7 @@ show_usage() {
 
 # Function to get the stable identifier from terraform/tofu show
 get_identifier() {
-    $TF_CMD show -json | jq -r '.values.root_module.resources[] | select(.name == "test_record") | .values.identifier'
+    TF_CLI_CONFIG_FILE=./dev.tfrc $TF_CMD show -json | jq -r '.values.root_module.resources[] | select(.name == "test_record") | .values.identifier'
 }
 
 case "${1:-help}" in
@@ -83,20 +83,64 @@ case "${1:-help}" in
 
     "init")
         echo "📦 Initializing $TF_CMD..."
-        $TF_CMD init
+        TF_CLI_CONFIG_FILE=./dev.tfrc $TF_CMD init
         echo "✅ $TF_CMD initialized"
         ;;
 
     "create")
         echo "🏗️  Creating test resources..."
-        $TF_CMD plan -out=tfplan
-        $TF_CMD apply tfplan
+        TF_CLI_CONFIG_FILE=./dev.tfrc $TF_CMD plan -out=tfplan
+        TF_CLI_CONFIG_FILE=./dev.tfrc $TF_CMD apply tfplan
         echo "✅ Resources created"
         echo ""
         echo "🔍 Getting stable identifier..."
-        IDENTIFIER=$(get_identifier)
+        IDENTIFIER=$(TF_CLI_CONFIG_FILE=./dev.tfrc get_identifier)
         echo "📋 Stable Identifier: $IDENTIFIER"
         echo "   Save this for the import test!"
+        ;;
+
+    "show")
+        echo "📊 Current $TF_CMD state:"
+        TF_CLI_CONFIG_FILE=./dev.tfrc $TF_CMD show
+        echo ""
+        echo "🔍 Stable identifier:"
+        IDENTIFIER=$(TF_CLI_CONFIG_FILE=./dev.tfrc get_identifier)
+        echo "📋 $IDENTIFIER"
+        ;;
+
+    "test-import")
+        echo "🧪 Testing import functionality..."
+
+        # Get the identifier
+        IDENTIFIER=$(TF_CLI_CONFIG_FILE=./dev.tfrc get_identifier)
+        if [ -z "$IDENTIFIER" ] || [ "$IDENTIFIER" = "null" ]; then
+            echo "❌ Error: Could not find identifier. Make sure resources are created first."
+            exit 1
+        fi
+
+        echo "📋 Found identifier: $IDENTIFIER"
+
+        # Remove from state (but keep in API)
+        echo "🗑️  Removing from $TF_CMD state..."
+        TF_CLI_CONFIG_FILE=./dev.tfrc $TF_CMD state rm anxcloud_dns_record.test_record
+
+        # Import it back
+        echo "📥 Importing back using stable identifier..."
+        TF_CLI_CONFIG_FILE=./dev.tfrc $TF_CMD import anxcloud_dns_record.test_record "$IMPORT_ID"
+
+        # Verify
+        echo "✅ Import completed. Verifying..."
+        TF_CLI_CONFIG_FILE=./dev.tfrc $TF_CMD plan
+
+        echo ""
+        echo "🎉 Import test completed successfully!"
+        echo "   The plan should show no changes if import worked correctly."
+        ;;
+
+    "cleanup")
+        echo "🧹 Cleaning up test resources..."
+        TF_CLI_CONFIG_FILE=./dev.tfrc $TF_CMD destroy -auto-approve
+        echo "✅ Cleanup completed"
         ;;
 
     "show")

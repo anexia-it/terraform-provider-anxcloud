@@ -29,9 +29,8 @@ This directory contains a simple Terraform configuration to test the CloudDNS re
    cd test-clouddns-import
    ```
 
-4. **Configure Terraform to use local provider** (optional, if `make install` doesn't work):
-   Create `~/.terraformrc` with:
-   ```
+4. **Configure Terraform/OpenTofu to use local provider**:
+   The test directory includes a `dev.tfrc` file that configures development overrides to bypass checksum verification. This allows you to rebuild the provider without lock file conflicts.
    provider_installation {
      dev_overrides {
        "anexia-it/anxcloud" = "/path/to/terraform-provider-anxcloud"

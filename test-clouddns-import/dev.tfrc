@@ -1,0 +1,10 @@
+# Terraform/OpenTofu Development Configuration
+# This file configures development overrides for local provider testing
+# Place this file as ~/.terraformrc or use TF_CLI_CONFIG_FILE=./dev.tfrc
+
+provider_installation {
+  dev_overrides {
+    "hashicorp.com/anexia-it/anxcloud" = "/home/rweselowski/PhpstormProjects/terraform-provider-anxcloud"
+  }
+  direct {}
+}
