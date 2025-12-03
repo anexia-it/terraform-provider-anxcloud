@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -34,7 +35,7 @@ func resourceDNSRecord() *schema.Resource {
 		ReadContext:   resourceDNSRecordRead,
 		DeleteContext: resourceDNSRecordDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceDNSRecordImport,
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(2 * time.Minute),
@@ -210,6 +211,41 @@ func resourceDNSRecordDelete(ctx context.Context, d *schema.ResourceData, m inte
 
 	d.SetId("")
 	return nil
+}
+
+func resourceDNSRecordImport(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	importID := d.Id()
+
+	// Expected format: <zone_name>/<record_identifier>
+	parts := strings.Split(importID, "/")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid import ID format: expected '<zone_name>/<record_identifier>', got '%s'", importID)
+	}
+
+	zoneName := parts[0]
+	recordIdentifier := parts[1]
+
+	// Validate that the record identifier looks like a UUID
+	if !isValidUUID(recordIdentifier) {
+		return nil, fmt.Errorf("invalid record identifier format: expected UUID, got '%s'", recordIdentifier)
+	}
+
+	// Set the zone name in the resource data
+	if err := d.Set("zone_name", zoneName); err != nil {
+		return nil, fmt.Errorf("failed to set zone_name: %w", err)
+	}
+
+	// Set the record identifier as the resource ID
+	d.SetId(recordIdentifier)
+
+	return []*schema.ResourceData{d}, nil
+}
+
+// isValidUUID performs basic validation for UUID format
+func isValidUUID(uuid string) bool {
+	// Basic UUID format validation (8-4-4-4-12 hex digits)
+	uuidRegex := regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
+	return uuidRegex.MatchString(uuid)
 }
 
 func dnsRecordFromResourceData(d *schema.ResourceData) clouddnsv1.Record {

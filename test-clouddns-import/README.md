@@ -88,9 +88,14 @@ If you have an existing DNS record in your AnxCloud environment:
    }
    ```
 
-2. Import using the stable identifier:
+2. Import using the new format:
    ```bash
-   terraform import anxcloud_dns_record.existing_record <stable-identifier>
+   terraform import anxcloud_dns_record.existing_record <zone_name>/<stable-identifier>
+   ```
+
+   For example:
+   ```bash
+   terraform import anxcloud_dns_record.existing_record example.com/abc123def-4567-8901-2345-6789abcdef01
    ```
 
 ## Verification

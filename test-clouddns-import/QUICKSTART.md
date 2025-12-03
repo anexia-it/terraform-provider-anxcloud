@@ -68,6 +68,18 @@ terraform output dns_record_identifier  # Shows stable UUID
 terraform output dns_record_id          # Shows Terraform ID
 ```
 
+## 🔧 Import Format
+
+The new import format requires both zone name and identifier:
+```
+<zone_name>/<stable_identifier>
+```
+
+Example:
+```
+test-import-zone.terraform.example/dc813ec2-1ecb-4d22-ba9d-a8403c32e60a
+```
+
 ## 🛠️ Provider Configuration
 
 The test uses:

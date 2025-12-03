@@ -124,9 +124,11 @@ case "${1:-help}" in
         echo "🗑️  Removing from $TF_CMD state..."
         $TF_CMD state rm anxcloud_dns_record.test_record
 
-        # Import it back
-        echo "📥 Importing back using stable identifier..."
-        $TF_CMD import anxcloud_dns_record.test_record "$IDENTIFIER"
+        # Import it back using the new format: zone_name/identifier
+        ZONE_NAME="test-import-zone.terraform.example"
+        IMPORT_ID="${ZONE_NAME}/${IDENTIFIER}"
+        echo "📥 Importing back using format: $IMPORT_ID"
+        $TF_CMD import anxcloud_dns_record.test_record "$IMPORT_ID"
 
         # Verify
         echo "✅ Import completed. Verifying..."
