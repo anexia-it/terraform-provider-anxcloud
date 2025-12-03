@@ -1,0 +1,170 @@
+#!/bin/bash
+
+# CloudDNS Import Test Helper Script
+# This script helps test the CloudDNS import functionality
+
+set -e
+
+echo "🔍 CloudDNS Import Test Helper"
+echo "================================"
+
+# Check if we're in the right directory
+if [ ! -f "main.tf" ]; then
+    echo "❌ Error: main.tf not found. Run this script from the test-clouddns-import directory."
+    exit 1
+fi
+
+# Check for required environment variables
+if [ -z "$ANEXIA_TOKEN" ]; then
+    echo "❌ Error: ANEXIA_TOKEN environment variable not set."
+    echo "   Set it with: export ANEXIA_TOKEN='your-token-here'"
+    exit 1
+fi
+
+echo "✅ Environment check passed"
+
+# Check if local provider is built
+PROVIDER_PATH="$HOME/.terraform.d/plugins/hashicorp.com/anexia-it/anxcloud/0.3.1/linux_amd64/terraform-provider-anxcloud"
+if [ ! -f "$PROVIDER_PATH" ]; then
+    echo "⚠️  Warning: Local provider not found at $PROVIDER_PATH"
+    echo "   Build and install it first:"
+    echo "   cd .. && make install"
+    echo ""
+    read -p "Continue anyway? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+else
+    echo "✅ Local provider found"
+fi
+
+# Function to show usage
+show_usage() {
+    echo ""
+    echo "Usage: $0 <command>"
+    echo ""
+    echo "Commands:"
+    echo "  build     - Build and install local provider"
+    echo "  init      - Initialize Terraform"
+    echo "  create    - Create test resources"
+    echo "  show      - Show current state and get identifier"
+    echo "  test-import - Test import functionality"
+    echo "  cleanup   - Destroy all resources"
+    echo "  full-test - Run complete test cycle"
+    echo ""
+}
+
+# Function to get the stable identifier from terraform show
+get_identifier() {
+    terraform show -json | jq -r '.values.root_module.resources[] | select(.name == "test_record") | .values.identifier'
+}
+
+case "${1:-help}" in
+    "build")
+        echo "🔨 Building and installing local provider..."
+        cd ..
+        make install
+        cd test-clouddns-import
+        echo "✅ Provider built and installed"
+        ;;
+
+    "init")
+        echo "📦 Initializing Terraform..."
+        terraform init
+        echo "✅ Terraform initialized"
+        ;;
+
+    "create")
+        echo "🏗️  Creating test resources..."
+        terraform plan -out=tfplan
+        terraform apply tfplan
+        echo "✅ Resources created"
+        echo ""
+        echo "🔍 Getting stable identifier..."
+        IDENTIFIER=$(get_identifier)
+        echo "📋 Stable Identifier: $IDENTIFIER"
+        echo "   Save this for the import test!"
+        ;;
+
+    "show")
+        echo "📊 Current Terraform state:"
+        terraform show
+        echo ""
+        echo "🔍 Stable identifier:"
+        IDENTIFIER=$(get_identifier)
+        echo "📋 $IDENTIFIER"
+        ;;
+
+    "test-import")
+        echo "🧪 Testing import functionality..."
+
+        # Get the identifier
+        IDENTIFIER=$(get_identifier)
+        if [ -z "$IDENTIFIER" ] || [ "$IDENTIFIER" = "null" ]; then
+            echo "❌ Error: Could not find identifier. Make sure resources are created first."
+            exit 1
+        fi
+
+        echo "📋 Found identifier: $IDENTIFIER"
+
+        # Remove from state (but keep in API)
+        echo "🗑️  Removing from Terraform state..."
+        terraform state rm anxcloud_dns_record.test_record
+
+        # Import it back
+        echo "📥 Importing back using stable identifier..."
+        terraform import anxcloud_dns_record.test_record "$IDENTIFIER"
+
+        # Verify
+        echo "✅ Import completed. Verifying..."
+        terraform plan
+
+        echo ""
+        echo "🎉 Import test completed successfully!"
+        echo "   The plan should show no changes if import worked correctly."
+        ;;
+
+    "cleanup")
+        echo "🧹 Cleaning up test resources..."
+        terraform destroy -auto-approve
+        echo "✅ Cleanup completed"
+        ;;
+
+    "full-test")
+        echo "🚀 Running full test cycle..."
+        echo ""
+
+        # Build
+        echo "Step 1: Build provider"
+        $0 build
+        echo ""
+
+        # Init
+        echo "Step 2: Initialize"
+        $0 init
+        echo ""
+
+        # Create
+        echo "Step 3: Create resources"
+        $0 create
+        echo ""
+
+        # Test import
+        echo "Step 4: Test import functionality"
+        $0 test-import
+        echo ""
+
+        # Cleanup
+        echo "Step 5: Cleanup"
+        read -p "Press Enter to continue with cleanup..."
+        $0 cleanup
+
+        echo ""
+        echo "🎉 Full test cycle completed successfully!"
+        ;;
+
+    "help"|*)
+        show_usage
+        ;;
+esac
