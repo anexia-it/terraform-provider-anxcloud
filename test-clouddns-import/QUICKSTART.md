@@ -70,7 +70,8 @@ terraform output dns_record_id          # Shows Terraform ID
 
 The test uses:
 - **Source**: `hashicorp.com/anexia-it/anxcloud`
-- **Version**: `0.3.1`
-- **Location**: `~/.terraform.d/plugins/hashicorp.com/anexia-it/anxcloud/0.3.1/linux_amd64/`
+- **Version**: `0.7.5-dev` (development version)
+- **Location**: `~/.terraform.d/plugins/hashicorp.com/anexia-it/anxcloud/0.7.5-dev/linux_amd64/`
+- **SDK Version**: `go.anx.io/go-anxcloud v0.9.2-alpha`
 
 This matches the Makefile configuration for local development.

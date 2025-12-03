@@ -24,7 +24,7 @@ fi
 echo "✅ Environment check passed"
 
 # Check if local provider is built
-PROVIDER_PATH="$HOME/.terraform.d/plugins/hashicorp.com/anexia-it/anxcloud/0.3.1/linux_amd64/terraform-provider-anxcloud"
+PROVIDER_PATH="$HOME/.terraform.d/plugins/hashicorp.com/anexia-it/anxcloud/0.7.5-dev/linux_amd64/terraform-provider-anxcloud"
 if [ ! -f "$PROVIDER_PATH" ]; then
     echo "⚠️  Warning: Local provider not found at $PROVIDER_PATH"
     echo "   Build and install it first:"
