@@ -8,6 +8,18 @@ set -e
 echo "🔍 CloudDNS Import Test Helper"
 echo "================================"
 
+# Detect which tool to use (terraform or tofu)
+if command -v tofu &> /dev/null; then
+    TF_CMD="tofu"
+    echo "🔧 Using OpenTofu"
+elif command -v terraform &> /dev/null; then
+    TF_CMD="terraform"
+    echo "🔧 Using Terraform"
+else
+    echo "❌ Error: Neither terraform nor tofu found in PATH"
+    exit 1
+fi
+
 # Check if we're in the right directory
 if [ ! -f "main.tf" ]; then
     echo "❌ Error: main.tf not found. Run this script from the test-clouddns-import directory."
@@ -55,9 +67,9 @@ show_usage() {
     echo ""
 }
 
-# Function to get the stable identifier from terraform show
+# Function to get the stable identifier from terraform/tofu show
 get_identifier() {
-    terraform show -json | jq -r '.values.root_module.resources[] | select(.name == "test_record") | .values.identifier'
+    $TF_CMD show -json | jq -r '.values.root_module.resources[] | select(.name == "test_record") | .values.identifier'
 }
 
 case "${1:-help}" in
@@ -70,15 +82,15 @@ case "${1:-help}" in
         ;;
 
     "init")
-        echo "📦 Initializing Terraform..."
-        terraform init
-        echo "✅ Terraform initialized"
+        echo "📦 Initializing $TF_CMD..."
+        $TF_CMD init
+        echo "✅ $TF_CMD initialized"
         ;;
 
     "create")
         echo "🏗️  Creating test resources..."
-        terraform plan -out=tfplan
-        terraform apply tfplan
+        $TF_CMD plan -out=tfplan
+        $TF_CMD apply tfplan
         echo "✅ Resources created"
         echo ""
         echo "🔍 Getting stable identifier..."
@@ -88,8 +100,8 @@ case "${1:-help}" in
         ;;
 
     "show")
-        echo "📊 Current Terraform state:"
-        terraform show
+        echo "📊 Current $TF_CMD state:"
+        $TF_CMD show
         echo ""
         echo "🔍 Stable identifier:"
         IDENTIFIER=$(get_identifier)
@@ -109,16 +121,16 @@ case "${1:-help}" in
         echo "📋 Found identifier: $IDENTIFIER"
 
         # Remove from state (but keep in API)
-        echo "🗑️  Removing from Terraform state..."
-        terraform state rm anxcloud_dns_record.test_record
+        echo "🗑️  Removing from $TF_CMD state..."
+        $TF_CMD state rm anxcloud_dns_record.test_record
 
         # Import it back
         echo "📥 Importing back using stable identifier..."
-        terraform import anxcloud_dns_record.test_record "$IDENTIFIER"
+        $TF_CMD import anxcloud_dns_record.test_record "$IDENTIFIER"
 
         # Verify
         echo "✅ Import completed. Verifying..."
-        terraform plan
+        $TF_CMD plan
 
         echo ""
         echo "🎉 Import test completed successfully!"
@@ -127,7 +139,7 @@ case "${1:-help}" in
 
     "cleanup")
         echo "🧹 Cleaning up test resources..."
-        terraform destroy -auto-approve
+        $TF_CMD destroy -auto-approve
         echo "✅ Cleanup completed"
         ;;
 
