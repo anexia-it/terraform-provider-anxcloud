@@ -30,9 +30,10 @@ func resourceDNSRecord() *schema.Resource {
 	return &schema.Resource{
 		Description: "This resource allows you to create DNS records for a specified zone. TXT records might behave funny, we are working on it." +
 			" Create and delete operations will be handled in batches internally. As a side effect this will cause whole batches to fail in case some of the operations are invalid." +
-			" Updating record attributes triggers a replacement (destroy old -> create new).",
+			" TTL and RDATA fields can be updated in-place without requiring record replacement.",
 		CreateContext: resourceDNSRecordCreate,
 		ReadContext:   resourceDNSRecordRead,
+		UpdateContext: resourceDNSRecordUpdate,
 		DeleteContext: resourceDNSRecordDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceDNSRecordImport,
@@ -211,6 +212,32 @@ func resourceDNSRecordDelete(ctx context.Context, d *schema.ResourceData, m inte
 
 	d.SetId("")
 	return nil
+}
+
+func resourceDNSRecordUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags []diag.Diagnostic
+
+	a := apiFromProviderConfig(m)
+
+	// Check if record is immutable
+	if immutable, ok := d.GetOk("immutable"); ok && immutable.(bool) {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Cannot update immutable DNS record",
+			Detail:   "This DNS record is marked as immutable and cannot be modified. To change this record, you must delete and recreate it.",
+		})
+		return diags
+	}
+
+	// Get the current record to update
+	r := dnsRecordFromResourceData(d)
+
+	// Use the CloudDNS API Update method
+	if err := a.Update(ctx, &r); err != nil {
+		return diag.FromErr(fmt.Errorf("failed to update DNS record: %w", err))
+	}
+
+	return resourceDNSRecordRead(ctx, d, m)
 }
 
 func resourceDNSRecordImport(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {

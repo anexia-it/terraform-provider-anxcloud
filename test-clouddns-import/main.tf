@@ -30,8 +30,10 @@ resource "anxcloud_dns_record" "test_record" {
   name      = "test-record"
   zone_name = anxcloud_dns_zone.test_zone.name
   type      = "A"
-  rdata     = "192.168.1.100"
-  ttl       = 300
+  # rdata     = "192.168.1.100"
+  # ttl       = 300
+  rdata     = "193.168.1.100"
+  ttl       = 301
 }
 
 # Output the stable identifier for easy access

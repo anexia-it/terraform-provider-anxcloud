@@ -68,6 +68,40 @@ func TestAccAnxCloudDNSRecordImport(t *testing.T) {
 	})
 }
 
+func TestAccAnxCloudDNSRecordUpdate(t *testing.T) {
+	environment.SkipIfNoEnvironment(t)
+	zoneName := test.RandomHostname() + ".terraform.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnxDNSZoneAndRecordUpdate(zoneName, "192.168.1.100", 300),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("anxcloud_dns_record.update_test", "zone_name", zoneName),
+					resource.TestCheckResourceAttr("anxcloud_dns_record.update_test", "name", "update-test"),
+					resource.TestCheckResourceAttr("anxcloud_dns_record.update_test", "type", "A"),
+					resource.TestCheckResourceAttr("anxcloud_dns_record.update_test", "rdata", "192.168.1.100"),
+					resource.TestCheckResourceAttr("anxcloud_dns_record.update_test", "ttl", "300"),
+					resource.TestCheckResourceAttrSet("anxcloud_dns_record.update_test", "identifier"),
+				),
+			},
+			{
+				Config: testAccAnxDNSZoneAndRecordUpdate(zoneName, "192.168.1.200", 600),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("anxcloud_dns_record.update_test", "zone_name", zoneName),
+					resource.TestCheckResourceAttr("anxcloud_dns_record.update_test", "name", "update-test"),
+					resource.TestCheckResourceAttr("anxcloud_dns_record.update_test", "type", "A"),
+					resource.TestCheckResourceAttr("anxcloud_dns_record.update_test", "rdata", "192.168.1.200"),
+					resource.TestCheckResourceAttr("anxcloud_dns_record.update_test", "ttl", "600"),
+					resource.TestCheckResourceAttrSet("anxcloud_dns_record.update_test", "identifier"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAnxDNSZoneAndRecord(zoneNameSuffix string, recordsZoneIndex uint) string {
 	return fmt.Sprintf(`
 	resource "anxcloud_dns_zone" "test_dns_zones" {
@@ -106,7 +140,7 @@ func testAccAnxDNSZoneAndRecordImport(zoneName string) string {
 		name = "%s"
 		is_master = true
 		dns_sec_mode = "unvalidated"
-		admin_email = "admin@terraform.test"
+		admin_email = "admin@example.com"
 		refresh = 100
 		retry = 100
 		expire = 1000
@@ -121,4 +155,27 @@ func testAccAnxDNSZoneAndRecordImport(zoneName string) string {
 		ttl = 300
 	}
 	`, zoneName)
+}
+
+func testAccAnxDNSZoneAndRecordUpdate(zoneName, rdata string, ttl int) string {
+	return fmt.Sprintf(`
+	resource "anxcloud_dns_zone" "update_zone" {
+		name = "%s"
+		is_master = true
+		dns_sec_mode = "unvalidated"
+		admin_email = "admin@example.com"
+		refresh = 100
+		retry = 100
+		expire = 1000
+		ttl = 100
+	}
+
+	resource "anxcloud_dns_record" "update_test" {
+		name = "update-test"
+		zone_name = anxcloud_dns_zone.update_zone.name
+		type = "A"
+		rdata = "%s"
+		ttl = %d
+	}
+	`, zoneName, rdata, ttl)
 }
