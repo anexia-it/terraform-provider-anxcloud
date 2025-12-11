@@ -3,11 +3,12 @@ package anxcloud
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"go.anx.io/go-anxcloud/pkg/api"
 	clouddnsv1 "go.anx.io/go-anxcloud/pkg/apis/clouddns/v1"
 )
@@ -23,10 +24,10 @@ func resourceDNSZone() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(time.Minute),
+			Create: schema.DefaultTimeout(30 * time.Minute),
 			Read:   schema.DefaultTimeout(time.Minute),
-			Update: schema.DefaultTimeout(time.Minute),
-			Delete: schema.DefaultTimeout(time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute), // Allow time for deployment waiting
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 		Schema: schemaDNSZone(),
 	}
@@ -121,6 +122,32 @@ func resourceDNSZoneRead(ctx context.Context, d *schema.ResourceData, m interfac
 	return diags
 }
 
+// waitForZoneDeployment waits for a zone to complete validation and deployment after updates
+func waitForZoneDeployment(ctx context.Context, a api.API, zoneName string) error {
+	// Add a brief initial delay to allow validation to start after update
+	log.Printf("[DEBUG] DNS Zone Update: update executed, waiting for validation to start")
+	time.Sleep(5 * time.Second)
+
+	b := backoff.NewExponentialBackOff()
+	b.InitialInterval = 10 * time.Second
+	b.MaxInterval = 30 * time.Second
+	b.MaxElapsedTime = 10 * time.Minute
+
+	return backoff.Retry(func() error {
+		zone := clouddnsv1.Zone{Name: zoneName}
+		if err := a.Get(ctx, &zone); err != nil {
+			return backoff.Permanent(err)
+		}
+
+		if zone.DeploymentLevel < 100 {
+			return fmt.Errorf("waiting for zone deployment to complete: %d%%", zone.DeploymentLevel)
+		}
+
+		log.Printf("[DEBUG] DNS Zone Update: zone deployment complete (deployment: %d%%)", zone.DeploymentLevel)
+		return nil
+	}, backoff.WithContext(b, ctx))
+}
+
 func resourceDNSZoneUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	a := apiFromProviderConfig(m)
 
@@ -135,6 +162,12 @@ func resourceDNSZoneUpdate(ctx context.Context, d *schema.ResourceData, m interf
 	}
 
 	d.SetId(def.Name)
+
+	// Wait for zone update to complete deployment before returning
+	// Zone updates trigger re-validation and re-deployment across all servers
+	if err := waitForZoneDeployment(ctx, a, def.Name); err != nil {
+		return diag.FromErr(fmt.Errorf("failed waiting for zone deployment after update: %w", err))
+	}
 
 	return resourceDNSZoneRead(ctx, d, m)
 }

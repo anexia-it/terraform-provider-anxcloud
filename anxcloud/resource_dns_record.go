@@ -1,45 +1,36 @@
 package anxcloud
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
+	"log"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/internal/utils"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"go.anx.io/go-anxcloud/pkg/api"
-	"go.anx.io/go-anxcloud/pkg/api/types"
 	clouddnsv1 "go.anx.io/go-anxcloud/pkg/apis/clouddns/v1"
-	"go.anx.io/go-anxcloud/pkg/utils/object/compare"
 )
 
 func resourceDNSRecord() *schema.Resource {
 	return &schema.Resource{
 		Description: "This resource allows you to create DNS records for a specified zone. TXT records might behave funny, we are working on it." +
 			" Create and delete operations will be handled in batches internally. As a side effect this will cause whole batches to fail in case some of the operations are invalid." +
-			" Updating record attributes triggers a replacement (destroy old -> create new).",
+			" TTL and RDATA fields can be updated in-place without requiring record replacement.",
 		CreateContext: resourceDNSRecordCreate,
 		ReadContext:   resourceDNSRecordRead,
+		UpdateContext: resourceDNSRecordUpdate,
 		DeleteContext: resourceDNSRecordDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceDNSRecordImport,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(2 * time.Minute),
+			Create: schema.DefaultTimeout(30 * time.Minute),
 			Read:   schema.DefaultTimeout(time.Minute),
-			Delete: schema.DefaultTimeout(2 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 		Schema: schemaDNSRecord(),
 	}
@@ -47,38 +38,53 @@ func resourceDNSRecord() *schema.Resource {
 
 var resourceDNSRecordBatcherMap sync.Map
 
-func resourceDNSRecordBatcherForZone(a api.API, zoneName string) *utils.Batcher[recordBatchUnit, any] {
-	anyBatcher, _ := resourceDNSRecordBatcherMap.LoadOrStore(zoneName, &utils.Batcher[recordBatchUnit, any]{
-		// this will consume 15 seconds of the 2 minute create/delete budget
-		Wait:      15 * time.Second,
-		BatchFunc: resourceDNSRecordBatch(a, zoneName),
-	})
-
-	return anyBatcher.(*utils.Batcher[recordBatchUnit, any])
-}
-
 func resourceDNSRecordCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	a := apiFromProviderConfig(m)
 	batcher := resourceDNSRecordBatcherForZone(a, d.Get("zone_name").(string))
 
 	r := dnsRecordFromResourceData(d)
 
+	// For TXT records, add DNS protocol quotes (SYSENG-816)
+	// DNS TXT records must be quoted per RFC
+	// We add quotes here so users don't have to worry about it in their config
+	// We manually add quotes instead of using %q to preserve user's quote characters
+	if r.Type == "TXT" {
+		r.RData = `"` + r.RData + `"`
+	}
+
+	// Debug logging
+	log.Printf("[DEBUG] DNS Record Create: zone=%s, name=%s, type=%s, rdata=%s, ttl=%d", r.ZoneName, r.Name, r.Type, r.RData, r.TTL)
+
 	// try to import
-	if ret, err := findDNSRecord(ctx, a, r); api.IgnoreNotFound(err) != nil {
+	if _, err := findDNSRecord(ctx, a, r); api.IgnoreNotFound(err) != nil {
 		return diag.FromErr(err)
 	} else if err == nil {
-		// DNS Record found
-		d.SetId(ret.Identifier)
+		// DNS Record found - generate content hash for existing record
+		contentID := generateContentHash(r.ZoneName, r.Name, r.Type, r.RData, r.TTL)
+		d.SetId(contentID)
 		return resourceDNSRecordRead(ctx, d, m)
 	}
 
-	// not found -> create new zone
+	// not found -> create new record
+	// Generate content hash immediately for stable Terraform resource ID
+	contentID := generateContentHash(r.ZoneName, r.Name, r.Type, r.RData, r.TTL)
+	d.SetId(contentID)
 
 	if _, err := batcher.Process(ctx, recordBatchUnit{record: r, batchOperation: batchOperationCreate}); err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(resourceDNSRecordCanonicalIdentifier(r))
+	// Wait for zone deployment to complete before verification using coordinated polling
+	// This ensures records are fully propagated and available for reading
+	// The coordinator manages polling to avoid redundant API calls during concurrent operations
+	log.Printf("[DEBUG] DNS Record Create: changeset executed, coordinating zone deployment polling")
+
+	coordinator := getZonePollingCoordinator(a, r.ZoneName)
+	defer coordinator.release()
+
+	if deploymentErr := coordinator.waitForZoneDeployment(ctx); deploymentErr != nil {
+		return diag.FromErr(fmt.Errorf("failed waiting for zone deployment: %w", deploymentErr))
+	}
 
 	return resourceDNSRecordRead(ctx, d, m)
 }
@@ -88,41 +94,86 @@ func resourceDNSRecordRead(ctx context.Context, d *schema.ResourceData, m interf
 
 	a := apiFromProviderConfig(m)
 
-	r := dnsRecordFromResourceData(d)
-	r, err := findDNSRecord(ctx, a, r)
+	// Get target record data
+	targetRecord := dnsRecordFromResourceData(d)
 
-	if api.IgnoreNotFound(err) != nil {
+	log.Printf("[DEBUG] DNS Record Read: id=%s, zone=%s, name=%s, type=%s, rdata=%s, ttl=%d", d.Id(), targetRecord.ZoneName, targetRecord.Name, targetRecord.Type, targetRecord.RData, targetRecord.TTL)
+
+	// Fetch all zone records to get current real identifiers
+	zoneRecords, err := fetchAllZoneRecords(ctx, a, targetRecord.ZoneName)
+	if err != nil {
 		return diag.FromErr(err)
-	} else if err != nil {
-		d.SetId("")
-		return diags
 	}
 
-	// remove quotes from txt rdata to prevent double, tripple, ... quoted data (SYSENG-816)
-	rData := r.RData
-	if r.Type == "TXT" {
-		rData = rData[1 : len(rData)-1]
+	// First try to find by identifier if we have one (for imported/updated records)
+	var realRecord *clouddnsv1.Record
+	if d.Id() != "" {
+		log.Printf("[DEBUG] DNS Record Read: trying to find record by identifier %s among %d zone records", d.Id(), len(zoneRecords))
+		for _, record := range zoneRecords {
+			log.Printf("[DEBUG] DNS Record Read: checking record identifier %s", record.Identifier)
+			if record.Identifier == d.Id() {
+				realRecord = &record
+				log.Printf("[DEBUG] DNS Record Read: found record by identifier match")
+				break
+			}
+		}
+		if realRecord == nil {
+			log.Printf("[DEBUG] DNS Record Read: record with identifier %s not found in zone, will try content matching", d.Id())
+		}
 	}
 
+	// If not found by identifier, try content matching
+	if realRecord == nil {
+		// Determine if we should ignore TTL and region in matching
+		// TTL: Ignore if it's 0 and not explicitly set (API uses zone default)
+		ignoreTTL := targetRecord.TTL == 0
+		// Region: Always ignore since it's computed and may not match API values during read
+		ignoreRegion := true
+
+		foundRecord, err := findRecordByContentFlexible(zoneRecords, targetRecord, ignoreTTL, ignoreRegion)
+		if err != nil {
+			// Record not found
+			d.SetId("")
+			return diags
+		}
+		realRecord = foundRecord
+	}
+
+	// For TXT records, strip the DNS protocol quotes (SYSENG-816)
+	// DNS TXT records are always quoted per RFC, so API returns them with quotes
+	// We strip the outer quotes to make it user-friendly in Terraform config
+	// Users who want literal quotes in the TXT value should escape them in HCL
+	rData := realRecord.RData
+	if realRecord.Type == "TXT" {
+		// Safely strip outer quotes if present
+		rData = stripOuterQuotes(rData)
+	}
+
+	// Use the stable backend identifier as the resource ID
+	d.SetId(realRecord.Identifier)
+
+	if err := d.Set("identifier", realRecord.Identifier); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
 	if err := d.Set("rdata", rData); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	if err := d.Set("type", r.Type); err != nil {
+	if err := d.Set("type", realRecord.Type); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	if err := d.Set("name", r.Name); err != nil {
+	if err := d.Set("name", realRecord.Name); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	if err := d.Set("zone_name", r.ZoneName); err != nil {
+	if err := d.Set("zone_name", realRecord.ZoneName); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	if err := d.Set("region", r.Region); err != nil {
+	if err := d.Set("region", realRecord.Region); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	if err := d.Set("ttl", r.TTL); err != nil {
+	if err := d.Set("ttl", realRecord.TTL); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
-	if err := d.Set("immutable", r.Immutable); err != nil {
+	if err := d.Set("immutable", realRecord.Immutable); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
@@ -133,17 +184,27 @@ func resourceDNSRecordDelete(ctx context.Context, d *schema.ResourceData, m inte
 	a := apiFromProviderConfig(m)
 	batcher := resourceDNSRecordBatcherForZone(a, d.Get("zone_name").(string))
 
-	r := dnsRecordFromResourceData(d)
-	r, err := findDNSRecord(ctx, a, r)
+	// Get target record data
+	targetRecord := dnsRecordFromResourceData(d)
 
-	if api.IgnoreNotFound(err) != nil {
-		return diag.FromErr(err)
-	} else if err != nil {
+	// Fetch all zone records to get current real identifiers
+	zoneRecords, err := fetchAllZoneRecords(ctx, a, targetRecord.ZoneName)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("failed to fetch zone records: %w", err))
+	}
+
+	// Find the matching record by content with flexible matching
+	ignoreTTL := targetRecord.TTL == 0
+	ignoreRegion := true
+	realRecord, err := findRecordByContentFlexible(zoneRecords, targetRecord, ignoreTTL, ignoreRegion)
+	if err != nil {
+		// Record not found - already deleted
 		d.SetId("")
 		return nil
 	}
 
-	if _, err := batcher.Process(ctx, recordBatchUnit{record: r, batchOperation: batchOperationDelete}); err != nil {
+	// Delete using the real record with current identifier
+	if _, err := batcher.Process(ctx, recordBatchUnit{record: *realRecord, batchOperation: batchOperationDelete}); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -151,195 +212,166 @@ func resourceDNSRecordDelete(ctx context.Context, d *schema.ResourceData, m inte
 	return nil
 }
 
-func dnsRecordFromResourceData(d *schema.ResourceData) clouddnsv1.Record {
-	return clouddnsv1.Record{
-		Type:      d.Get("type").(string),
-		Name:      d.Get("name").(string),
-		ZoneName:  d.Get("zone_name").(string),
-		Region:    d.Get("region").(string),
-		RData:     d.Get("rdata").(string),
-		TTL:       d.Get("ttl").(int),
-		Immutable: d.Get("immutable").(bool),
-	}
-}
+func resourceDNSRecordUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags []diag.Diagnostic
 
-func findDNSRecord(ctx context.Context, a api.API, r clouddnsv1.Record) (foundRecord clouddnsv1.Record, err error) {
-	// quote TXTs rdata for compare.Compare (SYSENG-816)
-	if r.Type == "TXT" {
-		r.RData = fmt.Sprintf("%q", r.RData)
-	}
+	a := apiFromProviderConfig(m)
 
-	var pageIter types.PageInfo
-	err = a.List(ctx, &r, api.Paged(1, 100, &pageIter))
-	if err != nil {
-		return
-	}
+	log.Printf("[DEBUG] DNS Record Update: id=%s, zone=%s", d.Id(), d.Get("zone_name").(string))
 
-	var pagedRecords []clouddnsv1.Record
-	for pageIter.Next(&pagedRecords) {
-		idx, err := compare.Search(&r, pagedRecords, "Type", "Name", "RData", "TTL")
-		if err != nil {
-			return foundRecord, err
-		}
-		if idx > -1 {
-			return pagedRecords[idx], nil
-		}
-	}
-
-	return foundRecord, api.ErrNotFound
-}
-
-type batchOperation string
-
-const (
-	batchOperationCreate batchOperation = "create"
-	batchOperationDelete batchOperation = "delete"
-)
-
-type recordBatchUnit struct {
-	record         clouddnsv1.Record
-	batchOperation batchOperation
-}
-
-func resourceDNSRecordBatch(a api.API, zoneName string) func(ctx context.Context, records []recordBatchUnit) []utils.BatchUnitResult[any] {
-	return func(ctx context.Context, records []recordBatchUnit) []utils.BatchUnitResult[any] {
-		res := make([]utils.BatchUnitResult[any], len(records))
-
-		// ridiculously high timeout -> will be canceld before by schema timeout
-		err := retry.RetryContext(ctx, time.Hour, func() *retry.RetryError {
-			zone := clouddnsv1.Zone{Name: zoneName}
-			if err := a.Get(ctx, &zone); err != nil {
-				return retry.NonRetryableError(err)
-			}
-
-			if !zone.IsEditable {
-				return retry.RetryableError(fmt.Errorf("zone not yet editable"))
-			}
-
-			return nil
+	// Check if record is immutable
+	if immutable := d.Get("immutable").(bool); immutable {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Cannot update immutable DNS record",
+			Detail:   "This DNS record is marked as immutable and cannot be modified. To change this record, you must delete and recreate it.",
 		})
-		if err != nil {
-			for i := range records {
-				res[i].Error = err
-			}
-		}
-
-		changeSet := dnsZoneChangeSet{ZoneName: zoneName}
-		for _, r := range records {
-			changeSetRecord := dnsZoneChangeSetRecord{
-				Name:   r.record.Name,
-				Type:   r.record.Type,
-				Region: r.record.Region,
-				RData:  r.record.RData,
-				TTL:    r.record.TTL,
-			}
-			if r.batchOperation == batchOperationCreate {
-				changeSet.Create = append(changeSet.Create, changeSetRecord)
-			} else if r.batchOperation == batchOperationDelete {
-				changeSet.Delete = append(changeSet.Delete, changeSetRecord)
-			}
-		}
-
-		if err := a.Create(ctx, &changeSet); err != nil {
-			if changeSet.Error != nil {
-				var (
-					createIndex = 0
-					deleteIndex = 0
-				)
-
-				for i := range records {
-					var opErr map[string][]string
-					if changeSet.Error.Create != nil && records[i].batchOperation == batchOperationCreate {
-						opErr = changeSet.Error.Create[createIndex]
-						createIndex++
-					} else if changeSet.Error.Delete != nil && records[i].batchOperation == batchOperationDelete {
-						opErr = changeSet.Error.Delete[deleteIndex]
-						deleteIndex++
-					}
-
-					if len(opErr) > 0 {
-						var combined *multierror.Error
-						for fieldName, errors := range opErr {
-							combined = multierror.Append(combined, fmt.Errorf("[%s: %s]", fieldName, strings.Join(errors, " - ")))
-						}
-						res[i].Error = combined
-					} else {
-						res[i].Error = fmt.Errorf("failed to %s dns record as part of batch, because other records are invalid", records[i].batchOperation)
-					}
-				}
-			} else {
-				for i := range records {
-					res[i].Error = err
-				}
-			}
-		}
-
-		return res
+		return diags
 	}
-}
 
-type dnsZoneChangeSetRecord struct {
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	Region string `json:"region,omitempty"`
-	RData  string `json:"rdata"`
-	TTL    int    `json:"ttl"`
-}
+	// Use the stored backend identifier to find the record to update
+	storedIdentifier := d.Id()
+	if storedIdentifier == "" {
+		return diag.FromErr(fmt.Errorf("resource ID is empty"))
+	}
 
-type dnsZoneChangeSetError struct {
-	Create []map[string][]string
-	Delete []map[string][]string
-}
+	log.Printf("[DEBUG] DNS Record Update: attempting direct lookup by identifier=%s", storedIdentifier)
 
-// todo: move to go-anxcloud at a later time
-type dnsZoneChangeSet struct {
-	ZoneName string                   `json:"-"`
-	Create   []dnsZoneChangeSetRecord `json:"create"`
-	Delete   []dnsZoneChangeSetRecord `json:"delete"`
-	Error    *dnsZoneChangeSetError   `json:"error,omitempty"`
-}
+	// Try to get the record directly by identifier
+	targetRecord := clouddnsv1.Record{
+		Identifier: storedIdentifier,
+		ZoneName:   d.Get("zone_name").(string),
+	}
 
-func (cs *dnsZoneChangeSet) GetIdentifier(ctx context.Context) (string, error) {
-	return "<not-used>", nil
-}
-
-func (cs *dnsZoneChangeSet) EndpointURL(ctx context.Context) (*url.URL, error) {
-	op, err := types.OperationFromContext(ctx)
+	realRecord, err := findDNSRecord(ctx, a, targetRecord)
 	if err != nil {
-		return nil, err
-	}
+		log.Printf("[DEBUG] DNS Record Update: direct lookup failed for id=%s, falling back to content matching", storedIdentifier)
 
-	if op != types.OperationCreate {
-		return nil, errors.New("helper resource 'dnsZoneChangeSet' only supports Create operations")
-	}
+		// If direct lookup fails, fall back to content matching
+		// Get target record data - start with current configuration values
+		targetRecord = dnsRecordFromResourceData(d)
 
-	return url.Parse(fmt.Sprintf("/api/clouddns/v1/zone.json/%s/changeset", cs.ZoneName))
-}
-
-// FilterAPIResponse decodes record errors into the dnsZoneChangeSet so that we can output
-// detailed error messages per zone instead of the same generic error message
-func (cs *dnsZoneChangeSet) FilterAPIResponse(ctx context.Context, res *http.Response) (*http.Response, error) {
-	if res.StatusCode == http.StatusOK {
-		res.StatusCode = http.StatusNoContent
-		res.Body.Close()
-		res.Body = io.NopCloser(&bytes.Buffer{})
-	} else if res.StatusCode == http.StatusBadRequest {
-		if err := json.NewDecoder(res.Body).Decode(cs); err != nil {
-			return nil, fmt.Errorf("unable to decode bad request response: %w", err)
+		// For content matching, use OLD values for mutable fields (rdata, ttl) to find existing record
+		// The API still has the old values, so we need to search using those
+		if oldRdata, newRdata := d.GetChange("rdata"); oldRdata != newRdata {
+			targetRecord.RData = oldRdata.(string) // Use old rdata to find existing record
 		}
+		if oldTTL, newTTL := d.GetChange("ttl"); oldTTL != newTTL {
+			targetRecord.TTL = oldTTL.(int) // Use old ttl to find existing record
+		}
+
+		// Fetch all zone records to get current real identifiers
+		zoneRecords, err := fetchAllZoneRecords(ctx, a, targetRecord.ZoneName)
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("failed to fetch zone records: %w", err))
+		}
+
+		// Find the matching record by content using old values for mutable fields
+		// Use same flexible matching as read operation
+		ignoreTTL := targetRecord.TTL == 0
+		ignoreRegion := true
+		foundRecord, err := findRecordByContentFlexible(zoneRecords, targetRecord, ignoreTTL, ignoreRegion)
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("failed to find record to update: %w", err))
+		}
+		realRecord = *foundRecord
+		log.Printf("[DEBUG] DNS Record Update: found record by content matching, identifier=%s", realRecord.Identifier)
+	} else {
+		log.Printf("[DEBUG] DNS Record Update: direct lookup succeeded, found record identifier=%s", realRecord.Identifier)
 	}
 
-	return res, nil
+	// Prepare update record with minimal payload - only updatable fields
+	// Exclude computed fields (Region, Immutable) and immutable fields (Type, Name, ZoneName)
+	// Include Identifier for API routing and updatable fields (RData, TTL)
+
+	// Get new RData value from state
+	updateRData := d.Get("rdata").(string)
+
+	// For TXT records, add DNS protocol quotes
+	// We manually add quotes instead of using %q to preserve user's quote characters
+	if realRecord.Type == "TXT" {
+		updateRData = `"` + updateRData + `"`
+	}
+
+	updateRecord := clouddnsv1.Record{
+		Identifier: realRecord.Identifier, // Required for API routing
+		RData:      updateRData,           // New RData value (quoted for TXT)
+		TTL:        d.Get("ttl").(int),    // New TTL value
+	}
+
+	// Use the CloudDNS API Update method
+	if err := a.Update(ctx, &updateRecord); err != nil {
+		return diag.FromErr(fmt.Errorf("failed to update DNS record: %w", err))
+	}
+
+	return resourceDNSRecordRead(ctx, d, m)
 }
 
-func resourceDNSRecordCanonicalIdentifier(r clouddnsv1.Record) string {
-	return strings.Join([]string{
-		r.Name,
-		r.ZoneName,
-		r.Type,
-		url.QueryEscape(r.RData),
-		fmt.Sprint(r.TTL),
-		r.Region,
-		fmt.Sprint(r.Immutable),
-	}, "_")
+func resourceDNSRecordImport(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	importID := d.Id()
+
+	// Support both old format (<zone_name>/<uuid>) and new format (<zone_name>/<content_hash>)
+	parts := strings.Split(importID, "/")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid import ID format: expected '<zone_name>/<record_identifier>', got '%s'", importID)
+	}
+
+	zoneName := parts[0]
+	recordIdentifier := parts[1]
+
+	// Set the zone name in the resource data
+	if err := d.Set("zone_name", zoneName); err != nil {
+		return nil, fmt.Errorf("failed to set zone_name: %w", err)
+	}
+
+	a := apiFromProviderConfig(m)
+
+	// First, try to find the record by its real API identifier (works for both old and new imports)
+	targetRecord := clouddnsv1.Record{
+		Identifier: recordIdentifier,
+		ZoneName:   zoneName,
+	}
+
+	foundRecord, err := findDNSRecord(ctx, a, targetRecord)
+	if err != nil {
+		// If not found by identifier, this might be a content hash or fake UUID
+		// Set the ID and let the read operation handle finding by content
+		d.SetId(recordIdentifier)
+		return []*schema.ResourceData{d}, nil
+	}
+
+	// Found by identifier - set all the fields from the record
+	if err := d.Set("name", foundRecord.Name); err != nil {
+		return nil, fmt.Errorf("failed to set name: %w", err)
+	}
+	if err := d.Set("type", foundRecord.Type); err != nil {
+		return nil, fmt.Errorf("failed to set type: %w", err)
+	}
+	// For TXT records, strip DNS protocol quotes (same as Read function)
+	// This ensures consistency between import and normal read operations
+	rdata := foundRecord.RData
+	if foundRecord.Type == "TXT" {
+		rdata = stripOuterQuotes(rdata)
+	}
+
+	if err := d.Set("rdata", rdata); err != nil {
+		return nil, fmt.Errorf("failed to set rdata: %w", err)
+	}
+	if err := d.Set("ttl", foundRecord.TTL); err != nil {
+		return nil, fmt.Errorf("failed to set ttl: %w", err)
+	}
+	if err := d.Set("region", foundRecord.Region); err != nil {
+		return nil, fmt.Errorf("failed to set region: %w", err)
+	}
+	if err := d.Set("identifier", foundRecord.Identifier); err != nil {
+		return nil, fmt.Errorf("failed to set identifier: %w", err)
+	}
+	if err := d.Set("immutable", foundRecord.Immutable); err != nil {
+		return nil, fmt.Errorf("failed to set immutable: %w", err)
+	}
+
+	// Use the stable backend identifier as the resource ID
+	d.SetId(foundRecord.Identifier)
+
+	return []*schema.ResourceData{d}, nil
 }

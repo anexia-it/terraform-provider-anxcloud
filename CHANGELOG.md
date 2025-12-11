@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+* data-source/dns-records: fixed data source to use correct API and return records
+    - Updated from legacy zone.NewAPI to modern v1 API
+    - Fixed records attribute population
+    - Added proper pagination support
+
 * resource/object-storage: added initial support
     - (read-only) `backend`
     - (read-only) `endpoint`

@@ -53,6 +53,7 @@ func schemaDNSZone() map[string]*schema.Schema {
 		"notify_allowed_ips": {
 			Type:        schema.TypeList,
 			Optional:    true,
+			Computed:    true,
 			Description: "IP addresses allowed to initiate domain transfer.",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
@@ -72,7 +73,7 @@ func schemaDNSZone() map[string]*schema.Schema {
 					},
 					"alias": {
 						Type:        schema.TypeString,
-						Required:    true,
+						Optional:    true,
 						Description: "DNS server alias.",
 					},
 				},

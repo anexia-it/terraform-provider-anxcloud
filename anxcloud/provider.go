@@ -104,6 +104,13 @@ func providerConfigure(version string) func(context.Context, *schema.ResourceDat
 			opts = append(opts, client.BaseURL(baseURL))
 		}
 
+		// Enable debug logging if environment variable is set
+		if os.Getenv("ANEXIA_DEBUG") != "" {
+			// Increase logger verbosity for debugging
+			logger = NewTerraformr(log.Default().Writer()).V(5)
+			opts = append(opts, client.Logger(logger.WithName("client")))
+		}
+
 		c, err := client.New(opts...)
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{

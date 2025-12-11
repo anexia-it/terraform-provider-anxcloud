@@ -6,7 +6,7 @@ HOSTNAME=hashicorp.com
 NAMESPACE=anexia-it
 NAME=anxcloud
 BINARY=terraform-provider-${NAME}
-VERSION=0.3.1
+VERSION=0.7.5-dev
 OS_ARCH=linux_amd64
 GOLDFLAGS= -s -X github.com/anexia-it/terraform-provider-anxcloud.version=$(VERSION)
 
@@ -37,7 +37,7 @@ release: fmtcheck lint test testacc
 .PHONY: install
 install: build
 	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
-	mv ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
+	cp ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 
 .PHONY: test
 test: fmtcheck
@@ -124,6 +124,10 @@ misspell: tools/misspell
 		echo "Unexpected misspelling found in docs files."; \
 		echo "To automatically fix the misspelling, run 'make docs-lint-fix' and commit the changes."; \
 		exit 1)
+
+.PHONY: setup-local-api
+setup-local-api:
+	@./scripts/setup-local-api.sh
 
 .PHONY: lint
 lint: go-lint docs-lint

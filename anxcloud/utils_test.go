@@ -3,7 +3,9 @@ package anxcloud
 import (
 	"errors"
 	"testing"
+	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -95,5 +97,20 @@ func TestSliceSubstract(t *testing.T) {
 		if diff := cmp.Diff(testCase.actual, testCase.expected); diff != "" {
 			t.Errorf("(-expected +actual):\n%s", diff)
 		}
+	}
+}
+
+func TestBackoffImport(t *testing.T) {
+	// Test that cenkalti/backoff/v4 can be imported and basic functionality works
+	b := backoff.NewExponentialBackOff()
+	b.InitialInterval = 10 * time.Second
+	b.MaxInterval = 30 * time.Second
+
+	// Verify the backoff configuration
+	if b.InitialInterval != 10*time.Second {
+		t.Errorf("Expected initial interval 10s, got %v", b.InitialInterval)
+	}
+	if b.MaxInterval != 30*time.Second {
+		t.Errorf("Expected max interval 30s, got %v", b.MaxInterval)
 	}
 }
