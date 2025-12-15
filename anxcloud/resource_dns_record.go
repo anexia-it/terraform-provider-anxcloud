@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -313,11 +314,17 @@ func resourceDNSRecordImport(ctx context.Context, d *schema.ResourceData, m inte
 	// Support both old format (<zone_name>/<uuid>) and new format (<zone_name>/<content_hash>)
 	parts := strings.Split(importID, "/")
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("invalid import ID format: expected '<zone_name>/<record_identifier>', got '%s'", importID)
+		return nil, fmt.Errorf("invalid import ID format: expected '<zone_name>/<record_identifier>', got '%s'. If importing existing DNS records, consider using the generate-import-blocks.sh script to generate proper import commands", importID)
 	}
 
 	zoneName := parts[0]
 	recordIdentifier := parts[1]
+
+	// Validate UUID format if it appears to be a UUID
+	uuidRegex := regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
+	if strings.Contains(recordIdentifier, "-") && !uuidRegex.MatchString(recordIdentifier) {
+		return nil, fmt.Errorf("invalid UUID format in import ID: '%s'. UUIDs must be in format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", recordIdentifier)
+	}
 
 	// Set the zone name in the resource data
 	if err := d.Set("zone_name", zoneName); err != nil {
@@ -335,6 +342,8 @@ func resourceDNSRecordImport(ctx context.Context, d *schema.ResourceData, m inte
 	foundRecord, err := findDNSRecord(ctx, a, targetRecord)
 	if err != nil {
 		// If not found by identifier, this might be a content hash or fake UUID
+		// Log warning on fallback
+		log.Printf("[WARN] DNS record import: identifier '%s' not found in zone '%s', falling back to content-based lookup", recordIdentifier, zoneName)
 		// Set the ID and let the read operation handle finding by content
 		d.SetId(recordIdentifier)
 		return []*schema.ResourceData{d}, nil
