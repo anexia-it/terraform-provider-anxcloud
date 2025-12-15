@@ -2,6 +2,7 @@ package anxcloud
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/anexia-it/terraform-provider-anxcloud/anxcloud/testutils/environment"
@@ -687,4 +688,94 @@ resource "anxcloud_dns_record" "with_ttl" {
 	ttl       = %d
 }
 `, zoneName, ttl)
+}
+
+// TestAccAnxCloudDNSRecord_ImportInvalidFormat tests that importing with invalid ID format produces an error
+func TestAccAnxCloudDNSRecord_ImportInvalidFormat(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDNSRecordImportInvalidFormat(),
+			},
+			{
+				ResourceName:  "anxcloud_dns_record.invalid_import",
+				ImportState:   true,
+				ImportStateId: "invalid",
+				ExpectError:   regexp.MustCompile("invalid import ID format"),
+			},
+		},
+	})
+}
+
+// TestAccAnxCloudDNSRecord_ImportContentMatchingFallback tests importing with content hash triggers warning
+func TestAccAnxCloudDNSRecord_ImportContentMatchingFallback(t *testing.T) {
+	environment.SkipIfNoEnvironment(t)
+	zoneName := test.RandomHostname() + ".terraform.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			// Create a record
+			{
+				Config: testAccDNSRecordImportContentMatching(zoneName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("anxcloud_dns_record.content_match_test", "zone_name", zoneName),
+					resource.TestCheckResourceAttr("anxcloud_dns_record.content_match_test", "name", "content-match"),
+					resource.TestCheckResourceAttr("anxcloud_dns_record.content_match_test", "type", "A"),
+					resource.TestCheckResourceAttr("anxcloud_dns_record.content_match_test", "rdata", "10.10.10.10"),
+					resource.TestCheckResourceAttr("anxcloud_dns_record.content_match_test", "ttl", "1800"),
+				),
+			},
+			// Import using content hash (should trigger warning and fallback to content matching)
+			{
+				ResourceName:      "anxcloud_dns_record.content_match_test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     fmt.Sprintf("%s/%s", zoneName, generateContentHash(zoneName, "content-match", "A", "10.10.10.10", 1800)),
+			},
+		},
+	})
+}
+
+func testAccDNSRecordImportInvalidFormat() string {
+	return `
+resource "anxcloud_dns_zone" "test" {
+	name = "invalid-format-test.terraform.test"
+}
+
+# This will attempt to import with invalid ID format during the test
+resource "anxcloud_dns_record" "invalid_import" {
+	zone_name = anxcloud_dns_zone.test.name
+	name      = "invalid"
+	type      = "A"
+	rdata     = "192.168.1.1"
+	ttl       = 3600
+}
+`
+}
+
+func testAccDNSRecordImportContentMatching(zoneName string) string {
+	return fmt.Sprintf(`
+resource "anxcloud_dns_zone" "test" {
+	name = "%s"
+	is_master = true
+	dns_sec_mode = "unvalidated"
+	admin_email = "admin@terraform.test"
+	refresh = 100
+	retry = 100
+	expire = 1000
+	ttl = 100
+}
+
+resource "anxcloud_dns_record" "content_match_test" {
+	zone_name = anxcloud_dns_zone.test.name
+	name      = "content-match"
+	type      = "A"
+	rdata     = "10.10.10.10"
+	ttl       = 1800
+}
+`, zoneName)
 }

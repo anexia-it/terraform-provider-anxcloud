@@ -81,4 +81,24 @@ Optional:
 - `delete` (String)
 - `read` (String)
 
+## Import
+
+DNS records can be imported using the preferred import ID format: `zone_name/uuid`
+
+Where:
+- `zone_name` is the DNS zone name (e.g., "example.com")
+- `uuid` is the record's unique identifier from the API
+
+### Examples
+
+```bash
+# Import a single A record
+terraform import anxcloud_dns_record.www "example.com/abc123def456"
+
+# Import an MX record
+terraform import anxcloud_dns_record.mail "example.com/def789ghi012"
+```
+
+For bulk imports of all records in a zone, use the `generate-import-blocks.sh` script located in the `examples/dns-zone-records-import/` directory. This script automatically discovers all records and generates import blocks for easy migration.
+
 
