@@ -166,10 +166,6 @@ func resourceObjectStorageKeyRead(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	if err := d.Set("secret", key.Secret); err != nil {
-		diags = append(diags, diag.FromErr(err)...)
-	}
-
 	if err := d.Set("secret_url", key.SecretURL); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
