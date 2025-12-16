@@ -8,6 +8,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"go.anx.io/go-anxcloud/pkg/api"
 	clouddnsv1 "go.anx.io/go-anxcloud/pkg/apis/clouddns/v1"
@@ -30,6 +31,9 @@ func resourceDNSZone() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 		Schema: schemaDNSZone(),
+		CustomizeDiff: customdiff.All(
+			validateZoneDoesNotExist,
+		),
 	}
 }
 
@@ -184,6 +188,60 @@ func resourceDNSZoneDelete(ctx context.Context, d *schema.ResourceData, m interf
 
 	d.SetId("")
 	return nil
+}
+
+// validateZoneDoesNotExist checks during plan if a zone with the same name already exists
+//
+// NOTE: This validation is intentionally commented out because it conflicts with
+// import workflows. When using import blocks, the zone naturally already exists,
+// and this validation would prevent the import from working.
+//
+// The original purpose was to warn users if they're about to create a zone that
+// already exists. However, the resourceDNSZoneCreate function already handles this
+// gracefully by adopting/updating existing zones, so the validation is redundant.
+//
+// If strict validation is needed in the future, it should detect import scenarios
+// and skip validation, but Terraform's CustomizeDiff does not provide a reliable
+// way to detect import operations.
+func validateZoneDoesNotExist(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+	// Skip validation if this is an existing resource (update)
+	if d.Id() != "" {
+		return nil
+	}
+
+	// DISABLED: Validation conflicts with import workflows
+	// See function documentation for details
+	return nil
+
+	/* Original validation code - DISABLED
+	zoneName := d.Get("name").(string)
+
+	// Only validate on create when name is being set
+	if !d.HasChange("name") && d.Id() == "" {
+		return nil
+	}
+
+	a := apiFromProviderConfig(m)
+	log.Printf("[DEBUG] DNS Zone Plan: checking if zone '%s' already exists", zoneName)
+
+	z := clouddnsv1.Zone{Name: zoneName}
+	err := a.Get(ctx, &z)
+
+	if api.IgnoreNotFound(err) != nil {
+		// API error other than NotFound
+		return fmt.Errorf("failed to check if zone exists: %w", err)
+	}
+
+	if err == nil {
+		// Zone exists - warn user it will be adopted/updated instead of created
+		log.Printf("[WARN] DNS Zone Plan: zone '%s' already exists and will be adopted/updated on apply", zoneName)
+		return fmt.Errorf("DNS zone '%s' already exists. Use 'terraform import' to manage existing zones, or choose a different name", zoneName)
+	}
+
+	// Zone doesn't exist - safe to create
+	log.Printf("[DEBUG] DNS Zone Plan: zone '%s' does not exist, will be created", zoneName)
+	return nil
+	*/
 }
 
 func dnsZoneFromResourceData(d *schema.ResourceData) clouddnsv1.Zone {
