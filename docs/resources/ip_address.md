@@ -50,6 +50,7 @@ resource "anxcloud_ip_address" "example_any_in_vlan" {
 
 - `address` (String) IP address.
 - `description_customer` (String) Additional customer description.
+- `rdns_name` (String) RDNS Name.
 - `network_prefix_id` (String) Identifier of the related network prefix.
 - `organization` (String) Customer of yours. Reseller only.
 - `reservation_period_seconds` (Number) Period for the requested reservation in seconds. Defaults to 30 minutes if not set.

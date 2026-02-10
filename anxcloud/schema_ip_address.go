@@ -37,6 +37,11 @@ func schemaIPAddresses() map[string]*schema.Schema {
 						Computed:    true,
 						Description: "Role of the IP address.",
 					},
+					"rdns_name": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "The associated RDNS name.",
+					},
 				},
 			},
 		},

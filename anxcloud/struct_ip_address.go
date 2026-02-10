@@ -21,6 +21,7 @@ func flattenIPAddresses(in []address.Summary) []interface{} {
 		m["address"] = a.Name
 		m["description_customer"] = a.DescriptionCustomer
 		m["role"] = a.Role
+		m["rdns_name"] = a.RDNSName
 
 		att = append(att, m)
 	}

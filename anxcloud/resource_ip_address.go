@@ -90,6 +90,13 @@ func resourceIPAddress() *schema.Resource {
 					Computed:    true,
 					Description: "Internal description.",
 				},
+				"rdns_name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					Description:   "The associated RDNS name.",
+					ConflictsWith: []string{"vlan_id"},
+				},
 				"role": {
 					Type:          schema.TypeString,
 					Optional:      true,
@@ -161,6 +168,7 @@ func createAddress(ctx context.Context, pc providerContext, d *schema.ResourceDa
 		DescriptionCustomer: d.Get("description_customer").(string),
 		Role:                d.Get("role").(string),
 		Organization:        d.Get("organization").(string),
+		RDNSName:            d.Get("rdns_name").(string),
 	}
 
 	res, err := addressClient.Create(ctx, def)
@@ -271,6 +279,9 @@ func addressIntoResourceData(a address.Address, d *schema.ResourceData) diag.Dia
 	if err := d.Set("description_customer", a.DescriptionCustomer); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
+	if err := d.Set("rdns_name", a.RDNSName); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
 	if err := d.Set("description_internal", a.DescriptionInternal); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
@@ -308,13 +319,14 @@ func resourceIPAddressUpdate(ctx context.Context, d *schema.ResourceData, m inte
 	c := m.(providerContext).legacyClient
 	a := address.NewAPI(c)
 
-	if !d.HasChanges("description_customer", "role") {
+	if !d.HasChanges("description_customer", "role", "rdns_name") {
 		return nil
 	}
 
 	def := address.Update{
 		DescriptionCustomer: d.Get("description_customer").(string),
 		Role:                d.Get("role").(string),
+		RDNSName:            d.Get("rdns_name").(string),
 	}
 	if _, err := a.Update(ctx, d.Id(), def); err != nil {
 		return diag.FromErr(err)

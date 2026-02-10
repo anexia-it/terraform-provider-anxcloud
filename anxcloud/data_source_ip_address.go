@@ -44,11 +44,15 @@ Retrieves an IP address.
 				Computed:    true,
 				Description: "The associated VLAN identifier.",
 			},
-
 			"description_customer": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Additional customer description.",
+			},
+			"rdns_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The associated RDNS name.",
 			},
 			"description_internal": {
 				Type:        schema.TypeString,
@@ -147,6 +151,9 @@ func dataSourceIPAddressRead(ctx context.Context, d *schema.ResourceData, m inte
 		diags = append(diags, diag.FromErr(err)...)
 	}
 	if err = d.Set("description_customer", addr.DescriptionCustomer); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+	if err = d.Set("rdns_name", addr.RDNSName); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
 	if err = d.Set("description_internal", addr.DescriptionInternal); err != nil {

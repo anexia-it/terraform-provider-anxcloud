@@ -7,15 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-* resource/object-storage: added initial support
-    - (read-only) `backend`
-    - (read-only) `endpoint`
-    - (read-only) `region`
-    - (read-only) `tenant`
-    - `bucket`
-    - `user`
-    - `key`
-
 <!--
 Please add your changelog entry under this comment in the correct category (Security, Fixed, Added, Changed, Deprecated, Removed - in this order).
 <!--
@@ -27,6 +18,20 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 
 * (internal)? scope: short description (#pr, @author)
 -->
+
+## [0.8.0] - 2026-02-10
+
+### Added
+
+* resource/ip_address: added support for defining the RDNS information
+* resource/object-storage: added initial support
+    - (read-only) `backend`
+    - (read-only) `endpoint`
+    - (read-only) `region`
+    - (read-only) `tenant`
+    - `bucket`
+    - `user`
+    - `key`
 
 ### Fixed
 
