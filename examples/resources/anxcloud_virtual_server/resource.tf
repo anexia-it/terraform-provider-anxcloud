@@ -36,7 +36,7 @@ resource "anxcloud_ip_address" "v6" {
 
 data "anxcloud_availability_zone" "zoneA" {
   location_id = data.anxcloud_core_location.anx04.id
-  name= "Zone A"
+  name        = "Zone A"
 } 
 
 resource "anxcloud_virtual_server" "example" {
