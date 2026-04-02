@@ -54,6 +54,11 @@ resource "anxcloud_ip_address" "v6" {
   network_prefix_id = anxcloud_network_prefix.v6.id
 }
 
+data "anxcloud_availability_zone" "zoneA" {
+  location_id = data.anxcloud_core_location.anx04.id
+  name= "Zone A"
+} 
+
 resource "anxcloud_virtual_server" "example" {
   hostname    = "example-terraform"
   location_id = data.anxcloud_core_location.anx04.id
@@ -61,6 +66,8 @@ resource "anxcloud_virtual_server" "example" {
 
   cpus   = 4
   memory = 4096
+
+  availability_zone_id = data.anxcloud_availability_zone.zoneA.id
 
   ssh_key = file("~/.ssh/id_rsa.pub")
 
@@ -120,6 +127,7 @@ resource "anxcloud_virtual_server" "example" {
 - `password` (String, Sensitive) Plaintext password. Example: ('!anx123mySuperStrongPassword123anx!', 'go3ju0la1ro3', …). For systems that support it, we strongly recommend using a SSH key instead.
 - `script` (String) Script to be executed after provisioning. Consider the corresponding shebang at the beginning of your script. If you want to use PowerShell, the first line should be: #ps1_sysnative.
 - `sockets` (Number) Amount of CPU sockets Number of cores have to be a multiple of sockets, as they will be spread evenly across all sockets. Defaults to number of cores, i.e. one socket per CPU core.
+- `availability_zone_id` (String) ID of the Availability Zone the VM should be placed in. Leave empty to keep current Availability Zone. Pass 'NotSet' to remove a VM from its current Availability Zone.
 - `ssh_key` (String) Public key (instead of password, only for Linux systems). Recommended over providing a plaintext password.
 - `tags` (Set of String) Set of tags attached to the resource.
 - `template` (String) Named template. Can be used instead of the template_id to select a template. Example: (`Debian 11`, `Windows 2022`).

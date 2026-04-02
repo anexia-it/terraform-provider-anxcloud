@@ -64,6 +64,12 @@ func schemaVirtualServer() map[string]*schema.Schema {
 			Description: "Amount of CPU sockets Number of cores have to be a multiple of sockets, as they will be spread evenly across all sockets. " +
 				"Defaults to number of cores, i.e. one socket per CPU core.",
 		},
+		"availability_zone_id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "ID of the Availability Zone the VM should be placed in. Leave empty to keep current Availability Zone. Pass 'NotSet' to remove a VM from its current Availability Zone.",
+		},
 		"memory": {
 			Type:        schema.TypeInt,
 			Required:    true,
@@ -247,6 +253,11 @@ func schemaVirtualServer() map[string]*schema.Schema {
 						Type:        schema.TypeInt,
 						Computed:    true,
 						Description: "Memory in MB.",
+					},
+					"availability_zone_id": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "The ID of the Availability Zone the VM is in.",
 					},
 					"disks_number": {
 						Type:        schema.TypeInt,

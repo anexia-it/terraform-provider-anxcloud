@@ -234,6 +234,7 @@ func resourceVirtualServerCreate(ctx context.Context, d *schema.ResourceData, m 
 		AdditionalDisks:    mapToAdditionalDisks(disks[1:]),
 		CPUPerformanceType: d.Get("cpu_performance_type").(string),
 		Sockets:            d.Get("sockets").(int),
+		AvailabilityZone:   d.Get("availability_zone_id").(string),
 		Network:            networks,
 		DNS1:               dns[0],
 		DNS2:               dns[1],
@@ -310,6 +311,16 @@ func resourceVirtualServerRead(ctx context.Context, d *schema.ResourceData, m in
 	}
 	if err = d.Set("sockets", sockets); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
+	}
+
+	if info.AvailabilityZone != nil {
+		if err = d.Set("availability_zone_id", info.AvailabilityZone.Identifier); err != nil {
+			diags = append(diags, diag.FromErr(err)...)
+		}
+	} else {
+		if err = d.Set("availability_zone_id", "NotSet"); err != nil {
+			diags = append(diags, diag.FromErr(err)...)
+		}
 	}
 
 	if err = d.Set("memory", info.RAM); err != nil {
@@ -406,10 +417,12 @@ func resourceVirtualServerUpdate(ctx context.Context, d *schema.ResourceData, m 
 		EnableDangerous: d.Get("critical_operation_confirmed").(bool),
 	}
 
-	if d.HasChanges("sockets", "memory", "cpus") {
+	if d.HasChanges("sockets", "memory", "cpus", "availability_zone_id") {
 		ch.CPUs = d.Get("cpus").(int)
 		ch.CPUSockets = d.Get("sockets").(int)
 		ch.MemoryMBs = d.Get("memory").(int)
+		az := d.Get("availability_zone_id")
+		ch.AvailabilityZone = vm.AvailabilityZoneUpdate(az.(string))
 	}
 
 	// cpu_performance_type might not be set because info endpoint didn't expose it previously

@@ -34,6 +34,11 @@ resource "anxcloud_ip_address" "v6" {
   network_prefix_id = anxcloud_network_prefix.v6.id
 }
 
+data "anxcloud_availability_zone" "zoneA" {
+  location_id = data.anxcloud_core_location.anx04.id
+  name= "Zone A"
+} 
+
 resource "anxcloud_virtual_server" "example" {
   hostname    = "example-terraform"
   location_id = data.anxcloud_core_location.anx04.id
@@ -41,6 +46,8 @@ resource "anxcloud_virtual_server" "example" {
 
   cpus   = 4
   memory = 4096
+
+  availability_zone_id = data.anxcloud_availability_zone.zoneA.id
 
   ssh_key = file("~/.ssh/id_rsa.pub")
 

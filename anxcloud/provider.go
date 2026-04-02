@@ -65,6 +65,7 @@ func Provider(version string) *schema.Provider {
 			"anxcloud_nic_types":             dataSourceNICTypes(),
 			"anxcloud_core_location":         dataSourceCoreLocation(),
 			"anxcloud_core_locations":        dataSourceCoreLocations(),
+			"anxcloud_availability_zone":     dataSourceAvailabilityZone(),
 			"anxcloud_vlan":                  dataSourceVLAN(),
 			"anxcloud_vlans":                 dataSourceVLANs(),
 			"anxcloud_tags":                  dataSourceTags(),

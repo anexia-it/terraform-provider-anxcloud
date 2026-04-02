@@ -18,6 +18,12 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 
 * (internal)? scope: short description (#pr, @author)
 -->
+## [0.10.0] - 2026-04-02
+
+### Added
+
+* data-source/availabilityzone: added support for fetching Availability Zones by name or identifier
+* resource/anxcloud_virtual_server: added support to set Availability Zone
 
 ## [0.8.0] - 2026-02-10
 
