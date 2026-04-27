@@ -33,6 +33,7 @@ func resourceDNSRecord() *schema.Resource {
 		CreateContext: resourceDNSRecordCreate,
 		ReadContext:   resourceDNSRecordRead,
 		DeleteContext: resourceDNSRecordDelete,
+		UpdateContext: resourceDNSRecordUpdate,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -104,6 +105,9 @@ func resourceDNSRecordRead(ctx context.Context, d *schema.ResourceData, m interf
 		rData = rData[1 : len(rData)-1]
 	}
 
+	if err := d.Set("identifier", r.Identifier); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
 	if err := d.Set("rdata", rData); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
@@ -116,6 +120,9 @@ func resourceDNSRecordRead(ctx context.Context, d *schema.ResourceData, m interf
 	if err := d.Set("zone_name", r.ZoneName); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
+	if err := d.Set("comment", r.Comment); err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
 	if err := d.Set("region", r.Region); err != nil {
 		diags = append(diags, diag.FromErr(err)...)
 	}
@@ -126,6 +133,24 @@ func resourceDNSRecordRead(ctx context.Context, d *schema.ResourceData, m interf
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
+	return diags
+}
+
+func resourceDNSRecordUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	update := &dnsRecordUpdate{
+		zone:     d.Get("zone_name").(string),
+		recordID: d.Get("identifier").(string),
+		Comment:  d.Get("comment").(string),
+	}
+
+	a := apiFromProviderConfig(m)
+	err := a.Update(ctx, update)
+
+	var diags []diag.Diagnostic
+	if err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
 	return diags
 }
 
@@ -152,6 +177,8 @@ func resourceDNSRecordDelete(ctx context.Context, d *schema.ResourceData, m inte
 }
 
 func dnsRecordFromResourceData(d *schema.ResourceData) clouddnsv1.Record {
+
+	comment := d.Get("comment").(string)
 	return clouddnsv1.Record{
 		Type:      d.Get("type").(string),
 		Name:      d.Get("name").(string),
@@ -160,6 +187,7 @@ func dnsRecordFromResourceData(d *schema.ResourceData) clouddnsv1.Record {
 		RData:     d.Get("rdata").(string),
 		TTL:       d.Get("ttl").(int),
 		Immutable: d.Get("immutable").(bool),
+		Comment:   &comment,
 	}
 }
 
@@ -227,11 +255,12 @@ func resourceDNSRecordBatch(a api.API, zoneName string) func(ctx context.Context
 		changeSet := dnsZoneChangeSet{ZoneName: zoneName}
 		for _, r := range records {
 			changeSetRecord := dnsZoneChangeSetRecord{
-				Name:   r.record.Name,
-				Type:   r.record.Type,
-				Region: r.record.Region,
-				RData:  r.record.RData,
-				TTL:    r.record.TTL,
+				Name:    r.record.Name,
+				Type:    r.record.Type,
+				Region:  r.record.Region,
+				RData:   r.record.RData,
+				TTL:     r.record.TTL,
+				Comment: r.record.Comment,
 			}
 			if r.batchOperation == batchOperationCreate {
 				changeSet.Create = append(changeSet.Create, changeSetRecord)
@@ -279,11 +308,12 @@ func resourceDNSRecordBatch(a api.API, zoneName string) func(ctx context.Context
 }
 
 type dnsZoneChangeSetRecord struct {
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	Region string `json:"region,omitempty"`
-	RData  string `json:"rdata"`
-	TTL    int    `json:"ttl"`
+	Name    string  `json:"name"`
+	Type    string  `json:"type"`
+	Region  string  `json:"region,omitempty"`
+	RData   string  `json:"rdata"`
+	TTL     int     `json:"ttl"`
+	Comment *string `json:"comment"`
 }
 
 type dnsZoneChangeSetError struct {
@@ -342,4 +372,27 @@ func resourceDNSRecordCanonicalIdentifier(r clouddnsv1.Record) string {
 		r.Region,
 		fmt.Sprint(r.Immutable),
 	}, "_")
+}
+
+type dnsRecordUpdate struct {
+	zone     string
+	recordID string
+	Comment  string `json:"comment"`
+}
+
+func (u *dnsRecordUpdate) GetIdentifier(ctx context.Context) (string, error) {
+	return u.recordID, nil
+}
+func (u *dnsRecordUpdate) EndpointURL(ctx context.Context) (*url.URL, error) {
+	op, err := types.OperationFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if op != types.OperationUpdate {
+		return nil, errors.New("helper resource 'dnsRecordUpdate' only supports Update operations")
+	}
+
+	return url.Parse(fmt.Sprintf("/api/clouddns/v1/zone.json/%s/records/",
+		u.zone))
 }
