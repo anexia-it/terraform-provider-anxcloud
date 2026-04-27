@@ -18,6 +18,12 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 
 * (internal)? scope: short description (#pr, @author)
 -->
+## [0.11.0] - 2026-04-27
+
+### Added
+
+* resource/anxcloud_dns_record: added support to set Comment
+
 ## [0.10.0] - 2026-04-02
 
 ### Added

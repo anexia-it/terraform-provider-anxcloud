@@ -22,6 +22,7 @@ func TestAccAnxCloudDNSRecord(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("anxcloud_dns_record.a_record", "zone_name", "0-"+zoneName),
 					resource.TestCheckResourceAttr("anxcloud_dns_record.a_record", "name", "a-record"),
+					resource.TestCheckResourceAttr("anxcloud_dns_record.a_record", "comment", "testcomment"),
 					resource.TestCheckResourceAttr("anxcloud_dns_record.txt_record", "name", "txt-record"),
 				),
 			},
@@ -56,6 +57,7 @@ func testAccAnxDNSZoneAndRecord(zoneNameSuffix string, recordsZoneIndex uint) st
 		zone_name = anxcloud_dns_zone.test_dns_zones[%[2]d].name
 		type = "A"
 		rdata = "1.1.1.1"
+		comment = "testcomment"
 		ttl = 300
 	}
 
