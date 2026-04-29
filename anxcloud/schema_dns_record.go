@@ -39,7 +39,11 @@ func schemaDNSRecord() map[string]*schema.Schema {
 			Description: "Region specific TTL. If not set the zone TTL will be used.",
 			ForceNew:    true,
 		},
-
+		"comment": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Free text comment.",
+		},
 		"region": {
 			Type:        schema.TypeString,
 			Computed:    true,
