@@ -81,3 +81,29 @@ jobs:
         ANEXIA_TOKEN: ${{ secrets.ANEXIA_TOKEN }}
         ANEXIA_LOCATION_ID: 52b5f6b2fd3a4a7eaaedf1a7c019e9ea
         ANEXIA_VLAN_ID: 00a239d617504e4ab49122efe0d27657
+
+  notify-on-error:
+    runs-on: ubuntu-latest
+    if: ${{ always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'timed_out')) }}
+    needs:
+      - docs-lint
+      - code-lint
+      - dependencies
+      - unit-tests
+      - integration-tests
+    steps:
+    - name: Send
+      uses: fjogeleit/http-request-action@v1
+      with:
+        url: '${{ secrets.NOTIFY_URL }}'
+        method: 'POST'
+        customHeaders: '{"Content-Type": "application/json","Authorization":"${{ secrets.NOTIFY_TOKEN }}"}'
+        data: ' {
+                  "channel": "${{ secrets.NOTIFY_CHANNEL }}",
+                  "text": ":error: Pipeline [terraform-provider-anxcloud](https://github.com/anexia-it/terraform-provider-anxcloud) / [Quality](https://github.com/anexia-it/terraform-provider-anxcloud/actions/workflows/quality.yml) has failed.\n
+                            Triggered by: **${{ github.actor }}**\n
+                            Run: [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+                          ",
+                  "username": "Github",
+                  "icon_emoji": "git"
+                }'
