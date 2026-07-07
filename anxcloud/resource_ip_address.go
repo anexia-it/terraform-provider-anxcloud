@@ -7,6 +7,7 @@ import (
 	"math"
 	"net/http"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -22,6 +23,25 @@ const (
 	ipAddressStatusActive   = "Active"
 	ipAddressStatusDeleted  = "Marked for deletion"
 )
+
+// stillAssignedErrorMessage is the substring the API returns in
+// ResponseError.ErrorData.Message when an IP address delete is attempted
+// before the backend has finished detaching it from a resource (e.g. a
+// virtual server's NIC) that was just deleted. This is an eventual
+// consistency gap on the API side rather than a real conflict, so callers
+// should retry on it instead of failing immediately.
+const stillAssignedErrorMessage = "is still assigned to a resource"
+
+// isStillAssignedError returns true if err is a ResponseError caused by the
+// IP address still being assigned to a resource that is in the process of
+// being detached/deleted.
+func isStillAssignedError(err error) bool {
+	var respErr *client.ResponseError
+	if errors.As(err, &respErr) {
+		return strings.Contains(respErr.ErrorData.Message, stillAssignedErrorMessage)
+	}
+	return false
+}
 
 func resourceIPAddress() *schema.Resource {
 	return &schema.Resource{
@@ -357,12 +377,29 @@ func resourceIPAddressDelete(ctx context.Context, d *schema.ResourceData, m inte
 		return diags
 	}
 
-	err := a.Delete(ctx, d.Id())
-	if err != nil {
-		if err := handleNotFoundError(err); err != nil {
-			return diag.FromErr(err)
+	// The backend can return a conflict here if the IP address hasn't
+	// finished being detached from a resource that was just deleted (e.g. a
+	// virtual server's NIC), even though tofu/terraform ordered the deletes
+	// correctly. This is an eventual-consistency gap on the API side, so we
+	// retry the delete call itself instead of failing immediately.
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
+		err := a.Delete(ctx, d.Id())
+		if err == nil {
+			return nil
+		}
+		if isStillAssignedError(err) {
+			return retry.RetryableError(fmt.Errorf("ip address '%s' is still assigned to a resource, retrying: %w", d.Id(), err))
+		}
+		if nfErr := handleNotFoundError(err); nfErr != nil {
+			return retry.NonRetryableError(nfErr)
 		}
 		d.SetId("")
+		return nil
+	})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if d.Id() == "" {
 		return nil
 	}
 
