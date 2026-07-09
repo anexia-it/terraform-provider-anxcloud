@@ -80,7 +80,7 @@ jobs:
       env:
         ANEXIA_TOKEN: ${{ secrets.ANEXIA_TOKEN }}
         ANEXIA_LOCATION_ID: 52b5f6b2fd3a4a7eaaedf1a7c019e9ea
-        ANEXIA_VLAN_ID: 00a239d617504e4ab49122efe0d27657
+        ANEXIA_VLAN_ID: a82e88deb074496e8e57d4413485d45d
 
   notify-on-error:
     runs-on: ubuntu-latest
