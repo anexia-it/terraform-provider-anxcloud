@@ -68,7 +68,7 @@ func TestAccAnxCloudNetworkPrefix(t *testing.T) {
 	})
 }
 
-func xTestAccAnxCloudNetworkPrefixTags(t *testing.T) {
+func TestAccAnxCloudNetworkPrefixTags(t *testing.T) {
 	environment.SkipIfNoEnvironment(t)
 	envInfo := environment.GetEnvInfo(t)
 
