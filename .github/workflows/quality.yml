@@ -95,7 +95,7 @@ jobs:
       - integration-tests
     steps:
     - name: Send
-      uses: fjogeleit/http-request-action@v1
+      uses: fjogeleit/http-request-action@v2
       with:
         url: '${{ secrets.NOTIFY_URL }}'
         method: 'POST'
