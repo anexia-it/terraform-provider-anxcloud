@@ -29,7 +29,7 @@ import (
 var buildNumberRegex = regexp.MustCompile(`[bB]?(\d+)`)
 
 const (
-	templateName = "Flatcar Linux Stable"
+	templateName = "Flatcar Linux Stable UEFI"
 	vmPoweredOn  = "poweredOn"
 )
 
@@ -148,44 +148,6 @@ func TestAccAnxCloudVirtualServerScale(t *testing.T) {
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAnxCloudVirtualServerDestroy,
 		Steps:             testSteps,
-	})
-}
-
-func TestAccAnxCloudVirtualServerFromScratch(t *testing.T) {
-	t.Skip("specific from_scratch templates no longer available")
-
-	environment.SkipIfNoEnvironment(t)
-	envInfo := environment.GetEnvInfo(t)
-	vmRecorder := getVMRecorder(t)
-
-	vmDef := vm.Definition{
-		Location:           envInfo.Location,
-		Hostname:           fmt.Sprintf("terraform-test-%s-create-virtual-server-from-scratch", envInfo.TestRunName),
-		TemplateID:         "114", // Debian GNU\/Linux 10, 64 Bit
-		TemplateType:       "from_scratch",
-		Memory:             2048,
-		CPUs:               2,
-		Sockets:            2,
-		CPUPerformanceType: "performance-intel",
-		Disk:               50,
-		DiskType:           "ENT6",
-		Network:            []vm.Network{createNewNetworkInterface(envInfo)},
-		DNS1:               "8.8.8.8",
-		Password:           "flatcar#1234$%%",
-	}
-
-	vmRecorder.RecordVMByName(fmt.Sprintf("%%-%s", vmDef.Hostname))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAnxCloudVirtualServerDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: withoutTags(testAccConfigAnxCloudVirtualServer("foo", "", &vmDef)),
-				Check:  testAccCheckAnxCloudVirtualServerExists("anxcloud_virtual_server.foo", &vmDef),
-			},
-		},
 	})
 }
 
