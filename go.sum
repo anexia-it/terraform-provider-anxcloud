@@ -244,8 +244,8 @@ github.com/zclconf/go-cty v1.18.1 h1:yEGE8M4iIZlyKQURZNb2SnEyZlZHUcBCnx6KF81KuwM
 github.com/zclconf/go-cty v1.18.1/go.mod h1:qpnV6EDNgC1sns/AleL1fvatHw72j+S+nS+MJ+T2CSg=
 github.com/zclconf/go-cty-debug v0.0.0-20240509010212-0d6042c53940 h1:4r45xpDWB6ZMSMNJFMOjqrGHynW3DIBuR2H9j0ug+Mo=
 github.com/zclconf/go-cty-debug v0.0.0-20240509010212-0d6042c53940/go.mod h1:CmBdvvj3nqzfzJ6nTCIwDTPZ56aVGvDrmztiO5g3qrM=
-go.anx.io/go-anxcloud v0.14.0 h1:qCiTAvPP903gJOpSfeFChRRLwGu6sw4/9jYFIq0Zbx8=
-go.anx.io/go-anxcloud v0.14.0/go.mod h1:nhwk53AePw9CH91dAGGGzrjlpovbR8dfixtFUkHD/PA=
+go.anx.io/go-anxcloud v0.14.5 h1:7oVdLWWe4hZtP4BJvcouzpKKNHqlaDGqnyggUC9Lom4=
+go.anx.io/go-anxcloud v0.14.5/go.mod h1:nhwk53AePw9CH91dAGGGzrjlpovbR8dfixtFUkHD/PA=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=
 go.opentelemetry.io/auto/sdk v1.2.1/go.mod h1:KRTj+aOaElaLi+wW1kO/DZRXwkF4C5xPbEe3ZiIhN7Y=
 go.opentelemetry.io/otel v1.39.0 h1:8yPrr/S0ND9QEfTfdP9V+SiwT4E0G7Y5MO7p85nis48=
