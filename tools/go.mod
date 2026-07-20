@@ -6,7 +6,7 @@ require (
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint v1.63.4
 	github.com/hashicorp/terraform-plugin-docs v0.24.0
-	github.com/katbyte/terrafmt v0.5.5
+	github.com/katbyte/terrafmt v0.5.6
 )
 
 require (
@@ -130,8 +130,8 @@ require (
 	github.com/jjti/go-spancheck v0.6.4 // indirect
 	github.com/julz/importas v0.2.0 // indirect
 	github.com/karamaru-alpha/copyloopvar v1.1.0 // indirect
-	github.com/katbyte/andreyvit-diff v0.0.2 // indirect
-	github.com/katbyte/sergi-go-diff v1.2.2 // indirect
+	github.com/katbyte/andreyvit-diff v0.0.3 // indirect
+	github.com/katbyte/sergi-go-diff v1.2.3 // indirect
 	github.com/kisielk/errcheck v1.8.0 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.5 // indirect
 	github.com/kulti/thelper v0.6.3 // indirect
