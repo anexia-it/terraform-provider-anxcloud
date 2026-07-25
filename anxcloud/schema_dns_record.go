@@ -13,19 +13,16 @@ func schemaDNSRecord() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "DNS record type.",
-			ForceNew:    true,
 		},
 		"rdata": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "DNS record data.",
-			ForceNew:    true,
 		},
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "DNS record name.",
-			ForceNew:    true,
 		},
 		"zone_name": {
 			Type:        schema.TypeString,
@@ -37,7 +34,6 @@ func schemaDNSRecord() map[string]*schema.Schema {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Description: "Region specific TTL. If not set the zone TTL will be used.",
-			ForceNew:    true,
 		},
 		"comment": {
 			Type:        schema.TypeString,

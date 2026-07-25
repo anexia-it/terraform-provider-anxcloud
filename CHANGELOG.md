@@ -18,6 +18,11 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 
 * (internal)? scope: short description (#pr, @author)
 -->
+
+### Changed
+
+* resource/anxcloud_dns_record: update records in place instead of recreating them; only `zone_name` changes trigger a replacement (@ProbstenHias)
+
 ## [0.11.0] - 2026-04-27
 
 ### Added
