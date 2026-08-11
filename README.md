@@ -32,17 +32,6 @@ or
 make build
 ```
 
-To cross-compile the provider for every platform supported by the release
-pipeline, run:
-
-```shell
-make cross-build
-```
-
-The release matrix includes Linux, macOS, and Windows on AMD64 and ARM64.
-Release tags package, sign, checksum, and publish all six provider binaries
-through GoReleaser.
-
 ### Test sample configuration
 
 First, build and install the provider.

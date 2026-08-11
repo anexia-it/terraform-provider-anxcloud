@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     anxcloud = {
-      version = "~> 0.11"
+      versions = ["0.3.1"]
       source   = "hashicorp.com/anexia-it/anxcloud"
     }
   }

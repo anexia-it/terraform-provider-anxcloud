@@ -28,8 +28,6 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 
 * data-source/anxcloud_network_prefix: add lookup by identifier or exact CIDR
 * resource/anxcloud_kubernetes_cluster, resource/anxcloud_kubernetes_node_pool: expose Kubernetes API v2 fields and support in-place updates
-* (internal) release: build provider packages for Linux, macOS, and Windows on amd64 and arm64
-
 ## [0.11.0] - 2026-04-27
 
 ### Added
