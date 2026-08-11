@@ -16,6 +16,7 @@ coverage.out
 *.tfstate.*
 examples/.terraform
 
+.terraform.lock.hcl
 # Crash log files
 crash.log
 

@@ -18,10 +18,33 @@ func dataSourceKubernetesCluster() *schema.Resource {
 		Schema: schemaWith(schemaKubernetesCluster(),
 			fieldsExactlyOneOf("id", "name"),
 			fieldsComputed(
+				"version",
 				"location",
 				"needs_service_vms",
 				"enable_nat_gateways",
 				"enable_lbaas",
+				"internal_ipv4_prefix",
+				"external_ipv4_prefix",
+				"external_ipv6_prefix",
+				"enable_autoscaling",
+				"apiserver_allowlist",
+				"cni_plugin",
+				"enable_persistent_storage",
+				"external_ip_families",
+				"enable_oidc_authentication",
+				"oidc_client_id",
+				"oidc_issuer_url",
+				"oidc_groups_claim",
+				"oidc_username_claim",
+				"oidc_extra_scopes",
+				"oidc_groups_prefix",
+				"oidc_required_claim",
+				"oidc_username_prefix",
+				"maintenance_window_start_time",
+				"maintenance_window_duration",
+				"patch_version",
+				"state",
+				"state_text",
 			),
 		),
 	}
@@ -52,26 +75,21 @@ func findClusterByName(ctx context.Context, a api.API, name string) (*kubernetes
 }
 
 func dataSourceKubernetesClusterRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	a := apiFromProviderConfig(m)
-
-	cluster := kubernetesv1.Cluster{
-		Identifier: d.Get("id").(string),
-		Name:       d.Get("name").(string),
-	}
-
-	if cluster.Identifier == "" {
-		foundCluster, err := findClusterByName(ctx, a, cluster.Name)
+	identifier := d.Get("id").(string)
+	if identifier == "" {
+		foundCluster, err := findClusterByName(ctx, apiFromProviderConfig(m), d.Get("name").(string))
 		if err != nil {
 			return diag.Errorf("failed retrieving cluster by name: %s", err)
 		}
-		cluster = *foundCluster
-	} else {
-		if err := a.Get(ctx, &cluster); err != nil {
-			return diag.Errorf("failed retrieving cluster by id: %s", err)
-		}
+		identifier = foundCluster.Identifier
+	}
+
+	a := newKubernetesServiceAPI[kubernetesCluster](m.(providerContext).legacyClient, "cluster")
+	cluster, err := a.Get(ctx, identifier)
+	if err != nil {
+		return diag.Errorf("failed retrieving cluster by id: %s", err)
 	}
 
 	d.SetId(cluster.Identifier)
-
-	return setResourceDataFromKubernetesCluster(d, cluster)
+	return setResourceDataFromKubernetesClusterV2(d, cluster)
 }

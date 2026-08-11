@@ -3,17 +3,12 @@
 page_title: "anxcloud_kubernetes_cluster Resource - terraform-provider-anxcloud"
 subcategory: ""
 description: |-
-  Resource to create Kubernetes clusters.
-              Updates are currently not supported.
+  Resource to create and update Kubernetes clusters.
 ---
 
 # anxcloud_kubernetes_cluster (Resource)
 
-Resource to create Kubernetes clusters.
-			Updates are currently not supported.
-
-### Known limitations
-- updating a cluster is currently not supported and forces a replacement of the Cluster
+Resource to create and update Kubernetes clusters.
 
 ## Example Usage
 
@@ -129,13 +124,31 @@ resource "anxcloud_kubernetes_cluster" "foo" {
 - `internal_ipv4_prefix` (String) Internal IPv4 prefix.
 - `needs_service_vms` (Boolean) Deploy Service VMs providing load balancers and outbound masquerade.
 - `apiserver_allowlist` ([]String) Limits access to the kubernetes API server to the given CIDRs.
+- `cni_plugin` (String) Container Network Interface plugin. Currently only Canal is supported.
+- `enable_oidc_authentication` (Boolean) Enable OIDC authentication for the Kubernetes cluster.
+- `enable_persistent_storage` (Boolean) Enable provisioning of persistent storage for the cluster when the organization and network support it.
+- `external_ip_families` (String) IP families used for external networking.
+- `maintenance_window_duration` (String) Maintenance window duration, for example `2h`, `30m`, or `15h30m`.
+- `maintenance_window_start_time` (String) Maintenance window start in UTC, for example `Tue 22:00` or `22:00`.
+- `oidc_client_id` (String) OIDC client ID.
+- `oidc_extra_scopes` (String) Space-separated list of additional OIDC scopes.
+- `oidc_groups_claim` (String) OIDC claim used to determine user groups.
+- `oidc_groups_prefix` (String) Prefix applied when filtering OIDC group claims.
+- `oidc_issuer_url` (String) OIDC issuer URL.
+- `oidc_required_claim` (String) OIDC claim a user must have.
+- `oidc_username_claim` (String) OIDC claim used to determine the username.
+- `oidc_username_prefix` (String) Prefix applied when filtering OIDC usernames.
 - `tags` (Set of String) Set of tags attached to the resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `version` (String) Kubernetes version.
+- `wait_until_ready` (Boolean) Wait for the cluster to reach the ready state during create and update. Intermediate reconciliation states, including Error, do not stop the wait. State transitions are written to provider logs.
 
 ### Read-Only
 
 - `id` (String) Cluster identifier.
+- `patch_version` (String) Current Kubernetes patch version.
+- `state` (String) Current reconciliation state identifier.
+- `state_text` (String) Human-readable current reconciliation state.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
@@ -145,5 +158,4 @@ Optional:
 - `create` (String)
 - `delete` (String)
 - `read` (String)
-
-
+- `update` (String)

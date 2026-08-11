@@ -67,6 +67,17 @@ jobs:
     - name: run unit tests
       run: make test
 
+  cross-build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-go@v6
+      with:
+        go-version: 'stable'
+
+    - name: Build every supported Terraform platform
+      run: make cross-build
+
   integration-tests:
     if: ${{ ! github.event.pull_request.draft && github.actor != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
@@ -92,6 +103,7 @@ jobs:
       - code-lint
       - dependencies
       - unit-tests
+      - cross-build
       - integration-tests
     steps:
     - name: Send

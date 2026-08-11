@@ -6,9 +6,24 @@ HOSTNAME=hashicorp.com
 NAMESPACE=anexia-it
 NAME=anxcloud
 BINARY=terraform-provider-${NAME}
-VERSION=0.3.1
-OS_ARCH=linux_amd64
-GOLDFLAGS= -s -X github.com/anexia-it/terraform-provider-anxcloud.version=$(VERSION)
+VERSION=0.11.1
+OS_ARCH?=$(shell go env GOOS)_$(shell go env GOARCH)
+GOLDFLAGS= -s -w -X main.version=$(VERSION)
+
+# Common deployment platforms. Keep this aligned with .goreleaser.yml.
+PLATFORMS := \
+	darwin_amd64 \
+	darwin_arm64 \
+	linux_amd64 \
+	linux_arm64 \
+	windows_amd64 \
+	windows_arm64
+
+TARGET_OS?=$(shell go env GOOS)
+TARGET_ARCH?=$(shell go env GOARCH)
+TARGET_ARM?=6
+TARGET_EXT=$(if $(filter windows,$(TARGET_OS)),.exe,)
+TARGET_BINARY=./bin/${BINARY}_${VERSION}_${TARGET_OS}_${TARGET_ARCH}${TARGET_EXT}
 
 GOFMT_FILES  := $(shell find ./anxcloud -name '*.go' |grep -v vendor)
 
@@ -19,20 +34,22 @@ build: fmtcheck go-lint
 	go build -o ${BINARY}
 
 .PHONY: release
-release: fmtcheck lint test testacc
-	GOOS=darwin GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_darwin_amd64 -ldflags "$(GOLDFLAGS)"
-	GOOS=darwin GOARCH=arm64 go build -o ./bin/${BINARY}_${VERSION}_darwin_arm64 -ldflags "$(GOLDFLAGS)"
-	GOOS=freebsd GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_freebsd_386 -ldflags "$(GOLDFLAGS)"
-	GOOS=freebsd GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_freebsd_amd64 -ldflags "$(GOLDFLAGS)"
-	GOOS=freebsd GOARCH=arm go build -o ./bin/${BINARY}_${VERSION}_freebsd_arm -ldflags "$(GOLDFLAGS)"
-	GOOS=linux GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_linux_386 -ldflags "$(GOLDFLAGS)"
-	GOOS=linux GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_linux_amd64 -ldflags "$(GOLDFLAGS)"
-	GOOS=linux GOARCH=arm go build -o ./bin/${BINARY}_${VERSION}_linux_arm -ldflags "$(GOLDFLAGS)"
-	GOOS=openbsd GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_openbsd_386 -ldflags "$(GOLDFLAGS)"
-	GOOS=openbsd GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_openbsd_amd64 -ldflags "$(GOLDFLAGS)"
-	GOOS=solaris GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_solaris_amd64 -ldflags "$(GOLDFLAGS)"
-	GOOS=windows GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_windows_386 -ldflags "$(GOLDFLAGS)"
-	GOOS=windows GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_windows_amd64 -ldflags "$(GOLDFLAGS)"
+release: fmtcheck lint test testacc cross-build
+
+.PHONY: build-target
+build-target:
+	@mkdir -p ./bin
+	@echo "==> Building ${TARGET_OS}/${TARGET_ARCH}..."
+	CGO_ENABLED=0 GOOS=${TARGET_OS} GOARCH=${TARGET_ARCH} GOARM=${TARGET_ARM} \
+		go build -trimpath -o "${TARGET_BINARY}" -ldflags "$(GOLDFLAGS)"
+
+.PHONY: cross-build
+cross-build:
+	@set -e; for platform in $(PLATFORMS); do \
+		target_os=$${platform%_*}; \
+		target_arch=$${platform#*_}; \
+		$(MAKE) --no-print-directory build-target TARGET_OS=$$target_os TARGET_ARCH=$$target_arch; \
+	done
 
 .PHONY: install
 install: build

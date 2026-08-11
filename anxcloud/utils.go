@@ -58,6 +58,8 @@ func fieldsComputed(fields ...string) func(schemaMap) {
 			field.Optional = false
 			field.Computed = true
 			field.Default = nil
+			field.ValidateFunc = nil
+			field.ValidateDiagFunc = nil
 		}, fields...)
 	}
 }

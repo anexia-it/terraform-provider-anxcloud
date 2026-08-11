@@ -55,7 +55,7 @@ jobs:
         GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
         GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
-    - name: Run GoReleaser
+    - name: Build, sign, and publish all provider packages
       uses: goreleaser/goreleaser-action@v7
       if: ${{ startsWith(github.ref, 'refs/tags/') }}
       with:
