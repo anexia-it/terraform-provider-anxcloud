@@ -13,7 +13,7 @@ func TestAccAnxCloudDNSRecordsDataSource(t *testing.T) {
 	resourceName := "acc_test"
 	resourcePath := "data.anxcloud_dns_records." + resourceName
 
-	zoneName := "ake-dev.go-sdk.test"
+	zoneName := "static.terraform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },

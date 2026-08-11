@@ -20,6 +20,7 @@ func TestAccAnxCloudNetworkPrefix(t *testing.T) {
 
 	envInfo := environment.GetEnvInfo(t)
 	locationID := envInfo.Location
+	vlanID := envInfo.VlanID
 	customerDescription := "network prefix acceptance tests: " + envInfo.TestRunName
 	customerDescriptionUpdate := "network prefix acceptance tests update"
 
@@ -29,7 +30,7 @@ func TestAccAnxCloudNetworkPrefix(t *testing.T) {
 		CheckDestroy:      testAccCheckAnxCloudNetworkPrefixDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescription, true),
+				Config: testAccAnxCloudNetworkPrefix(resourceName, locationID, vlanID, customerDescription, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
 					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescription),
@@ -39,7 +40,7 @@ func TestAccAnxCloudNetworkPrefix(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescriptionUpdate, true),
+				Config: testAccAnxCloudNetworkPrefix(resourceName, locationID, vlanID, customerDescriptionUpdate, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
 					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescriptionUpdate),
@@ -49,7 +50,7 @@ func TestAccAnxCloudNetworkPrefix(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescriptionUpdate, false),
+				Config: testAccAnxCloudNetworkPrefix(resourceName, locationID, vlanID, customerDescriptionUpdate, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "location_id", locationID),
 					resource.TestCheckResourceAttr(resourcePath, "description_customer", customerDescriptionUpdate),
@@ -121,18 +122,18 @@ func testAccCheckAnxCloudNetworkPrefixDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAnxCloudNetworkPrefix(resourceName, locationID, customerDescription string, createEmpty bool) string {
+func testAccAnxCloudNetworkPrefix(resourceName, locationID, vlanID, customerDescription string, createEmpty bool) string {
 	return fmt.Sprintf(`
 	resource "anxcloud_network_prefix" "%s" {
 		location_id   = "%s"
-		vlan_id = "00a239d617504e4ab49122efe0d27657"
+		vlan_id = "%s"
 		ip_version = 4
 		netmask = 30
 		type = 1
 		description_customer = "%s"
 		create_empty = %v
 	}
-	`, resourceName, locationID, customerDescription, createEmpty)
+	`, resourceName, locationID, vlanID, customerDescription, createEmpty)
 }
 
 func testAccAnxCloudNetworkPrefixExists(n string, expectedCustomerDescription string) resource.TestCheckFunc {

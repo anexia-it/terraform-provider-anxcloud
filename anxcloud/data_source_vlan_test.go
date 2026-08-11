@@ -20,7 +20,7 @@ func TestAccAnxCloudVLANDataSource(t *testing.T) {
 	// resource.ParallelTest. Therefore, we declare them (partially) static here.
 	var (
 		vlanID   = environment.GetEnvInfo(t).VlanID
-		vlanName = "VLAN3286"
+		vlanName = "VLAN2936"
 	)
 
 	resource.ParallelTest(t, resource.TestCase{
