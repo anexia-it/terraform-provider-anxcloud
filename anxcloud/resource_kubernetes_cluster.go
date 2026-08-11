@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"go.anx.io/go-anxcloud/pkg/api"
 )
 
 const kubernetesReconciliationPollInterval = 10 * time.Second
@@ -43,22 +44,23 @@ func resourceKubernetesCluster() *schema.Resource {
 }
 
 func resourceKubernetesClusterCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	a := newKubernetesServiceAPI[kubernetesCluster](m.(providerContext).legacyClient, "cluster")
+	a := apiFromProviderConfig(m)
 
-	cluster, err := a.Create(ctx, kubernetesClusterCreateDefinition(d))
-	if err != nil {
+	cluster := kubernetesCluster{requestDefinition: kubernetesClusterCreateDefinition(d)}
+	if err := a.Create(ctx, &cluster); err != nil {
 		return diag.Errorf("failed to create Kubernetes cluster: %s", err)
 	}
 
 	d.SetId(cluster.Identifier)
 	if definition := kubernetesClusterCreateUpdateDefinition(d); len(definition) != 0 {
-		cluster, err = a.Update(ctx, cluster.Identifier, definition)
-		if err != nil {
+		cluster.requestDefinition = definition
+		if err := a.Update(ctx, &cluster); err != nil {
 			return diag.Errorf("failed to apply Kubernetes cluster v2 fields after creation: %s", err)
 		}
 	}
 
 	if d.Get("wait_until_ready").(bool) {
+		var err error
 		cluster, err = awaitKubernetesClusterReconciliation(ctx, a, cluster.Identifier)
 		if err != nil {
 			return diag.Errorf("failed awaiting Kubernetes cluster reconciliation: %s", err)
@@ -69,14 +71,14 @@ func resourceKubernetesClusterCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceKubernetesClusterRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	a := newKubernetesServiceAPI[kubernetesCluster](m.(providerContext).legacyClient, "cluster")
+	a := apiFromProviderConfig(m)
 
-	cluster, err := a.Get(ctx, d.Id())
-	if isLegacyNotFoundError(err) {
-		d.SetId("")
-		return nil
-	}
+	cluster, err := getKubernetesCluster(ctx, a, d.Id())
 	if err != nil {
+		if api.IgnoreNotFound(err) == nil {
+			d.SetId("")
+			return nil
+		}
 		return diag.Errorf("failed getting Kubernetes cluster: %s", err)
 	}
 
@@ -86,10 +88,10 @@ func resourceKubernetesClusterRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceKubernetesClusterUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	a := newKubernetesServiceAPI[kubernetesCluster](m.(providerContext).legacyClient, "cluster")
+	a := apiFromProviderConfig(m)
 	definition := kubernetesClusterUpdateDefinition(d)
 	if len(definition) == 0 {
-		cluster, err := a.Get(ctx, d.Id())
+		cluster, err := getKubernetesCluster(ctx, a, d.Id())
 		if err != nil {
 			return diag.Errorf("failed getting Kubernetes cluster: %s", err)
 		}
@@ -102,12 +104,13 @@ func resourceKubernetesClusterUpdate(ctx context.Context, d *schema.ResourceData
 		return setResourceDataFromKubernetesClusterV2(d, cluster)
 	}
 
-	cluster, err := a.Update(ctx, d.Id(), definition)
-	if err != nil {
+	cluster := kubernetesCluster{Identifier: d.Id(), requestDefinition: definition}
+	if err := a.Update(ctx, &cluster); err != nil {
 		return diag.Errorf("failed to update Kubernetes cluster: %s", err)
 	}
 
 	if d.Get("wait_until_ready").(bool) {
+		var err error
 		cluster, err = awaitKubernetesClusterReconciliation(ctx, a, d.Id())
 		if err != nil {
 			return diag.Errorf("failed awaiting Kubernetes cluster reconciliation: %s", err)
@@ -118,9 +121,10 @@ func resourceKubernetesClusterUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceKubernetesClusterDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	a := newKubernetesServiceAPI[kubernetesCluster](m.(providerContext).legacyClient, "cluster")
+	a := apiFromProviderConfig(m)
+	cluster := kubernetesCluster{Identifier: d.Id()}
 
-	if err := a.Delete(ctx, d.Id()); err != nil && !isLegacyNotFoundError(err) {
+	if err := a.Destroy(ctx, &cluster); err != nil && api.IgnoreNotFound(err) != nil {
 		return diag.Errorf("failed deleting Kubernetes cluster: %s", err)
 	}
 
@@ -275,7 +279,7 @@ func kubernetesAPIServerAllowlist(d *schema.ResourceData) string {
 
 func awaitKubernetesClusterReconciliation(
 	ctx context.Context,
-	a kubernetesServiceAPI[kubernetesCluster],
+	a api.API,
 	identifier string,
 ) (kubernetesCluster, error) {
 	return awaitKubernetesClusterReconciliationWithPollInterval(
@@ -288,14 +292,14 @@ func awaitKubernetesClusterReconciliation(
 
 func awaitKubernetesClusterReconciliationWithPollInterval(
 	ctx context.Context,
-	a kubernetesServiceAPI[kubernetesCluster],
+	a api.API,
 	identifier string,
 	pollInterval time.Duration,
 ) (kubernetesCluster, error) {
 	lastState := ""
 
 	for {
-		cluster, err := a.Get(ctx, identifier)
+		cluster, err := getKubernetesCluster(ctx, a, identifier)
 		if err != nil {
 			return cluster, err
 		}
@@ -320,15 +324,15 @@ func awaitKubernetesClusterReconciliationWithPollInterval(
 
 func awaitKubernetesClusterDeletion(
 	ctx context.Context,
-	a kubernetesServiceAPI[kubernetesCluster],
+	a api.API,
 	identifier string,
 ) error {
 	for {
-		_, err := a.Get(ctx, identifier)
-		if isLegacyNotFoundError(err) {
-			return nil
-		}
+		_, err := getKubernetesCluster(ctx, a, identifier)
 		if err != nil {
+			if api.IgnoreNotFound(err) == nil {
+				return nil
+			}
 			return err
 		}
 
@@ -338,4 +342,12 @@ func awaitKubernetesClusterDeletion(
 		case <-time.After(kubernetesReconciliationPollInterval):
 		}
 	}
+}
+
+func getKubernetesCluster(ctx context.Context, a api.API, identifier string) (kubernetesCluster, error) {
+	cluster := kubernetesCluster{Identifier: identifier}
+	if err := a.Get(ctx, &cluster); err != nil {
+		return cluster, err
+	}
+	return cluster, nil
 }

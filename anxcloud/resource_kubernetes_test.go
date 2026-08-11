@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"testing"
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.anx.io/go-anxcloud/pkg/api"
 	"go.anx.io/go-anxcloud/pkg/client"
 )
 
@@ -118,7 +120,7 @@ func TestKubernetesClusterV2FieldsArePatchedAfterCreate(t *testing.T) {
 }
 
 func TestKubernetesClusterReadPreservesFailedResource(t *testing.T) {
-	cli := kubernetesTestClient{do: func(r *http.Request) (*http.Response, error) {
+	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.Equal(t, "/api/kubernetes/v2/cluster/cluster-id", r.URL.Path)
 		return kubernetesTestResponse(t, http.StatusOK, map[string]any{
@@ -132,7 +134,7 @@ func TestKubernetesClusterReadPreservesFailedResource(t *testing.T) {
 			"version":  map[string]any{"id": "1.34", "title": "1.34"},
 			"location": map[string]any{"identifier": "location-id", "name": "ANX04"},
 		}), nil
-	}}
+	})
 
 	d := schema.TestResourceDataRaw(t, schemaKubernetesCluster(), map[string]any{
 		"name":     "failed-cluster",
@@ -140,7 +142,7 @@ func TestKubernetesClusterReadPreservesFailedResource(t *testing.T) {
 	})
 	d.SetId("cluster-id")
 
-	diags := resourceKubernetesClusterRead(context.Background(), d, providerContext{legacyClient: cli})
+	diags := resourceKubernetesClusterRead(context.Background(), d, provider)
 	require.False(t, diags.HasError(), "refreshing an error-state cluster must remain usable")
 	assert.Equal(t, "cluster-id", d.Id())
 	assert.Equal(t, "1", d.Get("state"))
@@ -149,7 +151,7 @@ func TestKubernetesClusterReadPreservesFailedResource(t *testing.T) {
 
 func TestKubernetesClusterCreateDoesNotWaitByDefault(t *testing.T) {
 	requestCount := 0
-	cli := kubernetesTestClient{do: func(r *http.Request) (*http.Response, error) {
+	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
 		requestCount++
 		require.Equal(t, http.MethodPost, r.Method)
 		require.Equal(t, "/api/kubernetes/v2/cluster", r.URL.Path)
@@ -160,13 +162,13 @@ func TestKubernetesClusterCreateDoesNotWaitByDefault(t *testing.T) {
 			"version":    map[string]any{"id": "1.35", "title": "1.35"},
 			"state":      map[string]any{"id": "1", "title": "Error", "type": 1},
 		}), nil
-	}}
+	})
 	d := schema.TestResourceDataRaw(t, resourceKubernetesCluster().Schema, map[string]any{
 		"name":     "test-cluster",
 		"location": "location-id",
 	})
 
-	diags := resourceKubernetesClusterCreate(context.Background(), d, providerContext{legacyClient: cli})
+	diags := resourceKubernetesClusterCreate(context.Background(), d, provider)
 
 	require.False(t, diags.HasError())
 	assert.Equal(t, "cluster-id", d.Id())
@@ -251,7 +253,7 @@ func TestAwaitKubernetesClusterReconciliationIgnoresIntermediateStates(t *testin
 		{"id": "0", "title": "Deployed", "type": 1},
 	}
 	requestCount := 0
-	cli := kubernetesTestClient{do: func(r *http.Request) (*http.Response, error) {
+	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
 		require.Equal(t, http.MethodGet, r.Method)
 		require.Equal(t, "/api/kubernetes/v2/cluster/cluster-id", r.URL.Path)
 		require.Less(t, requestCount, len(states))
@@ -262,12 +264,11 @@ func TestAwaitKubernetesClusterReconciliationIgnoresIntermediateStates(t *testin
 			"identifier": "cluster-id",
 			"state":      state,
 		}), nil
-	}}
+	})
 
-	a := newKubernetesServiceAPI[kubernetesCluster](cli, "cluster")
 	cluster, err := awaitKubernetesClusterReconciliationWithPollInterval(
 		context.Background(),
-		a,
+		provider.api,
 		"cluster-id",
 		0,
 	)
@@ -278,28 +279,24 @@ func TestAwaitKubernetesClusterReconciliationIgnoresIntermediateStates(t *testin
 }
 
 func TestKubernetesClusterDeleteSkipsQueuedRulesAndWaitsForNotFound(t *testing.T) {
-	cli := kubernetesTestClient{do: func(r *http.Request) (*http.Response, error) {
+	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
 		switch r.Method {
 		case http.MethodDelete:
 			assert.Equal(t, "/api/kubernetes/v2/cluster/cluster-id", r.URL.Path)
 			assert.Equal(t, "true", r.URL.Query().Get("skip_queued_automation_rules"))
 			return kubernetesTestResponse(t, http.StatusNoContent, nil), nil
 		case http.MethodGet:
-			response := kubernetesTestResponse(t, http.StatusNotFound, map[string]any{
+			return kubernetesTestResponse(t, http.StatusNotFound, map[string]any{
 				"error": map[string]any{
 					"code":    http.StatusNotFound,
 					"message": "not found",
 				},
-			})
-			responseError := &client.ResponseError{Request: r, Response: response}
-			responseError.ErrorData.Code = http.StatusNotFound
-			responseError.ErrorData.Message = "not found"
-			return response, responseError
+			}), nil
 		default:
 			t.Fatalf("unexpected method %s", r.Method)
 			return nil, nil
 		}
-	}}
+	})
 
 	d := schema.TestResourceDataRaw(t, schemaKubernetesCluster(), map[string]any{
 		"name":     "failed-cluster",
@@ -307,13 +304,13 @@ func TestKubernetesClusterDeleteSkipsQueuedRulesAndWaitsForNotFound(t *testing.T
 	})
 	d.SetId("cluster-id")
 
-	diags := resourceKubernetesClusterDelete(context.Background(), d, providerContext{legacyClient: cli})
+	diags := resourceKubernetesClusterDelete(context.Background(), d, provider)
 	require.False(t, diags.HasError())
 	assert.Empty(t, d.Id())
 }
 
 func TestKubernetesPatchPreservesExplicitZeroValues(t *testing.T) {
-	cli := kubernetesTestClient{do: func(r *http.Request) (*http.Response, error) {
+	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
 		assert.Equal(t, http.MethodPatch, r.Method)
 		assert.Equal(t, "/api/kubernetes/v2/node_pool/node-pool-id", r.URL.Path)
 
@@ -332,26 +329,112 @@ func TestKubernetesPatchPreservesExplicitZeroValues(t *testing.T) {
 				"type":  1,
 			},
 		}), nil
-	}}
+	})
 
-	a := newKubernetesServiceAPI[kubernetesNodePool](cli, "node_pool")
-	_, err := a.Update(context.Background(), "node-pool-id", map[string]any{
+	nodePool := kubernetesNodePool{requestDefinition: map[string]any{
 		"autoscaler_enabled": false,
 		"replicas":           0,
-	})
+	}}
+	nodePool.Identifier = "node-pool-id"
+	err := provider.api.Update(context.Background(), &nodePool)
 	require.NoError(t, err)
 }
 
-type kubernetesTestClient struct {
+func TestKubernetesNodePoolSDKRequestContract(t *testing.T) {
+	requestCount := 0
+	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
+		requestCount++
+		switch requestCount {
+		case 1:
+			assert.Equal(t, http.MethodPost, r.Method)
+			assert.Equal(t, "/api/kubernetes/v2/node_pool", r.URL.Path)
+			var body map[string]any
+			require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+			assert.Equal(t, "test-node-pool", body["name"])
+			return kubernetesTestResponse(t, http.StatusOK, map[string]any{
+				"identifier": "node-pool-id",
+				"name":       "test-node-pool",
+			}), nil
+		case 2:
+			assert.Equal(t, http.MethodGet, r.Method)
+			assert.Equal(t, "/api/kubernetes/v2/node_pool/node-pool-id", r.URL.Path)
+			return kubernetesTestResponse(t, http.StatusOK, map[string]any{
+				"identifier": "node-pool-id",
+				"name":       "test-node-pool",
+			}), nil
+		case 3:
+			assert.Equal(t, http.MethodDelete, r.Method)
+			assert.Equal(t, "/api/kubernetes/v2/node_pool/node-pool-id", r.URL.Path)
+			assert.Equal(t, "true", r.URL.Query().Get("skip_queued_automation_rules"))
+			return kubernetesTestResponse(t, http.StatusNoContent, nil), nil
+		default:
+			t.Fatalf("unexpected request %d: %s %s", requestCount, r.Method, r.URL)
+			return nil, nil
+		}
+	})
+
+	nodePool := kubernetesNodePool{requestDefinition: map[string]any{"name": "test-node-pool"}}
+	require.NoError(t, provider.api.Create(context.Background(), &nodePool))
+	assert.Equal(t, "node-pool-id", nodePool.Identifier)
+
+	loaded, err := getKubernetesNodePool(context.Background(), provider.api, nodePool.Identifier)
+	require.NoError(t, err)
+	assert.Equal(t, "test-node-pool", loaded.Name)
+
+	require.NoError(t, provider.api.Destroy(context.Background(), &loaded))
+	assert.Equal(t, 3, requestCount)
+}
+
+func TestKubernetesClusterUpdateUsesV2Patch(t *testing.T) {
+	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
+		assert.Equal(t, http.MethodPatch, r.Method)
+		assert.Equal(t, "/api/kubernetes/v2/cluster/cluster-id", r.URL.Path)
+
+		var body map[string]any
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+		assert.Contains(t, body, "enable_persistent_storage")
+		assert.Equal(t, false, body["enable_persistent_storage"])
+		assert.Contains(t, body, "maintenance_window_duration")
+		assert.Equal(t, "", body["maintenance_window_duration"])
+
+		return kubernetesTestResponse(t, http.StatusOK, map[string]any{
+			"identifier": "cluster-id",
+			"state": map[string]any{
+				"id":    "2",
+				"title": "Reconciling",
+				"type":  0,
+			},
+		}), nil
+	})
+
+	cluster := kubernetesCluster{
+		Identifier: "cluster-id",
+		requestDefinition: map[string]any{
+			"enable_persistent_storage":   false,
+			"maintenance_window_duration": "",
+		},
+	}
+	require.NoError(t, provider.api.Update(context.Background(), &cluster))
+	assert.Equal(t, "2", cluster.State.ID)
+}
+
+type kubernetesTestRoundTripper struct {
 	do func(*http.Request) (*http.Response, error)
 }
 
-func (c kubernetesTestClient) BaseURL() string {
-	return "https://engine.test.invalid"
+func (r kubernetesTestRoundTripper) RoundTrip(request *http.Request) (*http.Response, error) {
+	return r.do(request)
 }
 
-func (c kubernetesTestClient) Do(request *http.Request) (*http.Response, error) {
-	return c.do(request)
+func kubernetesTestProviderContext(t *testing.T, do func(*http.Request) (*http.Response, error)) providerContext {
+	t.Helper()
+	a, err := api.NewAPI(api.WithClientOptions(
+		client.IgnoreMissingToken(),
+		client.BaseURL("https://engine.test.invalid"),
+		client.WithClient(&http.Client{Transport: kubernetesTestRoundTripper{do: do}}),
+	))
+	require.NoError(t, err)
+	return providerContext{api: a}
 }
 
 func kubernetesTestResponse(t *testing.T, status int, value any) *http.Response {
@@ -361,6 +444,7 @@ func kubernetesTestResponse(t *testing.T, status int, value any) *http.Response 
 		require.NoError(t, json.NewEncoder(&body).Encode(value))
 	}
 	return &http.Response{
+		Status:     fmt.Sprintf("%d %s", status, http.StatusText(status)),
 		StatusCode: status,
 		Header:     http.Header{"Content-Type": []string{"application/json"}},
 		Body:       io.NopCloser(bytes.NewReader(body.Bytes())),

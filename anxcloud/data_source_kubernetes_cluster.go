@@ -84,8 +84,7 @@ func dataSourceKubernetesClusterRead(ctx context.Context, d *schema.ResourceData
 		identifier = foundCluster.Identifier
 	}
 
-	a := newKubernetesServiceAPI[kubernetesCluster](m.(providerContext).legacyClient, "cluster")
-	cluster, err := a.Get(ctx, identifier)
+	cluster, err := getKubernetesCluster(ctx, apiFromProviderConfig(m), identifier)
 	if err != nil {
 		return diag.Errorf("failed retrieving cluster by id: %s", err)
 	}

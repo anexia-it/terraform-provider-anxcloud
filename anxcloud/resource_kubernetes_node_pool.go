@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"go.anx.io/go-anxcloud/pkg/api"
 )
 
 func resourceKubernetesNodePool() *schema.Resource {
@@ -30,21 +31,22 @@ func resourceKubernetesNodePool() *schema.Resource {
 }
 
 func resourceKubernetesNodePoolCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-	a := newKubernetesServiceAPI[kubernetesNodePool](m.(providerContext).legacyClient, "node_pool")
+	a := apiFromProviderConfig(m)
 
-	nodePool, err := a.Create(ctx, kubernetesNodePoolCreateDefinition(d))
-	if err != nil {
+	nodePool := kubernetesNodePool{requestDefinition: kubernetesNodePoolCreateDefinition(d)}
+	if err := a.Create(ctx, &nodePool); err != nil {
 		return diag.Errorf("failed to create Kubernetes node pool: %s", err)
 	}
 
 	d.SetId(nodePool.Identifier)
 	if definition := kubernetesNodePoolCreateUpdateDefinition(d); len(definition) != 0 {
-		nodePool, err = a.Update(ctx, nodePool.Identifier, definition)
-		if err != nil {
+		nodePool.requestDefinition = definition
+		if err := a.Update(ctx, &nodePool); err != nil {
 			return diag.Errorf("failed to apply Kubernetes node pool v2 fields after creation: %s", err)
 		}
 	}
 
+	var err error
 	nodePool, err = awaitKubernetesNodePoolReconciliation(ctx, a, nodePool.Identifier)
 	if err != nil {
 		return diag.Errorf("failed awaiting Kubernetes node pool reconciliation: %s", err)
@@ -54,14 +56,14 @@ func resourceKubernetesNodePoolCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceKubernetesNodePoolRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-	a := newKubernetesServiceAPI[kubernetesNodePool](m.(providerContext).legacyClient, "node_pool")
+	a := apiFromProviderConfig(m)
 
-	nodePool, err := a.Get(ctx, d.Id())
-	if isLegacyNotFoundError(err) {
-		d.SetId("")
-		return nil
-	}
+	nodePool, err := getKubernetesNodePool(ctx, a, d.Id())
 	if err != nil {
+		if api.IgnoreNotFound(err) == nil {
+			d.SetId("")
+			return nil
+		}
 		return diag.Errorf("failed getting Kubernetes node pool: %s", err)
 	}
 
@@ -71,13 +73,15 @@ func resourceKubernetesNodePoolRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceKubernetesNodePoolUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-	a := newKubernetesServiceAPI[kubernetesNodePool](m.(providerContext).legacyClient, "node_pool")
+	a := apiFromProviderConfig(m)
 	definition := kubernetesNodePoolUpdateDefinition(d)
 	if len(definition) == 0 {
 		return resourceKubernetesNodePoolRead(ctx, d, m)
 	}
 
-	if _, err := a.Update(ctx, d.Id(), definition); err != nil {
+	nodePool := kubernetesNodePool{requestDefinition: definition}
+	nodePool.Identifier = d.Id()
+	if err := a.Update(ctx, &nodePool); err != nil {
 		return diag.Errorf("failed to update Kubernetes node pool: %s", err)
 	}
 
@@ -90,9 +94,11 @@ func resourceKubernetesNodePoolUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceKubernetesNodePoolDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-	a := newKubernetesServiceAPI[kubernetesNodePool](m.(providerContext).legacyClient, "node_pool")
+	a := apiFromProviderConfig(m)
+	nodePool := kubernetesNodePool{}
+	nodePool.Identifier = d.Id()
 
-	if err := a.Delete(ctx, d.Id()); err != nil && !isLegacyNotFoundError(err) {
+	if err := a.Destroy(ctx, &nodePool); err != nil && api.IgnoreNotFound(err) != nil {
 		return diag.Errorf("failed deleting Kubernetes node pool: %s", err)
 	}
 
@@ -258,7 +264,7 @@ func setResourceDataFromKubernetesNodePool(d *schema.ResourceData, nodePool kube
 	set("operating_system", nodePool.OperatingSystem.ID)
 	set("cluster", nodePool.Cluster.Identifier)
 	set("sync_source", nodePool.SyncSource.ID)
-	set("cpu_performance_type", nodePool.CPUPerformanceType.ID)
+	set("cpu_performance_type", nodePool.CPUType.ID)
 	set("autoscaler_enabled", nodePool.AutoscalerEnabled)
 	set("autoscaler_min_nodes", nodePool.AutoscalerMinNodes)
 	set("autoscaler_max_nodes", nodePool.AutoscalerMaxNodes)
@@ -268,7 +274,7 @@ func setResourceDataFromKubernetesNodePool(d *schema.ResourceData, nodePool kube
 	set("dns_override_ipv6", nodePool.DNSOverrideIPv6)
 	set("dns_ipv6_1", nodePool.DNSv6Entry1)
 	set("dns_ipv6_2", nodePool.DNSv6Entry2)
-	set("ssh_public_keys", nodePool.SSHPublicKeys)
+	set("ssh_public_keys", nodePool.SSHPubKeys)
 	set("taints", nodePool.Taints)
 	set("labels", nodePool.Labels)
 	set("annotations", nodePool.Annotations)
@@ -276,7 +282,7 @@ func setResourceDataFromKubernetesNodePool(d *schema.ResourceData, nodePool kube
 	set("state_text", nodePool.State.Text)
 
 	set("disk", []map[string]any{{
-		"size_gib":         nodePool.DiskSizeBytes / gibiFactor,
+		"size_gib":         nodePool.DiskSize / gibiFactor,
 		"performance_type": nodePool.DiskPerformanceType.ID,
 	}})
 
@@ -305,11 +311,11 @@ func setResourceDataFromKubernetesNodePool(d *schema.ResourceData, nodePool kube
 
 func awaitKubernetesNodePoolReconciliation(
 	ctx context.Context,
-	a kubernetesServiceAPI[kubernetesNodePool],
+	a api.API,
 	identifier string,
 ) (kubernetesNodePool, error) {
 	for {
-		nodePool, err := a.Get(ctx, identifier)
+		nodePool, err := getKubernetesNodePool(ctx, a, identifier)
 		if err != nil {
 			return nodePool, err
 		}
@@ -331,15 +337,15 @@ func awaitKubernetesNodePoolReconciliation(
 
 func awaitKubernetesNodePoolDeletion(
 	ctx context.Context,
-	a kubernetesServiceAPI[kubernetesNodePool],
+	a api.API,
 	identifier string,
 ) error {
 	for {
-		_, err := a.Get(ctx, identifier)
-		if isLegacyNotFoundError(err) {
-			return nil
-		}
+		_, err := getKubernetesNodePool(ctx, a, identifier)
 		if err != nil {
+			if api.IgnoreNotFound(err) == nil {
+				return nil
+			}
 			return err
 		}
 
@@ -349,4 +355,13 @@ func awaitKubernetesNodePoolDeletion(
 		case <-time.After(kubernetesReconciliationPollInterval):
 		}
 	}
+}
+
+func getKubernetesNodePool(ctx context.Context, a api.API, identifier string) (kubernetesNodePool, error) {
+	nodePool := kubernetesNodePool{}
+	nodePool.Identifier = identifier
+	if err := a.Get(ctx, &nodePool); err != nil {
+		return nodePool, err
+	}
+	return nodePool, nil
 }
