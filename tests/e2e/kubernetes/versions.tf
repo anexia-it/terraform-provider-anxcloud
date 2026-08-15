@@ -6,6 +6,14 @@ terraform {
       source  = "hashicorp.com/anexia-it/anxcloud"
       version = "0.3.1"
     }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "3.2.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "3.2.1"
+    }
   }
 }
 

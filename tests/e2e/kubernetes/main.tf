@@ -1,23 +1,3 @@
-data "anxcloud_core_location" "e2e" {
-  code = var.location_code
-}
-
-data "anxcloud_vlan" "internal" {
-  id = "097296a1fbb84c42b98cf4c8b3e8b549"
-}
-
-data "anxcloud_vlan" "external" {
-  id = "b8f265be6fdc4a9cb1d3bc4e8314ceed"
-}
-
-data "anxcloud_network_prefix" "internal_v4" {
-  id = "9ff417815c944294a88d9fad454d784f"
-}
-
-data "anxcloud_network_prefix" "external_v4" {
-  id = "2b4ff37dbf8f4dfb80dbd8038fe2318e"
-}
-
 resource "anxcloud_kubernetes_cluster" "e2e" {
   name     = "${var.test_id}-cluster"
   location = data.anxcloud_core_location.e2e.id
@@ -55,12 +35,18 @@ resource "anxcloud_kubernetes_node_pool" "e2e" {
   autoscaler_min_nodes = 0
   autoscaler_max_nodes = 0
 
-  # At least one network must be part of the node-pool creation request.
+  # All node-pool networks are owned by the node pool and sent in its POST.
   networks {
     name            = "internal"
     bandwidth_limit = var.node_pool_network_bandwidth_limit
     vlan            = data.anxcloud_vlan.internal.id
   }
+
+  # networks {
+  #   name            = "external"
+  #   bandwidth_limit = var.node_pool_network_bandwidth_limit
+  #   vlan            = data.anxcloud_vlan.external.id
+  # }
 
   disk {
     size_gib         = var.node_disk_size_gib
@@ -68,11 +54,6 @@ resource "anxcloud_kubernetes_node_pool" "e2e" {
   }
 }
 
-# Exercise the standalone resource by adding a second network after the node
-# pool has been created with its required inline network.
-resource "anxcloud_kubernetes_node_pool_network" "external" {
-  name            = "external"
-  node_pool       = anxcloud_kubernetes_node_pool.e2e.id
-  vlan            = data.anxcloud_vlan.external.id
-  bandwidth_limit = var.node_pool_network_bandwidth_limit
+resource "anxcloud_kubernetes_kubeconfig" "cluster-admin" {
+  cluster = anxcloud_kubernetes_cluster.e2e.id
 }

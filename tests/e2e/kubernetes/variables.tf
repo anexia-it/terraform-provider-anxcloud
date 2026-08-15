@@ -15,7 +15,7 @@ variable "test_id" {
 variable "location_code" {
   type        = string
   description = "Anexia location code in which the test resources are created."
-  default     = "ANX04"
+  default     = "ANX25"
 }
 
 variable "wait_until_ready" {
@@ -50,7 +50,7 @@ variable "enable_lbaas" {
 variable "node_replicas" {
   type        = number
   description = "Desired number of nodes. Change this to test an in-place node-pool PATCH."
-  default     = 1
+  default     = 2
 }
 
 variable "node_sync_source" {
@@ -90,6 +90,24 @@ variable "node_disk_performance_type" {
 
 variable "node_pool_network_bandwidth_limit" {
   type        = string
-  description = "Bandwidth limit identifier for the additional node-pool network."
+  description = "Bandwidth limit identifier used by both node-pool networks."
   default     = "1000"
+}
+
+variable "anexia_token" {
+  type        = string
+  description = "Anexia API token written to the anexia/anexia-credentials Kubernetes secret. Set it through TF_VAR_anexia_token."
+  sensitive   = true
+  nullable    = false
+
+  validation {
+    condition     = length(var.anexia_token) > 0
+    error_message = "anexia_token must not be empty."
+  }
+}
+
+variable "generic_helm_chart_version" {
+  type        = string
+  description = "Version of the Anexia ks-generic-helmchart used for the ingress smoke test."
+  default     = "0.1.31"
 }

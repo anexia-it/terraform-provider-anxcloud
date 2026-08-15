@@ -17,3 +17,6 @@ node_memory_gib    = 4
 node_disk_size_gib = 20
 
 node_pool_network_bandwidth_limit = "1000"
+
+# Do not put anexia_token in this file. Export TF_VAR_anexia_token instead.
+generic_helm_chart_version = "0.1.31"
