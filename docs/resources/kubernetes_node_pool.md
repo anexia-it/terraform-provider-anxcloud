@@ -42,6 +42,7 @@ resource "anxcloud_kubernetes_node_pool" "example" {
 - `initial_replicas` (Number) Initial number of nodes.
 - `memory_gib` (Number) Memory per node in GiB.
 - `name` (String) Node pool name.
+- `networks` (Block List, Min: 1, Max: 10) Network interfaces attached to each node. The API requires between one and ten networks during node-pool creation. (see [below for nested schema](#nestedblock--networks))
 - `operating_system` (String) Operating system. Only "Flatcar Linux" supported at the moment.
 
 ### Optional
@@ -59,9 +60,8 @@ resource "anxcloud_kubernetes_node_pool" "example" {
 - `dns_override_ipv4` (Boolean) Enable custom IPv4 DNS servers.
 - `dns_override_ipv6` (Boolean) Enable custom IPv6 DNS servers.
 - `labels` (String) Kubernetes labels separated by line breaks.
-- `networks` (Block List, Max: 10) Network interfaces attached to each node. (see [below for nested schema](#nestedblock--networks))
 - `ssh_public_keys` (String) SSH public keys in authorized_keys format, separated by line breaks.
-- `sync_source` (String) Source of truth for node pool configuration.
+- `sync_source` (String) Source of truth for node pool configuration. Valid values are `engine` and `cluster`; defaults to `engine`. `Cluster` is accepted and normalized to `cluster`.
 - `tags` (Set of String) Set of tags attached to the resource.
 - `taints` (String) Kubernetes taints separated by line breaks.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
@@ -112,4 +112,3 @@ Optional:
 - `delete` (String)
 - `read` (String)
 - `update` (String)
-

@@ -3,6 +3,7 @@ package anxcloud
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -39,12 +40,6 @@ func resourceKubernetesNodePoolCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.SetId(nodePool.Identifier)
-	if definition := kubernetesNodePoolCreateUpdateDefinition(d); len(definition) != 0 {
-		nodePool.requestDefinition = definition
-		if err := a.Update(ctx, &nodePool); err != nil {
-			return diag.Errorf("failed to apply Kubernetes node pool v2 fields after creation: %s", err)
-		}
-	}
 
 	var err error
 	nodePool, err = awaitKubernetesNodePoolReconciliation(ctx, a, nodePool.Identifier)
@@ -111,62 +106,47 @@ func resourceKubernetesNodePoolDelete(ctx context.Context, d *schema.ResourceDat
 }
 
 func kubernetesNodePoolCreateDefinition(d *schema.ResourceData) map[string]any {
-	return map[string]any{
-		"name":             d.Get("name").(string),
-		"replicas":         d.Get("initial_replicas").(int),
-		"cpus":             d.Get("cpus").(int),
-		"memory":           int64(d.Get("memory_gib").(int)) * gibiFactor,
-		"disk_size":        int64(d.Get("disk").([]any)[0].(map[string]any)["size_gib"].(int)) * gibiFactor,
-		"operating_system": d.Get("operating_system").(string),
-		"cluster":          d.Get("cluster").(string),
+	definition := map[string]any{
+		"name":                 d.Get("name").(string),
+		"replicas":             d.Get("initial_replicas").(int),
+		"cpus":                 d.Get("cpus").(int),
+		"memory":               int64(d.Get("memory_gib").(int)) * gibiFactor,
+		"disk_size":            int64(d.Get("disk").([]any)[0].(map[string]any)["size_gib"].(int)) * gibiFactor,
+		"operating_system":     d.Get("operating_system").(string),
+		"cluster":              d.Get("cluster").(string),
+		"syncsource":           strings.ToLower(d.Get("sync_source").(string)),
+		"cpu_performance_type": d.Get("cpu_performance_type").(string),
+		"autoscaler_enabled":   d.Get("autoscaler_enabled").(bool),
+		"autoscaler_min_nodes": d.Get("autoscaler_min_nodes").(int),
+		"autoscaler_max_nodes": d.Get("autoscaler_max_nodes").(int),
+		"dns_override_ipv4":    d.Get("dns_override_ipv4").(bool),
+		"dns_override_ipv6":    d.Get("dns_override_ipv6").(bool),
 	}
-}
 
-func kubernetesNodePoolCreateUpdateDefinition(d *schema.ResourceData) map[string]any {
-	return kubernetesNodePoolCreateUpdateDefinitionWithConfiguredFields(d, func(field string) bool {
-		return kubernetesFieldIsConfigured(d, field)
-	})
-}
-
-func kubernetesNodePoolCreateUpdateDefinitionWithConfiguredFields(d *schema.ResourceData, isConfigured func(string) bool) map[string]any {
-	definition := make(map[string]any)
-
-	// The service currently rejects some advertised v2 fields on POST. Apply
-	// explicitly configured v2 fields immediately through the PATCH endpoint.
 	optionalFields := map[string]string{
-		"sync_source":          "syncsource",
-		"cpu_performance_type": "cpu_performance_type",
-		"autoscaler_enabled":   "autoscaler_enabled",
-		"autoscaler_min_nodes": "autoscaler_min_nodes",
-		"autoscaler_max_nodes": "autoscaler_max_nodes",
-		"dns_override_ipv4":    "dns_override_ipv4",
-		"dns_ipv4_1":           "dns_v4_1",
-		"dns_ipv4_2":           "dns_v4_2",
-		"dns_override_ipv6":    "dns_override_ipv6",
-		"dns_ipv6_1":           "dns_v6_1",
-		"dns_ipv6_2":           "dns_v6_2",
-		"ssh_public_keys":      "sshpubkeys",
-		"taints":               "taints",
-		"labels":               "labels",
-		"annotations":          "annotations",
+		"dns_ipv4_1":      "dns_v4_1",
+		"dns_ipv4_2":      "dns_v4_2",
+		"dns_ipv6_1":      "dns_v6_1",
+		"dns_ipv6_2":      "dns_v6_2",
+		"ssh_public_keys": "sshpubkeys",
+		"taints":          "taints",
+		"labels":          "labels",
+		"annotations":     "annotations",
 	}
 	for terraformName, apiName := range optionalFields {
-		if isConfigured(terraformName) {
-			definition[apiName] = d.Get(terraformName)
+		if value, ok := d.GetOk(terraformName); ok {
+			definition[apiName] = value
 		}
 	}
 
 	primaryDisk := d.Get("disk").([]any)[0].(map[string]any)
-	if isConfigured("disk") {
-		performanceType := primaryDisk["performance_type"].(string)
-		if performanceType != "" {
-			definition["disk_performance_type"] = performanceType
-		}
+	if performanceType := primaryDisk["performance_type"].(string); performanceType != "" {
+		definition["disk_performance_type"] = performanceType
 	}
-	if disks := kubernetesNodePoolAdditionalDisksDefinition(d); isConfigured("additional_disks") && len(disks) != 0 {
+	if disks := kubernetesNodePoolAdditionalDisksDefinition(d); len(disks) != 0 {
 		definition["additional_disks"] = disks
 	}
-	if networks := kubernetesNodePoolNetworksDefinition(d); isConfigured("networks") && len(networks) != 0 {
+	if networks := kubernetesNodePoolNetworksDefinition(d); len(networks) != 0 {
 		definition["networks"] = networks
 	}
 
@@ -296,8 +276,22 @@ func setResourceDataFromKubernetesNodePool(d *schema.ResourceData, nodePool kube
 	}
 	set("additional_disks", additionalDisks)
 
-	networks := make([]map[string]any, 0, len(nodePool.Networks))
+	// A node pool must own at least one inline network, but additional networks
+	// can be managed by standalone anxcloud_kubernetes_node_pool_network
+	// resources. Refresh only the inline networks already owned by this
+	// resource so the two Terraform resources do not adopt each other's state.
+	configuredNetworkNames := make(map[string]struct{})
+	for _, configuredNetwork := range d.Get("networks").([]any) {
+		if configuredNetwork == nil {
+			continue
+		}
+		configuredNetworkNames[configuredNetwork.(map[string]any)["name"].(string)] = struct{}{}
+	}
+	networks := make([]map[string]any, 0, len(configuredNetworkNames))
 	for _, network := range nodePool.Networks {
+		if _, configured := configuredNetworkNames[network.Name]; !configured {
+			continue
+		}
 		networks = append(networks, map[string]any{
 			"name":            network.Name,
 			"bandwidth_limit": network.BandwidthLimit.ID,

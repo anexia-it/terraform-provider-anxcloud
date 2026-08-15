@@ -18,8 +18,9 @@ data "anxcloud_core_location" "anx04" {
 }
 
 resource "anxcloud_kubernetes_cluster" "example" {
-  name     = "example-cluster"
-  location = data.anxcloud_core_location.anx04.id
+  name                 = "example-cluster"
+  location             = data.anxcloud_core_location.anx04.id
+  external_ip_families = "IPv4"
 }
 
 resource "anxcloud_kubernetes_node_pool" "example" {
@@ -95,8 +96,9 @@ resource "anxcloud_network_prefix" "external_v6" {
 ################## CLUSTER #####################
 
 resource "anxcloud_kubernetes_cluster" "foo" {
-  name     = "foo"
-  location = data.anxcloud_core_location.anx04.id
+  name                 = "foo"
+  location             = data.anxcloud_core_location.anx04.id
+  external_ip_families = "Dualstack"
 
   internal_ipv4_prefix = anxcloud_network_prefix.internal_v4.id
   external_ipv4_prefix = anxcloud_network_prefix.external_v4.id
@@ -110,7 +112,7 @@ resource "anxcloud_kubernetes_cluster" "foo" {
 ### Required
 
 - `location` (String) Cluster location.
-- `name` (String) Cluster name.
+- `name` (String) Cluster name. Changing it recreates the cluster.
 
 ### Optional
 
@@ -126,8 +128,7 @@ resource "anxcloud_kubernetes_cluster" "foo" {
 - `apiserver_allowlist` ([]String) Limits access to the kubernetes API server to the given CIDRs.
 - `cni_plugin` (String) Container Network Interface plugin. Currently only Canal is supported.
 - `enable_oidc_authentication` (Boolean) Enable OIDC authentication for the Kubernetes cluster.
-- `enable_persistent_storage` (Boolean) Enable provisioning of persistent storage for the cluster when the organization and network support it.
-- `external_ip_families` (String) IP families used for external networking.
+- `external_ip_families` (String) IP families used for external networking. Valid values are `IPv4` and `Dualstack`.
 - `maintenance_window_duration` (String) Maintenance window duration, for example `2h`, `30m`, or `15h30m`.
 - `maintenance_window_start_time` (String) Maintenance window start in UTC, for example `Tue 22:00` or `22:00`.
 - `oidc_client_id` (String) OIDC client ID.

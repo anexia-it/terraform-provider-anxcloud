@@ -23,11 +23,15 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 
 * resource/anxcloud_kubernetes_cluster: preserve failed clusters in Terraform state so they can be updated or deleted, and make reconciliation waiting opt-in
 * resource/anxcloud_kubernetes_cluster, resource/anxcloud_kubernetes_node_pool: wait for deletion to finish before removing resources from Terraform state
+* resource/anxcloud_kubernetes_cluster: include external IP families in cluster creation requests without sending unsupported backend, persistent-storage, or read-only reconciliation state fields
+* resource/anxcloud_kubernetes_node_pool: send the complete desired configuration during creation, including the required sync source, CPU performance type, and at least one network
 
 ### Added
 
 * data-source/anxcloud_network_prefix: add lookup by identifier or exact CIDR
 * resource/anxcloud_kubernetes_cluster, resource/anxcloud_kubernetes_node_pool: expose Kubernetes API v2 fields and support in-place updates
+* resource/anxcloud_kubernetes_node_pool_network: add standalone node-pool VLAN network management
+
 ## [0.11.0] - 2026-04-27
 
 ### Added

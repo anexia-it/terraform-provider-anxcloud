@@ -45,8 +45,7 @@ resource "local_file" "kubeconfig" {
 - `enable_lbaas` (Boolean) If enabled, Service VMs are set up as LBaaS hosts enabling K8s services of type LoadBalancer.
 - `enable_nat_gateways` (Boolean) If enabled, Service VMs are configured as NAT gateways connecting the internal cluster network to the internet.
 - `enable_oidc_authentication` (Boolean) Enable OIDC authentication for the Kubernetes cluster.
-- `enable_persistent_storage` (Boolean) Enable provisioning of persistent storage for the cluster when the organization and network support it.
-- `external_ip_families` (String) IP families used for external networking.
+- `external_ip_families` (String) IP families used for external networking. Valid values are `IPv4` and `Dualstack`.
 - `external_ipv4_prefix` (String) External IPv4 prefix.
 - `external_ipv6_prefix` (String) External IPv6 prefix.
 - `internal_ipv4_prefix` (String) Internal IPv4 prefix.

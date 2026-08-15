@@ -1,6 +1,8 @@
 package anxcloud
 
 import (
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -15,7 +17,8 @@ func schemaKubernetesCluster() map[string]*schema.Schema {
 		"name": {
 			Type:         schema.TypeString,
 			Required:     true,
-			Description:  "Cluster name.",
+			ForceNew:     true,
+			Description:  "Cluster name. Changing it recreates the cluster.",
 			ValidateFunc: validateKubernetesResourceName,
 		},
 		"version": {
@@ -89,18 +92,12 @@ Enable autoscaling for this cluster. Defaults to false if unset.
 			Description:  "Container Network Interface plugin. Currently only Canal is supported.",
 			ValidateFunc: validation.StringInSlice([]string{"canal"}, false),
 		},
-		"enable_persistent_storage": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "Enable provisioning of persistent storage for the cluster when the organization and network support it.",
-		},
 		"external_ip_families": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
-			Description:  "IP families used for external networking.",
-			ValidateFunc: validation.StringInSlice([]string{"IPv4", "DualStack"}, false),
+			Description:  "IP families used for external networking. Valid values are `IPv4` and `Dualstack`.",
+			ValidateFunc: validation.StringInSlice([]string{"IPv4", "Dualstack"}, false),
 		},
 		"enable_oidc_authentication": {
 			Type:        schema.TypeBool,
@@ -246,8 +243,11 @@ func schemaKubernetesNodePool() map[string]*schema.Schema {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      "engine",
-			Description:  "Source of truth for node pool configuration.",
-			ValidateFunc: validation.StringInSlice([]string{"engine", "cluster"}, false),
+			Description:  "Source of truth for node pool configuration. Valid values are `engine` and `cluster`; defaults to `engine`.",
+			ValidateFunc: validation.StringInSlice([]string{"engine", "cluster"}, true),
+			StateFunc: func(value any) string {
+				return strings.ToLower(value.(string))
+			},
 		},
 		"cpu_performance_type": {
 			Type:         schema.TypeString,
@@ -303,9 +303,10 @@ func schemaKubernetesNodePool() map[string]*schema.Schema {
 		},
 		"networks": {
 			Type:        schema.TypeList,
-			Optional:    true,
+			Required:    true,
+			MinItems:    1,
 			MaxItems:    10,
-			Description: "Network interfaces attached to each node.",
+			Description: "Network interfaces attached to each node. The API requires between one and ten networks during node-pool creation.",
 			Elem: &schema.Resource{Schema: map[string]*schema.Schema{
 				"name": {
 					Type:        schema.TypeString,

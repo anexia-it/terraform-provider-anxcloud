@@ -29,7 +29,6 @@ func dataSourceKubernetesCluster() *schema.Resource {
 				"enable_autoscaling",
 				"apiserver_allowlist",
 				"cni_plugin",
-				"enable_persistent_storage",
 				"external_ip_families",
 				"enable_oidc_authentication",
 				"oidc_client_id",

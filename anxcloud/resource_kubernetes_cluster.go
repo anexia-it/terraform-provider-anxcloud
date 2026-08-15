@@ -152,6 +152,9 @@ func kubernetesClusterCreateDefinition(d *schema.ResourceData) map[string]any {
 	if allowlist := kubernetesAPIServerAllowlist(d); allowlist != "" {
 		definition["apiserver_allowlist"] = allowlist
 	}
+	if externalIPFamilies, ok := d.GetOk("external_ip_families"); ok {
+		definition["external_ip_families"] = externalIPFamilies.(string)
+	}
 
 	setKubernetesClusterPrefixDefinitionFields(definition, d, false)
 	return definition
@@ -169,8 +172,6 @@ func kubernetesClusterCreateUpdateDefinitionWithConfiguredFields(d *schema.Resou
 	definition := make(map[string]any)
 	fields := map[string]string{
 		"cni_plugin":                    "cni_plugin",
-		"enable_persistent_storage":     "enable_persistent_storage",
-		"external_ip_families":          "external_ip_families",
 		"enable_oidc_authentication":    "enable_oidc_authentication",
 		"oidc_client_id":                "oidc_client_id",
 		"oidc_issuer_url":               "oidc_issuer_url",
@@ -204,7 +205,6 @@ func kubernetesFieldIsConfigured(d *schema.ResourceData, field string) bool {
 func kubernetesClusterUpdateDefinition(d *schema.ResourceData) map[string]any {
 	definition := make(map[string]any)
 	fields := map[string]string{
-		"name":                          "name",
 		"version":                       "version",
 		"location":                      "location",
 		"needs_service_vms":             "needs_service_vms",
@@ -212,7 +212,6 @@ func kubernetesClusterUpdateDefinition(d *schema.ResourceData) map[string]any {
 		"enable_lbaas":                  "enable_lbaas",
 		"enable_autoscaling":            "autoscaling",
 		"cni_plugin":                    "cni_plugin",
-		"enable_persistent_storage":     "enable_persistent_storage",
 		"external_ip_families":          "external_ip_families",
 		"enable_oidc_authentication":    "enable_oidc_authentication",
 		"maintenance_window_start_time": "maintenance_window_start_time",

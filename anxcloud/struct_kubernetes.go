@@ -13,6 +13,7 @@ import (
 	"go.anx.io/go-anxcloud/pkg/api/types"
 	"go.anx.io/go-anxcloud/pkg/apis/common"
 	"go.anx.io/go-anxcloud/pkg/apis/common/gs"
+	"go.anx.io/go-anxcloud/pkg/kubernetes/network"
 	"go.anx.io/go-anxcloud/pkg/kubernetes/nodepool"
 )
 
@@ -63,11 +64,10 @@ type kubernetesCluster struct {
 	ExternalIPv4Prefix *common.PartialResource `json:"external_ipv4_prefix"`
 	ExternalIPv6Prefix *common.PartialResource `json:"external_ipv6_prefix"`
 
-	CNIPlugin               kubernetesSelect `json:"cni_plugin"`
-	EnablePersistentStorage bool             `json:"enable_persistent_storage"`
-	EnableAutoscaling       bool             `json:"autoscaling"`
-	APIServerAllowlist      string           `json:"apiserver_allowlist"`
-	ExternalIPFamilies      kubernetesSelect `json:"external_ip_families"`
+	CNIPlugin          kubernetesSelect `json:"cni_plugin"`
+	EnableAutoscaling  bool             `json:"autoscaling"`
+	APIServerAllowlist string           `json:"apiserver_allowlist"`
+	ExternalIPFamilies kubernetesSelect `json:"external_ip_families"`
 
 	EnableOIDCAuthentication bool   `json:"enable_oidc_authentication"`
 	OIDCClientID             string `json:"oidc_client_id"`
@@ -89,6 +89,16 @@ type kubernetesCluster struct {
 // request body remains a map so PATCH can retain explicit false and zero values.
 type kubernetesNodePool struct {
 	nodepool.Nodepool
+	requestDefinition map[string]any
+}
+
+// kubernetesNodePoolNetwork reuses the go-anxcloud network model and adds the
+// state and parent node-pool fields exposed by the current Kubernetes v2 API.
+type kubernetesNodePoolNetwork struct {
+	network.NodepoolNetwork
+	State    gs.State               `json:"state"`
+	NodePool common.PartialResource `json:"nodepool"`
+
 	requestDefinition map[string]any
 }
 
@@ -121,6 +131,22 @@ func (n *kubernetesNodePool) FilterAPIRequestBody(context.Context) (interface{},
 }
 
 func (n *kubernetesNodePool) FilterAPIRequest(ctx context.Context, request *http.Request) (*http.Request, error) {
+	return filterKubernetesAPIRequest(ctx, request)
+}
+
+func (n *kubernetesNodePoolNetwork) EndpointURL(context.Context) (*url.URL, error) {
+	return url.Parse(kubernetesAPIV2Path + "/node_pool_network")
+}
+
+func (n *kubernetesNodePoolNetwork) GetIdentifier(context.Context) (string, error) {
+	return n.Identifier, nil
+}
+
+func (n *kubernetesNodePoolNetwork) FilterAPIRequestBody(context.Context) (interface{}, error) {
+	return n.requestDefinition, nil
+}
+
+func (n *kubernetesNodePoolNetwork) FilterAPIRequest(ctx context.Context, request *http.Request) (*http.Request, error) {
 	return filterKubernetesAPIRequest(ctx, request)
 }
 
@@ -159,7 +185,6 @@ func setResourceDataFromKubernetesClusterV2(d *schema.ResourceData, cluster kube
 	set("enable_lbaas", cluster.EnableLBaaS)
 	set("enable_autoscaling", cluster.EnableAutoscaling)
 	set("cni_plugin", cluster.CNIPlugin.ID)
-	set("enable_persistent_storage", cluster.EnablePersistentStorage)
 	set("external_ip_families", cluster.ExternalIPFamilies.ID)
 	set("enable_oidc_authentication", cluster.EnableOIDCAuthentication)
 	set("oidc_client_id", cluster.OIDCClientID)

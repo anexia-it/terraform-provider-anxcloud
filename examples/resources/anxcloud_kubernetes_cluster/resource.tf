@@ -3,8 +3,9 @@ data "anxcloud_core_location" "anx04" {
 }
 
 resource "anxcloud_kubernetes_cluster" "example" {
-  name     = "example-cluster"
-  location = data.anxcloud_core_location.anx04.id
+  name                 = "example-cluster"
+  location             = data.anxcloud_core_location.anx04.id
+  external_ip_families = "IPv4"
 }
 
 resource "anxcloud_kubernetes_node_pool" "example" {
@@ -80,8 +81,9 @@ resource "anxcloud_network_prefix" "external_v6" {
 ################## CLUSTER #####################
 
 resource "anxcloud_kubernetes_cluster" "foo" {
-  name     = "foo"
-  location = data.anxcloud_core_location.anx04.id
+  name                 = "foo"
+  location             = data.anxcloud_core_location.anx04.id
+  external_ip_families = "Dualstack"
 
   internal_ipv4_prefix = anxcloud_network_prefix.internal_v4.id
   external_ipv4_prefix = anxcloud_network_prefix.external_v4.id
