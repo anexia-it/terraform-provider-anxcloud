@@ -276,22 +276,8 @@ func setResourceDataFromKubernetesNodePool(d *schema.ResourceData, nodePool kube
 	}
 	set("additional_disks", additionalDisks)
 
-	// A node pool must own at least one inline network, but additional networks
-	// can be managed by standalone anxcloud_kubernetes_node_pool_network
-	// resources. Refresh only the inline networks already owned by this
-	// resource so the two Terraform resources do not adopt each other's state.
-	configuredNetworkNames := make(map[string]struct{})
-	for _, configuredNetwork := range d.Get("networks").([]any) {
-		if configuredNetwork == nil {
-			continue
-		}
-		configuredNetworkNames[configuredNetwork.(map[string]any)["name"].(string)] = struct{}{}
-	}
-	networks := make([]map[string]any, 0, len(configuredNetworkNames))
+	networks := make([]map[string]any, 0, len(nodePool.Networks))
 	for _, network := range nodePool.Networks {
-		if _, configured := configuredNetworkNames[network.Name]; !configured {
-			continue
-		}
 		networks = append(networks, map[string]any{
 			"name":            network.Name,
 			"bandwidth_limit": network.BandwidthLimit.ID,

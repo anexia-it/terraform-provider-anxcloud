@@ -13,7 +13,6 @@ import (
 	"go.anx.io/go-anxcloud/pkg/api/types"
 	"go.anx.io/go-anxcloud/pkg/apis/common"
 	"go.anx.io/go-anxcloud/pkg/apis/common/gs"
-	"go.anx.io/go-anxcloud/pkg/kubernetes/network"
 	"go.anx.io/go-anxcloud/pkg/kubernetes/nodepool"
 )
 
@@ -92,16 +91,6 @@ type kubernetesNodePool struct {
 	requestDefinition map[string]any
 }
 
-// kubernetesNodePoolNetwork reuses the go-anxcloud network model and adds the
-// state and parent node-pool fields exposed by the current Kubernetes v2 API.
-type kubernetesNodePoolNetwork struct {
-	network.NodepoolNetwork
-	State    gs.State               `json:"state"`
-	NodePool common.PartialResource `json:"nodepool"`
-
-	requestDefinition map[string]any
-}
-
 func (c *kubernetesCluster) EndpointURL(context.Context) (*url.URL, error) {
 	return url.Parse(kubernetesAPIV2Path + "/cluster")
 }
@@ -131,22 +120,6 @@ func (n *kubernetesNodePool) FilterAPIRequestBody(context.Context) (interface{},
 }
 
 func (n *kubernetesNodePool) FilterAPIRequest(ctx context.Context, request *http.Request) (*http.Request, error) {
-	return filterKubernetesAPIRequest(ctx, request)
-}
-
-func (n *kubernetesNodePoolNetwork) EndpointURL(context.Context) (*url.URL, error) {
-	return url.Parse(kubernetesAPIV2Path + "/node_pool_network")
-}
-
-func (n *kubernetesNodePoolNetwork) GetIdentifier(context.Context) (string, error) {
-	return n.Identifier, nil
-}
-
-func (n *kubernetesNodePoolNetwork) FilterAPIRequestBody(context.Context) (interface{}, error) {
-	return n.requestDefinition, nil
-}
-
-func (n *kubernetesNodePoolNetwork) FilterAPIRequest(ctx context.Context, request *http.Request) (*http.Request, error) {
 	return filterKubernetesAPIRequest(ctx, request)
 }
 
