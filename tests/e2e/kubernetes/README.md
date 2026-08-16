@@ -11,16 +11,13 @@ From the repository root:
 ```sh
 make install
 cd tests/e2e/kubernetes
-cp terraform.tfvars.example terraform.tfvars
-sed "s|__PLUGIN_DIR__|$HOME/.terraform.d/plugins|" terraform.tfrc.example > terraform.tfrc
 ```
 
-Edit `terraform.tfvars` so `test_id` is unique, select an available `kubernetes_version`, and confirm the existing VLAN and prefix identifiers in `data.tf` are available in `location_code`. Then export the token for both the Anexia provider and the Kubernetes Secret. The CLI configuration loads the locally built Anxcloud provider while downloading the official Kubernetes and Helm providers normally:
+Make sure the variable `test_id` is a unique cluster name, select an available `kubernetes_version`, and confirm the existing VLAN and prefix identifiers are available in `location_code`. Then export the token for both the Anexia provider and the Kubernetes Secret. The CLI configuration loads the locally built Anxcloud provider while downloading the official Kubernetes and Helm providers normally:
 
 ```sh
 export ANEXIA_TOKEN="$anexia_token"
 export TF_VAR_anexia_token="$anexia_token"
-export TF_CLI_CONFIG_FILE="$PWD/terraform.tfrc"
 terraform init -reconfigure -upgrade
 terraform validate
 terraform plan -out=tfplan

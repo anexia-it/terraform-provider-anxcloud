@@ -18,6 +18,26 @@ variable "location_code" {
   default     = "ANX25"
 }
 
+variable "internal_ipv4_vlan" {
+  type        = string
+  description = "Anexia vlan for internal usage (nodepools)"
+}
+
+variable "external_ipv4_vlan" {
+  type        = string
+  description = "Anexia vlan for external usage (loadbalancer)"
+}
+
+variable "internal_ipv4_prefix" {
+  type        = string
+  description = "Anexia prefix for internal usage (nodepools)"
+}
+
+variable "external_ipv4_prefix" {
+  type        = string
+  description = "Anexia prefix for external usage (loadbalancer)"
+}
+
 variable "wait_until_ready" {
   type        = bool
   description = "Wait for the cluster to reach reconciliation state 0 before creating the node pool."

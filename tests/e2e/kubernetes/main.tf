@@ -42,6 +42,7 @@ resource "anxcloud_kubernetes_node_pool" "e2e" {
     vlan            = data.anxcloud_vlan.internal.id
   }
 
+  # Just an example on how to add multiple networks
   # networks {
   #   name            = "external"
   #   bandwidth_limit = var.node_pool_network_bandwidth_limit
