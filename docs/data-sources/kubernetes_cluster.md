@@ -32,21 +32,37 @@ resource "local_file" "kubeconfig" {
 
 ### Optional
 
-- `enable_autoscaling` (Boolean) Enable autoscaling for this cluster. Defaults to false if unset.
-			
--> You will need to explicitly configure your node pools for autoscaling. Please check the provided [autoscaling documentation](https://engine.anexia-it.com/docs/en/module/kubernetes/user-guide/autoscaling) for details.
-- `external_ipv4_prefix` (String) External IPv4 prefix.
-- `external_ipv6_prefix` (String) External IPv6 prefix.
+- `api_environment` (String) Kubernetes service environment. Valid values are `prod`, `stage`, and `dev`; defaults to `prod`. Use the same value for a cluster and its node pools and kubeconfigs. For managed resources, changing it recreates the resource because it selects a different API endpoint.
 - `id` (String) Cluster identifier.
-- `internal_ipv4_prefix` (String) Internal IPv4 prefix.
 - `name` (String) Cluster name.
-- `version` (String) Kubernetes version.
 
 ### Read-Only
 
+- `apiserver_allowlist` (List of String) A list of CIDRs that should be allowed access to the kubernetes API server. By default there are no IP restrictions.
+- `cni_plugin` (String) Container Network Interface plugin. Currently only Canal is supported.
+- `enable_autoscaling` (Boolean) Enable autoscaling for this cluster. Defaults to false if unset.
+
+-> You will need to explicitly configure your node pools for autoscaling. Please check the provided [autoscaling documentation](https://engine.anexia-it.com/docs/en/module/kubernetes/user-guide/autoscaling) for details.
 - `enable_lbaas` (Boolean) If enabled, Service VMs are set up as LBaaS hosts enabling K8s services of type LoadBalancer.
 - `enable_nat_gateways` (Boolean) If enabled, Service VMs are configured as NAT gateways connecting the internal cluster network to the internet.
+- `enable_oidc_authentication` (Boolean) Enable OIDC authentication for the Kubernetes cluster.
+- `external_ip_families` (String) IP families used for external networking. Valid values are `IPv4` and `Dualstack`.
+- `external_ipv4_prefix` (String) External IPv4 network prefix identifier. Use the `id` exported by an `anxcloud_network_prefix` resource or data source.
+- `external_ipv6_prefix` (String) External IPv6 network prefix identifier. Use the `id` exported by an `anxcloud_network_prefix` resource or data source.
+- `internal_ipv4_prefix` (String) Internal IPv4 network prefix identifier. Use the `id` exported by an `anxcloud_network_prefix` resource or data source.
 - `location` (String) Cluster location.
+- `maintenance_window_duration` (String) Maintenance window duration, for example `2h`, `30m`, or `15h30m`.
+- `maintenance_window_start_time` (String) Maintenance window start in UTC, for example `Tue 22:00` or `22:00`.
 - `needs_service_vms` (Boolean) Deploy Service VMs providing load balancers and outbound masquerade.
-
-
+- `oidc_client_id` (String) OIDC client ID.
+- `oidc_extra_scopes` (String) Space-separated list of additional OIDC scopes.
+- `oidc_groups_claim` (String) OIDC claim used to determine user groups.
+- `oidc_groups_prefix` (String) Prefix applied when filtering OIDC group claims.
+- `oidc_issuer_url` (String) OIDC issuer URL.
+- `oidc_required_claim` (String) OIDC claim a user must have.
+- `oidc_username_claim` (String) OIDC claim used to determine the username.
+- `oidc_username_prefix` (String) Prefix applied when filtering OIDC usernames.
+- `patch_version` (String) Current Kubernetes patch version.
+- `state` (String) Current reconciliation state identifier.
+- `state_text` (String) Human-readable current reconciliation state.
+- `version` (String) Kubernetes version.

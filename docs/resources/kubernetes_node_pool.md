@@ -3,20 +3,22 @@
 page_title: "anxcloud_kubernetes_node_pool Resource - terraform-provider-anxcloud"
 subcategory: ""
 description: |-
-  Resource to create Kubernetes node pools.
-              Updates are currently not supported.
+  Resource to create and update Kubernetes node pools.
 ---
 
 # anxcloud_kubernetes_node_pool (Resource)
 
-Resource to create Kubernetes node pools.
-			Updates are currently not supported.
+Resource to create and update Kubernetes node pools.
 
 ## Example Usage
 
 ```terraform
 data "anxcloud_kubernetes_cluster" "example" {
   name = "example-cluster"
+}
+
+data "anxcloud_vlan" "example" {
+  name = "example-network"
 }
 
 resource "anxcloud_kubernetes_node_pool" "example" {
@@ -26,6 +28,12 @@ resource "anxcloud_kubernetes_node_pool" "example" {
   memory_gib       = 4
   operating_system = "Flatcar Linux"
   cluster          = data.anxcloud_kubernetes_cluster.example.id
+
+  networks {
+    name            = "internal"
+    bandwidth_limit = "1000"
+    vlan            = data.anxcloud_vlan.example.id
+  }
 
   disk {
     size_gib = 20
@@ -44,16 +52,45 @@ resource "anxcloud_kubernetes_node_pool" "example" {
 - `initial_replicas` (Number) Initial number of nodes.
 - `memory_gib` (Number) Memory per node in GiB.
 - `name` (String) Node pool name.
+- `networks` (Block List, Min: 1, Max: 10) Network interfaces attached to each node. The API requires between one and ten networks during node-pool creation. (see [below for nested schema](#nestedblock--networks))
 - `operating_system` (String) Operating system. Only "Flatcar Linux" supported at the moment.
 
 ### Optional
 
+- `additional_disks` (Block List, Max: 10) Additional disks attached to each node. (see [below for nested schema](#nestedblock--additional_disks))
+- `annotations` (String) Kubernetes annotations separated by line breaks.
+- `api_environment` (String) Kubernetes service environment. Valid values are `prod`, `stage`, and `dev`; defaults to `prod`. Use the same value for a cluster and its node pools and kubeconfigs. For managed resources, changing it recreates the resource because it selects a different API endpoint.
+- `autoscaler_enabled` (Boolean) Enable automatic node count adjustment.
+- `autoscaler_max_nodes` (Number) Maximum node count used by the autoscaler.
+- `autoscaler_min_nodes` (Number) Minimum node count used by the autoscaler.
+- `cpu_performance_type` (String) CPU performance type.
+- `dns_ipv4_1` (String) First IPv4 DNS server.
+- `dns_ipv4_2` (String) Second IPv4 DNS server.
+- `dns_ipv6_1` (String) First IPv6 DNS server.
+- `dns_ipv6_2` (String) Second IPv6 DNS server.
+- `dns_override_ipv4` (Boolean) Enable custom IPv4 DNS servers.
+- `dns_override_ipv6` (Boolean) Enable custom IPv6 DNS servers.
+- `labels` (String) Kubernetes labels separated by line breaks.
+- `ssh_public_keys` (String) SSH public keys in authorized_keys format, separated by line breaks.
+- `sync_source` (String) Source of truth for node pool configuration. Valid values are `engine` and `cluster`; defaults to `engine`. `Cluster` is accepted and normalized to `cluster`.
 - `tags` (Set of String) Set of tags attached to the resource.
+- `taints` (String) Kubernetes taints separated by line breaks.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
 - `id` (String) Node pool identifier.
+- `state` (String) Current reconciliation state identifier.
+- `state_text` (String) Human-readable current reconciliation state.
+
+<a id="nestedblock--additional_disks"></a>
+### Nested Schema for `additional_disks`
+
+Required:
+
+- `name` (String) Disk name.
+- `performance_type` (String) Disk performance type.
+- `size_gib` (Number) Disk size in GiB.
 
 <a id="nestedblock--disk"></a>
 ### Nested Schema for `disk`
@@ -61,6 +98,20 @@ resource "anxcloud_kubernetes_node_pool" "example" {
 Required:
 
 - `size_gib` (Number) Disk size in GiB.
+
+Optional:
+
+- `performance_type` (String) Disk performance type.
+
+
+<a id="nestedblock--networks"></a>
+### Nested Schema for `networks`
+
+Required:
+
+- `bandwidth_limit` (String) Network bandwidth limit identifier.
+- `name` (String) Network interface name.
+- `vlan` (String) VLAN identifier.
 
 
 <a id="nestedblock--timeouts"></a>
@@ -71,5 +122,4 @@ Optional:
 - `create` (String)
 - `delete` (String)
 - `read` (String)
-
-
+- `update` (String)
