@@ -52,14 +52,28 @@ func resourceKubernetesKubeconfigRead(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("failed requesting kubeconfig: %s", err)
 	}
 
+	return setResourceDataFromKubernetesKubeconfig(d, rawKubeconfig)
+}
+
+func setResourceDataFromKubernetesKubeconfig(d *schema.ResourceData, rawKubeconfig string) diag.Diagnostics {
+
 	kubeconfig, err := clientcmd.Load([]byte(rawKubeconfig))
 	if err != nil {
-		return diag.Errorf("failed loading deserializing kubeconfig: %s", err)
+		return diag.Errorf("failed deserializing kubeconfig: %s", err)
 	}
 
 	kubecontext := kubeconfig.Contexts[kubeconfig.CurrentContext]
+	if kubecontext == nil {
+		return diag.Errorf("kubeconfig current context %q was not found", kubeconfig.CurrentContext)
+	}
 	authInfo := kubeconfig.AuthInfos[kubecontext.AuthInfo]
+	if authInfo == nil {
+		return diag.Errorf("kubeconfig auth info %q was not found", kubecontext.AuthInfo)
+	}
 	cluster := kubeconfig.Clusters[kubecontext.Cluster]
+	if cluster == nil {
+		return diag.Errorf("kubeconfig cluster %q was not found", kubecontext.Cluster)
+	}
 
 	var diags diag.Diagnostics
 	if err := d.Set("host", cluster.Server); err != nil {

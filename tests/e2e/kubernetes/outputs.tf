@@ -38,12 +38,3 @@ output "cluster-admin-token" {
   value     = anxcloud_kubernetes_kubeconfig.cluster-admin.token
   sensitive = true
 }
-
-output "load_balancer_smoke_test" {
-  description = "Traefik load-balancer addresses. Open the IP or hostname over HTTP and expect 'Anexia Kubernetes LBaaS works'."
-  value = {
-    namespace = kubernetes_namespace_v1.anexia.metadata[0].name
-    ingress   = kubernetes_ingress_v1.smoke_app.metadata[0].name
-    addresses = try(data.kubernetes_service_v1.traefik.status[0].load_balancer[0].ingress, [])
-  }
-}

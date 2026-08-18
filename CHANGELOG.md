@@ -30,6 +30,7 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 ### Added
 
 * data-source/anxcloud_network_prefix: add lookup by identifier or exact CIDR
+* data-source/anxcloud_kubernetes_kubeconfig: read an existing cluster kubeconfig without requesting or removing it
 * resource/anxcloud_kubernetes_cluster, resource/anxcloud_kubernetes_node_pool: expose Kubernetes API v2 fields and support in-place updates
 * resource/anxcloud_kubernetes_cluster, resource/anxcloud_kubernetes_node_pool, resource/anxcloud_kubernetes_kubeconfig: allow selecting the production, stage, or development Kubernetes service API
 

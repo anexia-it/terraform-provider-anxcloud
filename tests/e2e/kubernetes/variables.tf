@@ -124,21 +124,3 @@ variable "node_pool_network_bandwidth_limit" {
   description = "Bandwidth limit identifier used by both node-pool networks."
   default     = "1000"
 }
-
-variable "anexia_token" {
-  type        = string
-  description = "Anexia API token written to the anexia/anexia-credentials Kubernetes secret. Set it through TF_VAR_anexia_token."
-  sensitive   = true
-  nullable    = false
-
-  validation {
-    condition     = length(var.anexia_token) > 0
-    error_message = "anexia_token must not be empty."
-  }
-}
-
-variable "generic_helm_chart_version" {
-  type        = string
-  description = "Version of the Anexia ks-generic-helmchart used for the ingress smoke test."
-  default     = "0.1.31"
-}
