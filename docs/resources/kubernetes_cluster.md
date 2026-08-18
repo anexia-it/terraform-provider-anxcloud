@@ -3,17 +3,12 @@
 page_title: "anxcloud_kubernetes_cluster Resource - terraform-provider-anxcloud"
 subcategory: ""
 description: |-
-  Resource to create Kubernetes clusters.
-              Updates are currently not supported.
+  Resource to create and update Kubernetes clusters.
 ---
 
 # anxcloud_kubernetes_cluster (Resource)
 
-Resource to create Kubernetes clusters.
-			Updates are currently not supported.
-
-### Known limitations
-- updating a cluster is currently not supported and forces a replacement of the Cluster
+Resource to create and update Kubernetes clusters.
 
 ## Example Usage
 
@@ -22,9 +17,14 @@ data "anxcloud_core_location" "anx04" {
   code = "ANX04"
 }
 
+data "anxcloud_vlan" "example" {
+  name = "example-network"
+}
+
 resource "anxcloud_kubernetes_cluster" "example" {
-  name     = "example-cluster"
-  location = data.anxcloud_core_location.anx04.id
+  name                 = "example-cluster"
+  location             = data.anxcloud_core_location.anx04.id
+  external_ip_families = "IPv4"
 }
 
 resource "anxcloud_kubernetes_node_pool" "example" {
@@ -34,6 +34,12 @@ resource "anxcloud_kubernetes_node_pool" "example" {
   memory_gib       = 4
   operating_system = "Flatcar Linux"
   cluster          = anxcloud_kubernetes_cluster.example.id
+
+  networks {
+    name            = "internal"
+    bandwidth_limit = "1000"
+    vlan            = data.anxcloud_vlan.example.id
+  }
 
   disk {
     size_gib = 20
@@ -100,8 +106,9 @@ resource "anxcloud_network_prefix" "external_v6" {
 ################## CLUSTER #####################
 
 resource "anxcloud_kubernetes_cluster" "foo" {
-  name     = "foo"
-  location = data.anxcloud_core_location.anx04.id
+  name                 = "foo"
+  location             = data.anxcloud_core_location.anx04.id
+  external_ip_families = "Dualstack"
 
   internal_ipv4_prefix = anxcloud_network_prefix.internal_v4.id
   external_ipv4_prefix = anxcloud_network_prefix.external_v4.id
@@ -115,27 +122,45 @@ resource "anxcloud_kubernetes_cluster" "foo" {
 ### Required
 
 - `location` (String) Cluster location.
-- `name` (String) Cluster name.
+- `name` (String) Cluster name. Changing it recreates the cluster.
 
 ### Optional
 
+- `api_environment` (String) Kubernetes service environment. Valid values are `prod`, `stage`, and `dev`; defaults to `prod`. Use the same value for a cluster and its node pools and kubeconfigs. For managed resources, changing it recreates the resource because it selects a different API endpoint.
 - `enable_autoscaling` (Boolean) Enable autoscaling for this cluster. Defaults to false if unset.
 			
 -> You will need to explicitly configure your node pools for autoscaling. Please check the provided [autoscaling documentation](https://engine.anexia-it.com/docs/en/module/kubernetes/user-guide/autoscaling) for details.
 - `enable_lbaas` (Boolean) If enabled, Service VMs are set up as LBaaS hosts enabling K8s services of type LoadBalancer.
 - `enable_nat_gateways` (Boolean) If enabled, Service VMs are configured as NAT gateways connecting the internal cluster network to the internet.
-- `external_ipv4_prefix` (String) External IPv4 prefix.
-- `external_ipv6_prefix` (String) External IPv6 prefix.
-- `internal_ipv4_prefix` (String) Internal IPv4 prefix.
+- `external_ipv4_prefix` (String) External IPv4 network prefix identifier. Use the `id` exported by an `anxcloud_network_prefix` resource or data source.
+- `external_ipv6_prefix` (String) External IPv6 network prefix identifier. Use the `id` exported by an `anxcloud_network_prefix` resource or data source.
+- `internal_ipv4_prefix` (String) Internal IPv4 network prefix identifier. Use the `id` exported by an `anxcloud_network_prefix` resource or data source.
 - `needs_service_vms` (Boolean) Deploy Service VMs providing load balancers and outbound masquerade.
 - `apiserver_allowlist` ([]String) Limits access to the kubernetes API server to the given CIDRs.
+- `cni_plugin` (String) Container Network Interface plugin. Currently only Canal is supported.
+- `enable_oidc_authentication` (Boolean) Enable OIDC authentication for the Kubernetes cluster.
+- `external_ip_families` (String) IP families used for external networking. Valid values are `IPv4` and `Dualstack`.
+- `maintenance_window_duration` (String) Maintenance window duration, for example `2h`, `30m`, or `15h30m`.
+- `maintenance_window_start_time` (String) Maintenance window start in UTC, for example `Tue 22:00` or `22:00`.
+- `oidc_client_id` (String) OIDC client ID.
+- `oidc_extra_scopes` (String) Space-separated list of additional OIDC scopes.
+- `oidc_groups_claim` (String) OIDC claim used to determine user groups.
+- `oidc_groups_prefix` (String) Prefix applied when filtering OIDC group claims.
+- `oidc_issuer_url` (String) OIDC issuer URL.
+- `oidc_required_claim` (String) OIDC claim a user must have.
+- `oidc_username_claim` (String) OIDC claim used to determine the username.
+- `oidc_username_prefix` (String) Prefix applied when filtering OIDC usernames.
 - `tags` (Set of String) Set of tags attached to the resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `version` (String) Kubernetes version.
+- `wait_until_ready` (Boolean) Wait for the cluster to reach the ready state during create and update. Intermediate reconciliation states, including Error, do not stop the wait. State transitions are written to provider logs.
 
 ### Read-Only
 
 - `id` (String) Cluster identifier.
+- `patch_version` (String) Current Kubernetes patch version.
+- `state` (String) Current reconciliation state identifier.
+- `state_text` (String) Human-readable current reconciliation state.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
@@ -145,5 +170,4 @@ Optional:
 - `create` (String)
 - `delete` (String)
 - `read` (String)
-
-
+- `update` (String)

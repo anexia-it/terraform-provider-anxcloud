@@ -17,6 +17,10 @@ data "anxcloud_core_location" "anx04" {
   code = "ANX04"
 }
 
+data "anxcloud_vlan" "example" {
+  name = "example-network"
+}
+
 resource "anxcloud_kubernetes_cluster" "example" {
   name     = "example-cluster"
   location = data.anxcloud_core_location.anx04.id
@@ -29,6 +33,12 @@ resource "anxcloud_kubernetes_node_pool" "example" {
   memory_gib       = 4
   operating_system = "Flatcar Linux"
   cluster          = anxcloud_kubernetes_cluster.example.id
+
+  networks {
+    name            = "internal"
+    bandwidth_limit = "1000"
+    vlan            = data.anxcloud_vlan.example.id
+  }
 
   disk {
     size_gib = 20
@@ -61,6 +71,7 @@ resource "kubernetes_namespace" "example" {
 
 ### Optional
 
+- `api_environment` (String) Kubernetes service environment. Valid values are `prod`, `stage`, and `dev`; defaults to `prod`. Use the same value for a cluster and its node pools and kubeconfigs. For managed resources, changing it recreates the resource because it selects a different API endpoint.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
@@ -79,5 +90,3 @@ Optional:
 - `create` (String)
 - `delete` (String)
 - `read` (String)
-
-

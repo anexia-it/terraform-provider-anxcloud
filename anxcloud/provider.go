@@ -68,11 +68,13 @@ func Provider(version string) *schema.Provider {
 			"anxcloud_availability_zone":     dataSourceAvailabilityZone(),
 			"anxcloud_vlan":                  dataSourceVLAN(),
 			"anxcloud_vlans":                 dataSourceVLANs(),
+			"anxcloud_network_prefix":        dataSourceNetworkPrefix(),
 			"anxcloud_tags":                  dataSourceTags(),
 			"anxcloud_cpu_performance_types": dataSourceCPUPerformanceTypes(),
 			"anxcloud_dns_records":           dataSourceDNSRecords(),
 			"anxcloud_dns_zones":             datasourceDNSZones(),
 			"anxcloud_kubernetes_cluster":    dataSourceKubernetesCluster(),
+			"anxcloud_kubernetes_kubeconfig": dataSourceKubernetesKubeconfig(),
 			// Object Storage data sources
 			"anxcloud_object_storage_endpoints": dataSourceObjectStorageEndpoints(),
 			"anxcloud_object_storage_backends":  dataSourceObjectStorageBackends(),
