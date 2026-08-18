@@ -3,16 +3,20 @@
 page_title: "anxcloud_network_prefix Data Source - terraform-provider-anxcloud"
 subcategory: ""
 description: |-
-  Provides details about an Anexia Cloud network prefix. This data source is useful if you want to use a non-Terraform managed prefix.
+  Provides details about an Anexia Cloud network prefix. Look it up by its Anexia identifier (`id`) or exact CIDR; the resulting `.id` is the identifier expected by other provider resources.
 ---
 
 # anxcloud_network_prefix (Data Source)
 
-Provides details about an Anexia Cloud network prefix. This data source is useful if you want to use a non-Terraform managed prefix.
+Provides details about an Anexia Cloud network prefix. Look it up by its Anexia identifier (`id`) or exact CIDR; the resulting `.id` is the identifier expected by other provider resources.
 
 ## Example Usage
 
 ```terraform
+data "anxcloud_network_prefix" "by_id" {
+  id = "0123456789abcdef0123456789abcdef"
+}
+
 data "anxcloud_network_prefix" "by_cidr" {
   cidr = "10.0.0.0/24"
 }
@@ -24,7 +28,7 @@ data "anxcloud_network_prefix" "by_cidr" {
 ### Optional
 
 - `cidr` (String) Network prefix CIDR.
-- `id` (String) Network prefix identifier.
+- `id` (String) Anexia network prefix identifier. This is the value expected by cluster prefix fields and other resource references.
 
 ### Read-Only
 
@@ -52,4 +56,3 @@ Read-Only:
 - `lat` (String)
 - `lon` (String)
 - `name` (String)
-

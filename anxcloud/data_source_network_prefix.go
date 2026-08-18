@@ -12,13 +12,13 @@ import (
 
 func dataSourceNetworkPrefix() *schema.Resource {
 	return &schema.Resource{
-		Description: "Provides details about an Anexia Cloud network prefix. This data source is useful if you want to use a non-Terraform managed prefix.",
+		Description: "Provides details about an Anexia Cloud network prefix. Look it up by its Anexia identifier (`id`) or exact CIDR; the resulting `.id` is the identifier expected by other provider resources.",
 		ReadContext: dataSourceNetworkPrefixRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Description:  "Network prefix identifier.",
+				Description:  "Anexia network prefix identifier. This is the value expected by cluster prefix fields and other resource references.",
 				ExactlyOneOf: []string{"id", "cidr"},
 			},
 			"cidr": {

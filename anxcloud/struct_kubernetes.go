@@ -1,11 +1,14 @@
 package anxcloud
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -18,7 +21,29 @@ import (
 
 const gibiFactor = 1073741824 // math.Pow(2, 30)
 
-const kubernetesAPIV2Path = "/api/kubernetes/v2"
+const (
+	kubernetesAPIEnvironmentProd  = "prod"
+	kubernetesAPIEnvironmentStage = "stage"
+	kubernetesAPIEnvironmentDev   = "dev"
+
+	requestKubeConfigRuleIdentifier = "12277a581e1c47cba72338425a008aa3"
+	removeKubeConfigRuleIdentifier  = "eec87131729e44fa91a4b7ee8c365a26"
+)
+
+func kubernetesAPIPath(environment string, version int) string {
+	return fmt.Sprintf("/api/%s/v%d", kubernetesAPIService(environment), version)
+}
+
+func kubernetesAPIService(environment string) string {
+	service := "kubernetes"
+	switch environment {
+	case kubernetesAPIEnvironmentStage:
+		service = "kubernetes-stage"
+	case kubernetesAPIEnvironmentDev:
+		service = "kubernetes-dev"
+	}
+	return service
+}
 
 // kubernetesSelect is used by the Kubernetes v2 API for selectable values.
 // Some older deployments return only the ID, so both representations are accepted.
@@ -82,6 +107,7 @@ type kubernetesCluster struct {
 	MaintenanceWindowDuration string `json:"maintenance_window_duration"`
 
 	requestDefinition map[string]any
+	apiEnvironment    string
 }
 
 // kubernetesNodePool reuses the go-anxcloud Kubernetes v2 response model. Its
@@ -89,10 +115,11 @@ type kubernetesCluster struct {
 type kubernetesNodePool struct {
 	nodepool.Nodepool
 	requestDefinition map[string]any
+	apiEnvironment    string
 }
 
 func (c *kubernetesCluster) EndpointURL(context.Context) (*url.URL, error) {
-	return url.Parse(kubernetesAPIV2Path + "/cluster")
+	return url.Parse(kubernetesAPIPath(c.apiEnvironment, 2) + "/cluster")
 }
 
 func (c *kubernetesCluster) GetIdentifier(context.Context) (string, error) {
@@ -108,7 +135,74 @@ func (c *kubernetesCluster) FilterAPIRequest(ctx context.Context, request *http.
 }
 
 func (n *kubernetesNodePool) EndpointURL(context.Context) (*url.URL, error) {
-	return url.Parse(kubernetesAPIV2Path + "/node_pool")
+	return url.Parse(kubernetesAPIPath(n.apiEnvironment, 2) + "/node_pool")
+}
+
+// kubernetesKubeconfigCluster is the minimal Kubernetes v1 response needed
+// while waiting for Engine to generate a kubeconfig. The upstream helper uses
+// the same endpoint but currently hard-codes the production service path.
+type kubernetesKubeconfigCluster struct {
+	Identifier     string  `json:"identifier" anxcloud:"identifier"`
+	KubeConfig     *string `json:"kubeconfig"`
+	apiEnvironment string
+}
+
+func (c *kubernetesKubeconfigCluster) EndpointURL(context.Context) (*url.URL, error) {
+	return url.Parse(kubernetesAPIPath(c.apiEnvironment, 1) + "/cluster.json")
+}
+
+func (c *kubernetesKubeconfigCluster) GetIdentifier(context.Context) (string, error) {
+	return c.Identifier, nil
+}
+
+type kubernetesKubeconfigRequest struct {
+	Cluster        string `json:"cluster" anxcloud:"identifier"`
+	apiEnvironment string
+}
+
+func (k *kubernetesKubeconfigRequest) EndpointURL(ctx context.Context) (*url.URL, error) {
+	operation, err := types.OperationFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	ruleIdentifier := requestKubeConfigRuleIdentifier
+	if operation == types.OperationDestroy {
+		ruleIdentifier = removeKubeConfigRuleIdentifier
+	} else if operation != types.OperationCreate {
+		return nil, fmt.Errorf("unsupported kubeconfig operation %q", operation)
+	}
+
+	return url.Parse(fmt.Sprintf(
+		"%s/cluster.json/%s/rule/%s",
+		kubernetesAPIPath(k.apiEnvironment, 1),
+		k.Cluster,
+		ruleIdentifier,
+	))
+}
+
+func (k *kubernetesKubeconfigRequest) GetIdentifier(context.Context) (string, error) {
+	return k.Cluster, nil
+}
+
+func (k *kubernetesKubeconfigRequest) FilterAPIRequest(ctx context.Context, request *http.Request) (*http.Request, error) {
+	operation, err := types.OperationFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if operation == types.OperationDestroy {
+		request.Method = http.MethodPost
+		request.URL.Path = path.Dir(request.URL.Path)
+	}
+	request.Body = nil
+	request.ContentLength = 0
+	return request, nil
+}
+
+func (k *kubernetesKubeconfigRequest) FilterAPIResponse(_ context.Context, response *http.Response) (*http.Response, error) {
+	_ = response.Body.Close()
+	response.Body = io.NopCloser(bytes.NewReader([]byte("{}")))
+	return response, nil
 }
 
 func (n *kubernetesNodePool) GetIdentifier(context.Context) (string, error) {

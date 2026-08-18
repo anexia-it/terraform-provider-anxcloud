@@ -1,7 +1,8 @@
 resource "anxcloud_kubernetes_cluster" "e2e" {
-  name     = "${var.test_id}-cluster"
-  location = data.anxcloud_core_location.e2e.id
-  version  = var.kubernetes_version
+  name            = "${var.test_id}-cluster"
+  location        = data.anxcloud_core_location.e2e.id
+  version         = var.kubernetes_version
+  api_environment = var.kubernetes_api_environment
 
   internal_ipv4_prefix = data.anxcloud_network_prefix.internal_v4.id
   external_ipv4_prefix = data.anxcloud_network_prefix.external_v4.id
@@ -26,6 +27,7 @@ resource "anxcloud_kubernetes_node_pool" "e2e" {
   cpus             = var.node_cpus
   memory_gib       = var.node_memory_gib
   operating_system = "Flatcar Linux"
+  api_environment  = var.kubernetes_api_environment
 
   sync_source = var.node_sync_source
 
@@ -56,5 +58,6 @@ resource "anxcloud_kubernetes_node_pool" "e2e" {
 }
 
 resource "anxcloud_kubernetes_kubeconfig" "cluster-admin" {
-  cluster = anxcloud_kubernetes_cluster.e2e.id
+  cluster         = anxcloud_kubernetes_cluster.e2e.id
+  api_environment = var.kubernetes_api_environment
 }

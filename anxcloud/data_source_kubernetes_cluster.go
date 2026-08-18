@@ -49,9 +49,10 @@ func dataSourceKubernetesCluster() *schema.Resource {
 	}
 }
 
-func findClusterByName(ctx context.Context, a api.API, name string) (*kubernetesv1.Cluster, error) {
+func findClusterByName(ctx context.Context, a api.API, name, apiEnvironment string) (*kubernetesv1.Cluster, error) {
+	environmentOption := api.EnvironmentOption("kubernetes/v1", kubernetesAPIService(apiEnvironment), true)
 	var channel types.ObjectChannel
-	if err := a.List(ctx, &kubernetesv1.Cluster{}, api.ObjectChannel(&channel)); err != nil {
+	if err := a.List(ctx, &kubernetesv1.Cluster{}, api.ObjectChannel(&channel), environmentOption); err != nil {
 		return nil, fmt.Errorf("failed listing clusters: %s", err)
 	}
 
@@ -62,7 +63,7 @@ func findClusterByName(ctx context.Context, a api.API, name string) (*kubernetes
 		}
 
 		if listResult.Name == name {
-			if err := a.Get(ctx, &listResult); err != nil {
+			if err := a.Get(ctx, &listResult, environmentOption); err != nil {
 				return nil, fmt.Errorf("failed retrieving full cluster object: %w", err)
 			}
 
@@ -74,16 +75,17 @@ func findClusterByName(ctx context.Context, a api.API, name string) (*kubernetes
 }
 
 func dataSourceKubernetesClusterRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	apiEnvironment := d.Get("api_environment").(string)
 	identifier := d.Get("id").(string)
 	if identifier == "" {
-		foundCluster, err := findClusterByName(ctx, apiFromProviderConfig(m), d.Get("name").(string))
+		foundCluster, err := findClusterByName(ctx, apiFromProviderConfig(m), d.Get("name").(string), apiEnvironment)
 		if err != nil {
 			return diag.Errorf("failed retrieving cluster by name: %s", err)
 		}
 		identifier = foundCluster.Identifier
 	}
 
-	cluster, err := getKubernetesCluster(ctx, apiFromProviderConfig(m), identifier)
+	cluster, err := getKubernetesCluster(ctx, apiFromProviderConfig(m), identifier, apiEnvironment)
 	if err != nil {
 		return diag.Errorf("failed retrieving cluster by id: %s", err)
 	}

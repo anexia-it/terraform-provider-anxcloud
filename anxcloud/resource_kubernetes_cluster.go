@@ -45,8 +45,12 @@ func resourceKubernetesCluster() *schema.Resource {
 
 func resourceKubernetesClusterCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	a := apiFromProviderConfig(m)
+	apiEnvironment := d.Get("api_environment").(string)
 
-	cluster := kubernetesCluster{requestDefinition: kubernetesClusterCreateDefinition(d)}
+	cluster := kubernetesCluster{
+		requestDefinition: kubernetesClusterCreateDefinition(d),
+		apiEnvironment:    apiEnvironment,
+	}
 	if err := a.Create(ctx, &cluster); err != nil {
 		return diag.Errorf("failed to create Kubernetes cluster: %s", err)
 	}
@@ -61,7 +65,7 @@ func resourceKubernetesClusterCreate(ctx context.Context, d *schema.ResourceData
 
 	if d.Get("wait_until_ready").(bool) {
 		var err error
-		cluster, err = awaitKubernetesClusterReconciliation(ctx, a, cluster.Identifier)
+		cluster, err = awaitKubernetesClusterReconciliation(ctx, a, cluster.Identifier, apiEnvironment)
 		if err != nil {
 			return diag.Errorf("failed awaiting Kubernetes cluster reconciliation: %s", err)
 		}
@@ -73,7 +77,7 @@ func resourceKubernetesClusterCreate(ctx context.Context, d *schema.ResourceData
 func resourceKubernetesClusterRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	a := apiFromProviderConfig(m)
 
-	cluster, err := getKubernetesCluster(ctx, a, d.Id())
+	cluster, err := getKubernetesCluster(ctx, a, d.Id(), d.Get("api_environment").(string))
 	if err != nil {
 		if api.IgnoreNotFound(err) == nil {
 			d.SetId("")
@@ -89,14 +93,15 @@ func resourceKubernetesClusterRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceKubernetesClusterUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	a := apiFromProviderConfig(m)
+	apiEnvironment := d.Get("api_environment").(string)
 	definition := kubernetesClusterUpdateDefinition(d)
 	if len(definition) == 0 {
-		cluster, err := getKubernetesCluster(ctx, a, d.Id())
+		cluster, err := getKubernetesCluster(ctx, a, d.Id(), apiEnvironment)
 		if err != nil {
 			return diag.Errorf("failed getting Kubernetes cluster: %s", err)
 		}
 		if d.Get("wait_until_ready").(bool) {
-			cluster, err = awaitKubernetesClusterReconciliation(ctx, a, d.Id())
+			cluster, err = awaitKubernetesClusterReconciliation(ctx, a, d.Id(), apiEnvironment)
 			if err != nil {
 				return diag.Errorf("failed awaiting Kubernetes cluster reconciliation: %s", err)
 			}
@@ -104,14 +109,18 @@ func resourceKubernetesClusterUpdate(ctx context.Context, d *schema.ResourceData
 		return setResourceDataFromKubernetesClusterV2(d, cluster)
 	}
 
-	cluster := kubernetesCluster{Identifier: d.Id(), requestDefinition: definition}
+	cluster := kubernetesCluster{
+		Identifier:        d.Id(),
+		requestDefinition: definition,
+		apiEnvironment:    apiEnvironment,
+	}
 	if err := a.Update(ctx, &cluster); err != nil {
 		return diag.Errorf("failed to update Kubernetes cluster: %s", err)
 	}
 
 	if d.Get("wait_until_ready").(bool) {
 		var err error
-		cluster, err = awaitKubernetesClusterReconciliation(ctx, a, d.Id())
+		cluster, err = awaitKubernetesClusterReconciliation(ctx, a, d.Id(), apiEnvironment)
 		if err != nil {
 			return diag.Errorf("failed awaiting Kubernetes cluster reconciliation: %s", err)
 		}
@@ -122,13 +131,14 @@ func resourceKubernetesClusterUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceKubernetesClusterDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	a := apiFromProviderConfig(m)
-	cluster := kubernetesCluster{Identifier: d.Id()}
+	apiEnvironment := d.Get("api_environment").(string)
+	cluster := kubernetesCluster{Identifier: d.Id(), apiEnvironment: apiEnvironment}
 
 	if err := a.Destroy(ctx, &cluster); err != nil && api.IgnoreNotFound(err) != nil {
 		return diag.Errorf("failed deleting Kubernetes cluster: %s", err)
 	}
 
-	if err := awaitKubernetesClusterDeletion(ctx, a, d.Id()); err != nil {
+	if err := awaitKubernetesClusterDeletion(ctx, a, d.Id(), apiEnvironment); err != nil {
 		return diag.Errorf("failed awaiting Kubernetes cluster deletion: %s", err)
 	}
 
@@ -175,8 +185,6 @@ func kubernetesClusterCreateUpdateDefinitionWithConfiguredFields(d *schema.Resou
 		"enable_oidc_authentication":    "enable_oidc_authentication",
 		"oidc_client_id":                "oidc_client_id",
 		"oidc_issuer_url":               "oidc_issuer_url",
-		"oidc_groups_claim":             "oidc_groups_claim",
-		"oidc_username_claim":           "oidc_username_claim",
 		"oidc_extra_scopes":             "oidc_extra_scopes",
 		"oidc_groups_prefix":            "oidc_groups_prefix",
 		"oidc_required_claim":           "oidc_required_claim",
@@ -187,6 +195,28 @@ func kubernetesClusterCreateUpdateDefinitionWithConfiguredFields(d *schema.Resou
 	for terraformName, apiName := range fields {
 		if isConfigured(terraformName) {
 			definition[apiName] = d.Get(terraformName)
+		}
+	}
+	oidcConfigured := false
+	for _, field := range []string{
+		"enable_oidc_authentication",
+		"oidc_client_id",
+		"oidc_issuer_url",
+		"oidc_groups_claim",
+		"oidc_username_claim",
+		"oidc_extra_scopes",
+		"oidc_groups_prefix",
+		"oidc_required_claim",
+		"oidc_username_prefix",
+	} {
+		if isConfigured(field) {
+			oidcConfigured = true
+			break
+		}
+	}
+	if oidcConfigured {
+		for _, field := range []string{"oidc_groups_claim", "oidc_username_claim"} {
+			definition[field] = kubernetesNullableOIDCClaim(d, field)
 		}
 	}
 	return definition
@@ -249,6 +279,7 @@ func setKubernetesClusterPrefixDefinitionFields(definition map[string]any, d *sc
 }
 
 func setChangedKubernetesClusterOIDCFields(definition map[string]any, d *schema.ResourceData) {
+	oidcChanged := d.HasChange("enable_oidc_authentication")
 	for _, field := range []string{
 		"oidc_client_id",
 		"oidc_issuer_url",
@@ -260,9 +291,30 @@ func setChangedKubernetesClusterOIDCFields(definition map[string]any, d *schema.
 		"oidc_username_prefix",
 	} {
 		if d.HasChange(field) {
-			definition[field] = d.Get(field).(string)
+			oidcChanged = true
+			switch field {
+			case "oidc_groups_claim", "oidc_username_claim":
+				definition[field] = kubernetesNullableOIDCClaim(d, field)
+			default:
+				definition[field] = d.Get(field).(string)
+			}
 		}
 	}
+	if oidcChanged {
+		for _, field := range []string{"oidc_groups_claim", "oidc_username_claim"} {
+			if _, exists := definition[field]; !exists {
+				definition[field] = kubernetesNullableOIDCClaim(d, field)
+			}
+		}
+	}
+}
+
+func kubernetesNullableOIDCClaim(d *schema.ResourceData, field string) any {
+	value := d.Get(field).(string)
+	if value == "" {
+		return nil
+	}
+	return value
 }
 
 func kubernetesAPIServerAllowlist(d *schema.ResourceData) string {
@@ -280,11 +332,13 @@ func awaitKubernetesClusterReconciliation(
 	ctx context.Context,
 	a api.API,
 	identifier string,
+	apiEnvironment string,
 ) (kubernetesCluster, error) {
 	return awaitKubernetesClusterReconciliationWithPollInterval(
 		ctx,
 		a,
 		identifier,
+		apiEnvironment,
 		kubernetesReconciliationPollInterval,
 	)
 }
@@ -293,12 +347,13 @@ func awaitKubernetesClusterReconciliationWithPollInterval(
 	ctx context.Context,
 	a api.API,
 	identifier string,
+	apiEnvironment string,
 	pollInterval time.Duration,
 ) (kubernetesCluster, error) {
 	lastState := ""
 
 	for {
-		cluster, err := getKubernetesCluster(ctx, a, identifier)
+		cluster, err := getKubernetesCluster(ctx, a, identifier, apiEnvironment)
 		if err != nil {
 			return cluster, err
 		}
@@ -325,9 +380,10 @@ func awaitKubernetesClusterDeletion(
 	ctx context.Context,
 	a api.API,
 	identifier string,
+	apiEnvironment string,
 ) error {
 	for {
-		_, err := getKubernetesCluster(ctx, a, identifier)
+		_, err := getKubernetesCluster(ctx, a, identifier, apiEnvironment)
 		if err != nil {
 			if api.IgnoreNotFound(err) == nil {
 				return nil
@@ -343,8 +399,8 @@ func awaitKubernetesClusterDeletion(
 	}
 }
 
-func getKubernetesCluster(ctx context.Context, a api.API, identifier string) (kubernetesCluster, error) {
-	cluster := kubernetesCluster{Identifier: identifier}
+func getKubernetesCluster(ctx context.Context, a api.API, identifier, apiEnvironment string) (kubernetesCluster, error) {
+	cluster := kubernetesCluster{Identifier: identifier, apiEnvironment: apiEnvironment}
 	if err := a.Get(ctx, &cluster); err != nil {
 		return cluster, err
 	}

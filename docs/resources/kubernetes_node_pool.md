@@ -59,6 +59,7 @@ resource "anxcloud_kubernetes_node_pool" "example" {
 
 - `additional_disks` (Block List, Max: 10) Additional disks attached to each node. (see [below for nested schema](#nestedblock--additional_disks))
 - `annotations` (String) Kubernetes annotations separated by line breaks.
+- `api_environment` (String) Kubernetes service environment. Valid values are `prod`, `stage`, and `dev`; defaults to `prod`. Use the same value for a cluster and its node pools and kubeconfigs. For managed resources, changing it recreates the resource because it selects a different API endpoint.
 - `autoscaler_enabled` (Boolean) Enable automatic node count adjustment.
 - `autoscaler_max_nodes` (Number) Maximum node count used by the autoscaler.
 - `autoscaler_min_nodes` (Number) Minimum node count used by the autoscaler.

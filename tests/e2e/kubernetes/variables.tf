@@ -50,6 +50,17 @@ variable "kubernetes_version" {
   default     = "1.35"
 }
 
+variable "kubernetes_api_environment" {
+  type        = string
+  description = "Kubernetes service environment used by the cluster, node pool, and kubeconfig resources."
+  default     = "prod"
+
+  validation {
+    condition     = contains(["prod", "stage", "dev"], var.kubernetes_api_environment)
+    error_message = "kubernetes_api_environment must be prod, stage, or dev."
+  }
+}
+
 variable "external_ip_families" {
   type        = string
   description = "External cluster IP families."

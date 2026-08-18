@@ -2,15 +2,17 @@ package anxcloud
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"go.anx.io/go-anxcloud/pkg/api"
-	kubernetesv1 "go.anx.io/go-anxcloud/pkg/apis/kubernetes/v1"
 	"k8s.io/client-go/tools/clientcmd"
 )
+
+const kubernetesKubeconfigPollInterval = 5 * time.Second
 
 func resourceKubernetesKubeconfig() *schema.Resource {
 	return &schema.Resource{
@@ -40,7 +42,12 @@ func resourceKubernetesKubeconfigCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceKubernetesKubeconfigRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	rawKubeconfig, err := kubernetesv1.GetKubeConfig(ctx, apiFromProviderConfig(m), d.Id())
+	rawKubeconfig, err := getKubernetesKubeconfig(
+		ctx,
+		apiFromProviderConfig(m),
+		d.Id(),
+		d.Get("api_environment").(string),
+	)
 	if err != nil {
 		return diag.Errorf("failed requesting kubeconfig: %s", err)
 	}
@@ -72,9 +79,49 @@ func resourceKubernetesKubeconfigRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceKubernetesKubeconfigDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	if err := kubernetesv1.RemoveKubeConfig(ctx, apiFromProviderConfig(m), d.Id()); api.IgnoreNotFound(err) != nil {
+	request := kubernetesKubeconfigRequest{
+		Cluster:        d.Id(),
+		apiEnvironment: d.Get("api_environment").(string),
+	}
+	if err := apiFromProviderConfig(m).Destroy(ctx, &request); api.IgnoreNotFound(err) != nil {
 		return diag.Errorf("failed deleting kubeconfig: %s", err)
 	}
 
 	return nil
+}
+
+func getKubernetesKubeconfig(ctx context.Context, a api.API, clusterID, apiEnvironment string) (string, error) {
+	ticker := time.NewTicker(kubernetesKubeconfigPollInterval)
+	defer ticker.Stop()
+
+	kubeconfigRequested := false
+	for {
+		cluster := kubernetesKubeconfigCluster{
+			Identifier:     clusterID,
+			apiEnvironment: apiEnvironment,
+		}
+		if err := a.Get(ctx, &cluster); err != nil {
+			return "", fmt.Errorf("failed to get cluster: %w", err)
+		}
+		if cluster.KubeConfig != nil && *cluster.KubeConfig != "" {
+			return *cluster.KubeConfig, nil
+		}
+
+		if !kubeconfigRequested {
+			request := kubernetesKubeconfigRequest{
+				Cluster:        clusterID,
+				apiEnvironment: apiEnvironment,
+			}
+			if err := a.Create(ctx, &request); err != nil {
+				return "", fmt.Errorf("failed to request kubeconfig: %w", err)
+			}
+			kubeconfigRequested = true
+		}
+
+		select {
+		case <-ctx.Done():
+			return "", ctx.Err()
+		case <-ticker.C:
+		}
+	}
 }

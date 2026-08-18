@@ -27,6 +27,14 @@ terraform output
 
 With `wait_until_ready = true`, provider logs report cluster state transitions and continue waiting through intermediate states, including `Error`, until state `0` is reached.
 
+The Kubernetes API defaults to production. To exercise another service environment, pass the same E2E variable through all three provider resources:
+
+```sh
+terraform apply -var-file=terraform.tfvars -var='kubernetes_api_environment=stage'
+```
+
+Supported values are `prod`, `stage`, and `dev`.
+
 ## Verify the workload and load balancer
 
 The Helm release installs only Traefik from `oci://anx-cr.io/se/charts/ks-generic-helmchart`; every other component in that umbrella chart remains disabled. Terraform also creates the `anexia` namespace, the token Secret, and an nginx smoke application exposed by a hostless Ingress.

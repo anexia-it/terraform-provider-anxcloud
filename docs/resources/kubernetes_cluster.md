@@ -126,14 +126,15 @@ resource "anxcloud_kubernetes_cluster" "foo" {
 
 ### Optional
 
+- `api_environment` (String) Kubernetes service environment. Valid values are `prod`, `stage`, and `dev`; defaults to `prod`. Use the same value for a cluster and its node pools and kubeconfigs. For managed resources, changing it recreates the resource because it selects a different API endpoint.
 - `enable_autoscaling` (Boolean) Enable autoscaling for this cluster. Defaults to false if unset.
 			
 -> You will need to explicitly configure your node pools for autoscaling. Please check the provided [autoscaling documentation](https://engine.anexia-it.com/docs/en/module/kubernetes/user-guide/autoscaling) for details.
 - `enable_lbaas` (Boolean) If enabled, Service VMs are set up as LBaaS hosts enabling K8s services of type LoadBalancer.
 - `enable_nat_gateways` (Boolean) If enabled, Service VMs are configured as NAT gateways connecting the internal cluster network to the internet.
-- `external_ipv4_prefix` (String) External IPv4 prefix.
-- `external_ipv6_prefix` (String) External IPv6 prefix.
-- `internal_ipv4_prefix` (String) Internal IPv4 prefix.
+- `external_ipv4_prefix` (String) External IPv4 network prefix identifier. Use the `id` exported by an `anxcloud_network_prefix` resource or data source.
+- `external_ipv6_prefix` (String) External IPv6 network prefix identifier. Use the `id` exported by an `anxcloud_network_prefix` resource or data source.
+- `internal_ipv4_prefix` (String) Internal IPv4 network prefix identifier. Use the `id` exported by an `anxcloud_network_prefix` resource or data source.
 - `needs_service_vms` (Boolean) Deploy Service VMs providing load balancers and outbound masquerade.
 - `apiserver_allowlist` ([]String) Limits access to the kubernetes API server to the given CIDRs.
 - `cni_plugin` (String) Container Network Interface plugin. Currently only Canal is supported.

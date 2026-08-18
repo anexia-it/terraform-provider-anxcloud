@@ -6,7 +6,7 @@ HOSTNAME=hashicorp.com
 NAMESPACE=anexia-it
 NAME=anxcloud
 BINARY=terraform-provider-${NAME}
-VERSION=0.3.1
+VERSION=0.11.1
 OS_ARCH?=$(shell go env GOOS)_$(shell go env GOARCH)
 GOLDFLAGS= -s -X github.com/anexia-it/terraform-provider-anxcloud.version=$(VERSION)
 

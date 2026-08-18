@@ -32,6 +32,7 @@ resource "local_file" "kubeconfig" {
 
 ### Optional
 
+- `api_environment` (String) Kubernetes service environment. Valid values are `prod`, `stage`, and `dev`; defaults to `prod`. Use the same value for a cluster and its node pools and kubeconfigs. For managed resources, changing it recreates the resource because it selects a different API endpoint.
 - `id` (String) Cluster identifier.
 - `name` (String) Cluster name.
 
@@ -46,9 +47,9 @@ resource "local_file" "kubeconfig" {
 - `enable_nat_gateways` (Boolean) If enabled, Service VMs are configured as NAT gateways connecting the internal cluster network to the internet.
 - `enable_oidc_authentication` (Boolean) Enable OIDC authentication for the Kubernetes cluster.
 - `external_ip_families` (String) IP families used for external networking. Valid values are `IPv4` and `Dualstack`.
-- `external_ipv4_prefix` (String) External IPv4 prefix.
-- `external_ipv6_prefix` (String) External IPv6 prefix.
-- `internal_ipv4_prefix` (String) Internal IPv4 prefix.
+- `external_ipv4_prefix` (String) External IPv4 network prefix identifier. Use the `id` exported by an `anxcloud_network_prefix` resource or data source.
+- `external_ipv6_prefix` (String) External IPv6 network prefix identifier. Use the `id` exported by an `anxcloud_network_prefix` resource or data source.
+- `internal_ipv4_prefix` (String) Internal IPv4 network prefix identifier. Use the `id` exported by an `anxcloud_network_prefix` resource or data source.
 - `location` (String) Cluster location.
 - `maintenance_window_duration` (String) Maintenance window duration, for example `2h`, `30m`, or `15h30m`.
 - `maintenance_window_start_time` (String) Maintenance window start in UTC, for example `Tue 22:00` or `22:00`.

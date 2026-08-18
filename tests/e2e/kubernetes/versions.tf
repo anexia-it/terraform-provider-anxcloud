@@ -4,7 +4,7 @@ terraform {
   required_providers {
     anxcloud = {
       source  = "hashicorp.com/anexia-it/anxcloud"
-      version = "0.3.1"
+      version = "0.11.1"
     }
     helm = {
       source  = "hashicorp/helm"

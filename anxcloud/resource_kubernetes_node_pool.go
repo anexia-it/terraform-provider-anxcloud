@@ -33,8 +33,12 @@ func resourceKubernetesNodePool() *schema.Resource {
 
 func resourceKubernetesNodePoolCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	a := apiFromProviderConfig(m)
+	apiEnvironment := d.Get("api_environment").(string)
 
-	nodePool := kubernetesNodePool{requestDefinition: kubernetesNodePoolCreateDefinition(d)}
+	nodePool := kubernetesNodePool{
+		requestDefinition: kubernetesNodePoolCreateDefinition(d),
+		apiEnvironment:    apiEnvironment,
+	}
 	if err := a.Create(ctx, &nodePool); err != nil {
 		return diag.Errorf("failed to create Kubernetes node pool: %s", err)
 	}
@@ -42,7 +46,7 @@ func resourceKubernetesNodePoolCreate(ctx context.Context, d *schema.ResourceDat
 	d.SetId(nodePool.Identifier)
 
 	var err error
-	nodePool, err = awaitKubernetesNodePoolReconciliation(ctx, a, nodePool.Identifier)
+	nodePool, err = awaitKubernetesNodePoolReconciliation(ctx, a, nodePool.Identifier, apiEnvironment)
 	if err != nil {
 		return diag.Errorf("failed awaiting Kubernetes node pool reconciliation: %s", err)
 	}
@@ -53,7 +57,7 @@ func resourceKubernetesNodePoolCreate(ctx context.Context, d *schema.ResourceDat
 func resourceKubernetesNodePoolRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	a := apiFromProviderConfig(m)
 
-	nodePool, err := getKubernetesNodePool(ctx, a, d.Id())
+	nodePool, err := getKubernetesNodePool(ctx, a, d.Id(), d.Get("api_environment").(string))
 	if err != nil {
 		if api.IgnoreNotFound(err) == nil {
 			d.SetId("")
@@ -69,18 +73,19 @@ func resourceKubernetesNodePoolRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceKubernetesNodePoolUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	a := apiFromProviderConfig(m)
+	apiEnvironment := d.Get("api_environment").(string)
 	definition := kubernetesNodePoolUpdateDefinition(d)
 	if len(definition) == 0 {
 		return resourceKubernetesNodePoolRead(ctx, d, m)
 	}
 
-	nodePool := kubernetesNodePool{requestDefinition: definition}
+	nodePool := kubernetesNodePool{requestDefinition: definition, apiEnvironment: apiEnvironment}
 	nodePool.Identifier = d.Id()
 	if err := a.Update(ctx, &nodePool); err != nil {
 		return diag.Errorf("failed to update Kubernetes node pool: %s", err)
 	}
 
-	nodePool, err := awaitKubernetesNodePoolReconciliation(ctx, a, d.Id())
+	nodePool, err := awaitKubernetesNodePoolReconciliation(ctx, a, d.Id(), apiEnvironment)
 	if err != nil {
 		return diag.Errorf("failed awaiting Kubernetes node pool reconciliation: %s", err)
 	}
@@ -90,14 +95,15 @@ func resourceKubernetesNodePoolUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceKubernetesNodePoolDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	a := apiFromProviderConfig(m)
-	nodePool := kubernetesNodePool{}
+	apiEnvironment := d.Get("api_environment").(string)
+	nodePool := kubernetesNodePool{apiEnvironment: apiEnvironment}
 	nodePool.Identifier = d.Id()
 
 	if err := a.Destroy(ctx, &nodePool); err != nil && api.IgnoreNotFound(err) != nil {
 		return diag.Errorf("failed deleting Kubernetes node pool: %s", err)
 	}
 
-	if err := awaitKubernetesNodePoolDeletion(ctx, a, d.Id()); err != nil {
+	if err := awaitKubernetesNodePoolDeletion(ctx, a, d.Id(), apiEnvironment); err != nil {
 		return diag.Errorf("failed awaiting Kubernetes node pool deletion: %s", err)
 	}
 
@@ -293,9 +299,10 @@ func awaitKubernetesNodePoolReconciliation(
 	ctx context.Context,
 	a api.API,
 	identifier string,
+	apiEnvironment string,
 ) (kubernetesNodePool, error) {
 	for {
-		nodePool, err := getKubernetesNodePool(ctx, a, identifier)
+		nodePool, err := getKubernetesNodePool(ctx, a, identifier, apiEnvironment)
 		if err != nil {
 			return nodePool, err
 		}
@@ -319,9 +326,10 @@ func awaitKubernetesNodePoolDeletion(
 	ctx context.Context,
 	a api.API,
 	identifier string,
+	apiEnvironment string,
 ) error {
 	for {
-		_, err := getKubernetesNodePool(ctx, a, identifier)
+		_, err := getKubernetesNodePool(ctx, a, identifier, apiEnvironment)
 		if err != nil {
 			if api.IgnoreNotFound(err) == nil {
 				return nil
@@ -337,8 +345,8 @@ func awaitKubernetesNodePoolDeletion(
 	}
 }
 
-func getKubernetesNodePool(ctx context.Context, a api.API, identifier string) (kubernetesNodePool, error) {
-	nodePool := kubernetesNodePool{}
+func getKubernetesNodePool(ctx context.Context, a api.API, identifier, apiEnvironment string) (kubernetesNodePool, error) {
+	nodePool := kubernetesNodePool{apiEnvironment: apiEnvironment}
 	nodePool.Identifier = identifier
 	if err := a.Get(ctx, &nodePool); err != nil {
 		return nodePool, err

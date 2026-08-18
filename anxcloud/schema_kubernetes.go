@@ -9,6 +9,7 @@ import (
 
 func schemaKubernetesCluster() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"api_environment": schemaKubernetesAPIEnvironment(),
 		"id": {
 			Type:        schema.TypeString,
 			Computed:    true,
@@ -52,19 +53,19 @@ func schemaKubernetesCluster() map[string]*schema.Schema {
 		},
 		"internal_ipv4_prefix": {
 			Type:        schema.TypeString,
-			Description: "Internal IPv4 prefix.",
+			Description: "Internal IPv4 network prefix identifier. Use the `id` exported by an `anxcloud_network_prefix` resource or data source.",
 			Optional:    true,
 			Computed:    true,
 		},
 		"external_ipv4_prefix": {
 			Type:        schema.TypeString,
-			Description: "External IPv4 prefix.",
+			Description: "External IPv4 network prefix identifier. Use the `id` exported by an `anxcloud_network_prefix` resource or data source.",
 			Optional:    true,
 			Computed:    true,
 		},
 		"external_ipv6_prefix": {
 			Type:        schema.TypeString,
-			Description: "External IPv6 prefix.",
+			Description: "External IPv6 network prefix identifier. Use the `id` exported by an `anxcloud_network_prefix` resource or data source.",
 			Optional:    true,
 			Computed:    true,
 		},
@@ -175,6 +176,7 @@ Enable autoscaling for this cluster. Defaults to false if unset.
 
 func schemaKubernetesNodePool() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"api_environment": schemaKubernetesAPIEnvironment(),
 		"id": {
 			Type:        schema.TypeString,
 			Computed:    true,
@@ -397,6 +399,7 @@ var validateKubernetesDiskPerformanceType = validation.StringInSlice([]string{
 
 func schemaKubernetesKubeConfig() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"api_environment": schemaKubernetesAPIEnvironment(),
 		"cluster": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -428,5 +431,20 @@ func schemaKubernetesKubeConfig() map[string]*schema.Schema {
 			Description: "Raw kubeconfig.",
 			Sensitive:   true,
 		},
+	}
+}
+
+func schemaKubernetesAPIEnvironment() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Default:     kubernetesAPIEnvironmentProd,
+		ForceNew:    true,
+		Description: "Kubernetes service environment. Valid values are `prod`, `stage`, and `dev`; defaults to `prod`. Use the same value for a cluster and its node pools and kubeconfigs. For managed resources, changing it recreates the resource because it selects a different API endpoint.",
+		ValidateFunc: validation.StringInSlice([]string{
+			kubernetesAPIEnvironmentProd,
+			kubernetesAPIEnvironmentStage,
+			kubernetesAPIEnvironmentDev,
+		}, false),
 	}
 }

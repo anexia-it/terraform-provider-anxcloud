@@ -71,6 +71,7 @@ resource "kubernetes_namespace" "example" {
 
 ### Optional
 
+- `api_environment` (String) Kubernetes service environment. Valid values are `prod`, `stage`, and `dev`; defaults to `prod`. Use the same value for a cluster and its node pools and kubeconfigs. For managed resources, changing it recreates the resource because it selects a different API endpoint.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
@@ -89,4 +90,3 @@ Optional:
 - `create` (String)
 - `delete` (String)
 - `read` (String)
-

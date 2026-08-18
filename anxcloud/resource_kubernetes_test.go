@@ -32,8 +32,8 @@ func TestKubernetesResourcesExposeUpdatesAndCurrentFields(t *testing.T) {
 		assert.Contains(t, clusterResource.Schema, field)
 	}
 	for fieldName, fieldSchema := range clusterResource.Schema {
-		if fieldName == "name" {
-			assert.True(t, fieldSchema.ForceNew, "name must be the only cluster replacement field")
+		if fieldName == "name" || fieldName == "api_environment" {
+			assert.True(t, fieldSchema.ForceNew, "%s identifies a cluster in a specific Kubernetes service", fieldName)
 			continue
 		}
 		assert.False(t, fieldSchema.ForceNew, "%s must be updated without replacing the cluster", fieldName)
@@ -74,6 +74,27 @@ func TestKubernetesResourcesExposeUpdatesAndCurrentFields(t *testing.T) {
 	_, errors = nodePoolResource.Schema["sync_source"].ValidateFunc("Cluster", "sync_source")
 	assert.Empty(t, errors)
 	assert.Equal(t, "cluster", nodePoolResource.Schema["sync_source"].StateFunc("Cluster"))
+
+	for _, resource := range []*schema.Resource{
+		clusterResource,
+		nodePoolResource,
+		resourceKubernetesKubeconfig(),
+	} {
+		field := resource.Schema["api_environment"]
+		require.NotNil(t, field)
+		assert.Equal(t, kubernetesAPIEnvironmentProd, field.Default)
+		assert.True(t, field.ForceNew)
+		for _, environment := range []string{
+			kubernetesAPIEnvironmentProd,
+			kubernetesAPIEnvironmentStage,
+			kubernetesAPIEnvironmentDev,
+		} {
+			_, validationErrors := field.ValidateFunc(environment, "api_environment")
+			assert.Empty(t, validationErrors)
+		}
+		_, validationErrors := field.ValidateFunc("testing", "api_environment")
+		assert.NotEmpty(t, validationErrors)
+	}
 }
 
 func TestKubernetesClusterCreateDefinitionExcludesReadOnlyFields(t *testing.T) {
@@ -90,6 +111,89 @@ func TestKubernetesClusterCreateDefinitionExcludesReadOnlyFields(t *testing.T) {
 	assert.NotContains(t, definition, "backend_name")
 	assert.NotContains(t, definition, "state_text")
 	assert.NotContains(t, definition, "wait_until_ready")
+	assert.NotContains(t, definition, "api_environment")
+}
+
+func TestKubernetesAPIEnvironmentPaths(t *testing.T) {
+	tests := []struct {
+		environment string
+		service     string
+	}{
+		{environment: kubernetesAPIEnvironmentProd, service: "kubernetes"},
+		{environment: kubernetesAPIEnvironmentStage, service: "kubernetes-stage"},
+		{environment: kubernetesAPIEnvironmentDev, service: "kubernetes-dev"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.environment, func(t *testing.T) {
+			clusterURL, err := (&kubernetesCluster{apiEnvironment: test.environment}).EndpointURL(context.Background())
+			require.NoError(t, err)
+			assert.Equal(t, "/api/"+test.service+"/v2/cluster", clusterURL.Path)
+
+			nodePoolURL, err := (&kubernetesNodePool{apiEnvironment: test.environment}).EndpointURL(context.Background())
+			require.NoError(t, err)
+			assert.Equal(t, "/api/"+test.service+"/v2/node_pool", nodePoolURL.Path)
+
+			kubeconfigClusterURL, err := (&kubernetesKubeconfigCluster{apiEnvironment: test.environment}).EndpointURL(context.Background())
+			require.NoError(t, err)
+			assert.Equal(t, "/api/"+test.service+"/v1/cluster.json", kubeconfigClusterURL.Path)
+		})
+	}
+}
+
+func TestKubernetesKubeconfigEnvironmentRequestContract(t *testing.T) {
+	requestCount := 0
+	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
+		requestCount++
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Zero(t, r.ContentLength)
+		switch requestCount {
+		case 1:
+			assert.Equal(t,
+				kubernetesAPIPath(kubernetesAPIEnvironmentStage, 1)+"/cluster.json/cluster-id/rule/"+requestKubeConfigRuleIdentifier,
+				r.URL.Path,
+			)
+		case 2:
+			assert.Equal(t,
+				kubernetesAPIPath(kubernetesAPIEnvironmentStage, 1)+"/cluster.json/cluster-id/rule/"+removeKubeConfigRuleIdentifier,
+				r.URL.Path,
+			)
+		default:
+			t.Fatalf("unexpected request %d", requestCount)
+		}
+		return kubernetesTestResponse(t, http.StatusOK, map[string]any{}), nil
+	})
+
+	request := kubernetesKubeconfigRequest{
+		Cluster:        "cluster-id",
+		apiEnvironment: kubernetesAPIEnvironmentStage,
+	}
+	require.NoError(t, provider.api.Create(context.Background(), &request))
+	require.NoError(t, provider.api.Destroy(context.Background(), &request))
+	assert.Equal(t, 2, requestCount)
+}
+
+func TestGetKubernetesKubeconfigUsesSelectedEnvironment(t *testing.T) {
+	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t,
+			kubernetesAPIPath(kubernetesAPIEnvironmentDev, 1)+"/cluster.json/cluster-id",
+			r.URL.Path,
+		)
+		return kubernetesTestResponse(t, http.StatusOK, map[string]any{
+			"identifier": "cluster-id",
+			"kubeconfig": "test-kubeconfig",
+		}), nil
+	})
+
+	raw, err := getKubernetesKubeconfig(
+		context.Background(),
+		provider.api,
+		"cluster-id",
+		kubernetesAPIEnvironmentDev,
+	)
+	require.NoError(t, err)
+	assert.Equal(t, "test-kubeconfig", raw)
 }
 
 func TestKubernetesClusterCreateUpdateDefinitionExcludesUnconfiguredFields(t *testing.T) {
@@ -110,6 +214,54 @@ func TestKubernetesClusterCreateUpdateDefinitionExcludesUnconfiguredFields(t *te
 	} {
 		assert.NotContains(t, definition, field)
 	}
+}
+
+func TestKubernetesClusterOIDCClaimsAreNullable(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, schemaKubernetesCluster(), map[string]any{
+		"name":                       "test-cluster",
+		"location":                   "location-id",
+		"enable_oidc_authentication": false,
+	})
+
+	configuredFields := map[string]bool{
+		"enable_oidc_authentication": true,
+	}
+	definition := kubernetesClusterCreateUpdateDefinitionWithConfiguredFields(d, func(field string) bool {
+		return configuredFields[field]
+	})
+
+	assert.Contains(t, definition, "oidc_groups_claim")
+	assert.Nil(t, definition["oidc_groups_claim"])
+	assert.Contains(t, definition, "oidc_username_claim")
+	assert.Nil(t, definition["oidc_username_claim"])
+	encodedDefinition, err := json.Marshal(definition)
+	require.NoError(t, err)
+	assert.JSONEq(t, `{
+		"enable_oidc_authentication": false,
+		"oidc_groups_claim": null,
+		"oidc_username_claim": null
+	}`, string(encodedDefinition))
+
+	d = schema.TestResourceDataRaw(t, schemaKubernetesCluster(), map[string]any{
+		"name":                "test-cluster",
+		"location":            "location-id",
+		"oidc_groups_claim":   "groups",
+		"oidc_username_claim": "preferred_username",
+	})
+	configuredFields = map[string]bool{
+		"oidc_groups_claim":   true,
+		"oidc_username_claim": true,
+	}
+	definition = kubernetesClusterCreateUpdateDefinitionWithConfiguredFields(d, func(field string) bool {
+		return configuredFields[field]
+	})
+
+	assert.Equal(t, "groups", definition["oidc_groups_claim"])
+	assert.Equal(t, "preferred_username", definition["oidc_username_claim"])
+
+	d = schema.TestResourceDataRaw(t, schemaKubernetesCluster(), map[string]any{})
+	assert.Nil(t, kubernetesNullableOIDCClaim(d, "oidc_groups_claim"))
+	assert.Nil(t, kubernetesNullableOIDCClaim(d, "oidc_username_claim"))
 }
 
 func TestKubernetesClusterFieldsUseCorrectCreateAndPatchRequests(t *testing.T) {
@@ -138,7 +290,7 @@ func TestKubernetesClusterFieldsUseCorrectCreateAndPatchRequests(t *testing.T) {
 func TestKubernetesClusterReadPreservesFailedResource(t *testing.T) {
 	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
 		assert.Equal(t, http.MethodGet, r.Method)
-		assert.Equal(t, "/api/kubernetes/v2/cluster/cluster-id", r.URL.Path)
+		assert.Equal(t, kubernetesAPIPath(kubernetesAPIEnvironmentProd, 2)+"/cluster/cluster-id", r.URL.Path)
 		return kubernetesTestResponse(t, http.StatusOK, map[string]any{
 			"identifier": "cluster-id",
 			"name":       "failed-cluster",
@@ -170,7 +322,7 @@ func TestKubernetesClusterCreateDoesNotWaitByDefault(t *testing.T) {
 	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
 		requestCount++
 		require.Equal(t, http.MethodPost, r.Method)
-		require.Equal(t, "/api/kubernetes/v2/cluster", r.URL.Path)
+		require.Equal(t, kubernetesAPIPath(kubernetesAPIEnvironmentProd, 2)+"/cluster", r.URL.Path)
 		var body map[string]any
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
 		assert.NotContains(t, body, "state")
@@ -252,6 +404,7 @@ func TestKubernetesNodePoolCreateDefinitionIncludesCompleteConfiguration(t *test
 	require.Len(t, definition["networks"], 1)
 	assert.Equal(t, "vlan-id", definition["networks"].([]map[string]any)[0]["vlan"])
 	assert.NotContains(t, definition, "state")
+	assert.NotContains(t, definition, "api_environment")
 }
 
 func TestAwaitKubernetesClusterReconciliationIgnoresIntermediateStates(t *testing.T) {
@@ -263,7 +416,7 @@ func TestAwaitKubernetesClusterReconciliationIgnoresIntermediateStates(t *testin
 	requestCount := 0
 	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
 		require.Equal(t, http.MethodGet, r.Method)
-		require.Equal(t, "/api/kubernetes/v2/cluster/cluster-id", r.URL.Path)
+		require.Equal(t, kubernetesAPIPath(kubernetesAPIEnvironmentProd, 2)+"/cluster/cluster-id", r.URL.Path)
 		require.Less(t, requestCount, len(states))
 
 		state := states[requestCount]
@@ -278,6 +431,7 @@ func TestAwaitKubernetesClusterReconciliationIgnoresIntermediateStates(t *testin
 		context.Background(),
 		provider.api,
 		"cluster-id",
+		kubernetesAPIEnvironmentProd,
 		0,
 	)
 
@@ -290,7 +444,7 @@ func TestKubernetesClusterDeleteSkipsQueuedRulesAndWaitsForNotFound(t *testing.T
 	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
 		switch r.Method {
 		case http.MethodDelete:
-			assert.Equal(t, "/api/kubernetes/v2/cluster/cluster-id", r.URL.Path)
+			assert.Equal(t, kubernetesAPIPath(kubernetesAPIEnvironmentProd, 2)+"/cluster/cluster-id", r.URL.Path)
 			assert.Equal(t, "true", r.URL.Query().Get("skip_queued_automation_rules"))
 			return kubernetesTestResponse(t, http.StatusNoContent, nil), nil
 		case http.MethodGet:
@@ -320,7 +474,7 @@ func TestKubernetesClusterDeleteSkipsQueuedRulesAndWaitsForNotFound(t *testing.T
 func TestKubernetesPatchPreservesExplicitZeroValues(t *testing.T) {
 	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
 		assert.Equal(t, http.MethodPatch, r.Method)
-		assert.Equal(t, "/api/kubernetes/v2/node_pool/node-pool-id", r.URL.Path)
+		assert.Equal(t, kubernetesAPIPath(kubernetesAPIEnvironmentProd, 2)+"/node_pool/node-pool-id", r.URL.Path)
 
 		var body map[string]any
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
@@ -355,7 +509,7 @@ func TestKubernetesNodePoolSDKRequestContract(t *testing.T) {
 		switch requestCount {
 		case 1:
 			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, "/api/kubernetes/v2/node_pool", r.URL.Path)
+			assert.Equal(t, kubernetesAPIPath(kubernetesAPIEnvironmentProd, 2)+"/node_pool", r.URL.Path)
 			var body map[string]any
 			require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
 			assert.Equal(t, "test-node-pool", body["name"])
@@ -371,14 +525,14 @@ func TestKubernetesNodePoolSDKRequestContract(t *testing.T) {
 			}), nil
 		case 2:
 			assert.Equal(t, http.MethodGet, r.Method)
-			assert.Equal(t, "/api/kubernetes/v2/node_pool/node-pool-id", r.URL.Path)
+			assert.Equal(t, kubernetesAPIPath(kubernetesAPIEnvironmentProd, 2)+"/node_pool/node-pool-id", r.URL.Path)
 			return kubernetesTestResponse(t, http.StatusOK, map[string]any{
 				"identifier": "node-pool-id",
 				"name":       "test-node-pool",
 			}), nil
 		case 3:
 			assert.Equal(t, http.MethodDelete, r.Method)
-			assert.Equal(t, "/api/kubernetes/v2/node_pool/node-pool-id", r.URL.Path)
+			assert.Equal(t, kubernetesAPIPath(kubernetesAPIEnvironmentProd, 2)+"/node_pool/node-pool-id", r.URL.Path)
 			assert.Equal(t, "true", r.URL.Query().Get("skip_queued_automation_rules"))
 			return kubernetesTestResponse(t, http.StatusNoContent, nil), nil
 		default:
@@ -398,7 +552,7 @@ func TestKubernetesNodePoolSDKRequestContract(t *testing.T) {
 	require.NoError(t, provider.api.Create(context.Background(), &nodePool))
 	assert.Equal(t, "node-pool-id", nodePool.Identifier)
 
-	loaded, err := getKubernetesNodePool(context.Background(), provider.api, nodePool.Identifier)
+	loaded, err := getKubernetesNodePool(context.Background(), provider.api, nodePool.Identifier, kubernetesAPIEnvironmentProd)
 	require.NoError(t, err)
 	assert.Equal(t, "test-node-pool", loaded.Name)
 
@@ -409,7 +563,7 @@ func TestKubernetesNodePoolSDKRequestContract(t *testing.T) {
 func TestKubernetesClusterUpdateUsesV2Patch(t *testing.T) {
 	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
 		assert.Equal(t, http.MethodPatch, r.Method)
-		assert.Equal(t, "/api/kubernetes/v2/cluster/cluster-id", r.URL.Path)
+		assert.Equal(t, kubernetesAPIPath(kubernetesAPIEnvironmentProd, 2)+"/cluster/cluster-id", r.URL.Path)
 
 		var body map[string]any
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
@@ -441,7 +595,7 @@ func TestKubernetesClusterUpdateUsesV2Patch(t *testing.T) {
 func TestKubernetesClusterUpdateAcceptsErrorState(t *testing.T) {
 	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
 		assert.Equal(t, http.MethodPatch, r.Method)
-		assert.Equal(t, "/api/kubernetes/v2/cluster/cluster-id", r.URL.Path)
+		assert.Equal(t, kubernetesAPIPath(kubernetesAPIEnvironmentProd, 2)+"/cluster/cluster-id", r.URL.Path)
 
 		var body map[string]any
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))

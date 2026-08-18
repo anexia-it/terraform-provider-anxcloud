@@ -37,6 +37,8 @@ func TestNetworkPrefixDataSourceSchema(t *testing.T) {
 
 	assert.ElementsMatch(t, []string{"id", "cidr"}, dataSource.Schema["id"].ExactlyOneOf)
 	assert.ElementsMatch(t, []string{"id", "cidr"}, dataSource.Schema["cidr"].ExactlyOneOf)
+	assert.Contains(t, dataSource.Schema["id"].Description, "identifier")
+	assert.Contains(t, dataSource.Description, "resulting `.id`")
 }
 
 func TestNetworkPrefixDataSourceReadByCIDR(t *testing.T) {
@@ -93,6 +95,7 @@ func TestNetworkPrefixDataSourceReadByCIDR(t *testing.T) {
 
 	require.False(t, diags.HasError())
 	assert.Equal(t, prefixID, data.Id())
+	assert.Equal(t, prefixID, data.Get("id"))
 	assert.Equal(t, cidr, data.Get("cidr"))
 	assert.Equal(t, "location-id", data.Get("location_id"))
 	assert.Equal(t, "vlan-id", data.Get("vlan_id"))
