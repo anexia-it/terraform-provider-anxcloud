@@ -26,7 +26,7 @@ terraform output
 
 With `wait_until_ready = true`, provider logs report cluster state transitions and continue waiting through intermediate states, including `Error`, until state `0` is reached.
 
-The Kubernetes API defaults to production. To exercise another service environment, pass the same E2E variable through all three provider resources:
+The Kubernetes API defaults to production. To exercise another service environment, pass the same E2E variable through the cluster and node-pool resources:
 
 ```sh
 terraform apply -var-file=terraform.tfvars -var='kubernetes_api_environment=stage'
@@ -34,12 +34,15 @@ terraform apply -var-file=terraform.tfvars -var='kubernetes_api_environment=stag
 
 Supported values are `prod`, `stage`, and `dev`.
 
-For Kubernetes-level diagnostics, write the sensitive kubeconfig to a temporary file and inspect the nodes:
+If this E2E directory was applied before the kubeconfig workload was split out,
+remove its obsolete kubeconfig entry from local Terraform state once:
 
 ```sh
-terraform output -raw cluster-admin-config > /tmp/anxcloud-e2e-kubeconfig
-KUBECONFIG=/tmp/anxcloud-e2e-kubeconfig kubectl get nodes
+terraform state rm 'anxcloud_kubernetes_kubeconfig.cluster-admin'
 ```
+
+This only forgets the old Terraform state entry; it does not delete or change
+the cluster's kubeconfig in Anexia.
 
 ## Exercise in-place updates
 

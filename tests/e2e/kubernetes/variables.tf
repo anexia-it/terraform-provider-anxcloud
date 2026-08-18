@@ -52,7 +52,7 @@ variable "kubernetes_version" {
 
 variable "kubernetes_api_environment" {
   type        = string
-  description = "Kubernetes service environment used by the cluster, node pool, and kubeconfig resources."
+  description = "Kubernetes service environment used by the cluster and node-pool resources."
   default     = "prod"
 
   validation {

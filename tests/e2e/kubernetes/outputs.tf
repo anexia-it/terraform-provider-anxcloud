@@ -27,14 +27,3 @@ output "network" {
     external_ipv4_prefix = data.anxcloud_network_prefix.external_v4.id
   }
 }
-
-
-output "cluster-admin-config" {
-  value     = anxcloud_kubernetes_kubeconfig.cluster-admin.raw
-  sensitive = true
-}
-
-output "cluster-admin-token" {
-  value     = anxcloud_kubernetes_kubeconfig.cluster-admin.token
-  sensitive = true
-}

@@ -12,7 +12,6 @@ resource "anxcloud_kubernetes_cluster" "e2e" {
   enable_lbaas        = var.enable_lbaas
   enable_autoscaling  = false
 
-  # These explicitly configured fields exercise the post-create PATCH path.
   cni_plugin                 = "canal"
   external_ip_families       = var.external_ip_families
   enable_oidc_authentication = false
