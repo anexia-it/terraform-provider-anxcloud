@@ -36,7 +36,8 @@ resource "anxcloud_kubernetes_node_pool" "example" {
   }
 
   disk {
-    size_gib = 20
+    size_gib         = 20
+    performance_type = "ENT2"
   }
 }
 ```
