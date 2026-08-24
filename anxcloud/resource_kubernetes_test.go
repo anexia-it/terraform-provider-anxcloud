@@ -150,12 +150,12 @@ func TestKubernetesKubeconfigEnvironmentRequestContract(t *testing.T) {
 		switch requestCount {
 		case 1:
 			assert.Equal(t,
-				kubernetesAPIPath(kubernetesAPIEnvironmentStage, 2)+"/cluster.json/cluster-id/trigger/rotate_kubeconfig",
+				kubernetesAPIPath(kubernetesAPIEnvironmentStage, 2)+"/cluster/cluster-id/trigger/rotate_kubeconfig",
 				r.URL.Path,
 			)
 		case 2:
 			assert.Equal(t,
-				kubernetesAPIPath(kubernetesAPIEnvironmentStage, 2)+"/cluster.json/cluster-id/trigger/rotate_kubeconfig",
+				kubernetesAPIPath(kubernetesAPIEnvironmentStage, 2)+"/cluster/cluster-id/trigger/rotate_kubeconfig",
 				r.URL.Path,
 			)
 		default:
