@@ -21,6 +21,7 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 
 ### Changed
 
+* resource/anxcloud_kubernetes_cluster, resource/anxcloud_kubernetes_node_pool: document the recommended cluster wait behavior, Kubernetes version, and disk performance type in the examples
 * resource/anxcloud_dns_record: update records in place instead of recreating them; only `zone_name` changes trigger a replacement (@ProbstenHias)
 
 ### Fixed
