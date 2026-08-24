@@ -140,11 +140,18 @@ func resourceDNSRecordUpdate(ctx context.Context, d *schema.ResourceData, m inte
 	a := apiFromProviderConfig(m)
 
 	r := dnsRecordFromResourceData(d)
-	r.Identifier = d.Get("identifier").(string)
+	update := dnsRecordUpdate{
+		zoneName:         r.ZoneName,
+		recordIdentifier: d.Get("identifier").(string),
+		Name:             r.Name,
+		Type:             r.Type,
+		RData:            r.RData,
+		Region:           r.Region,
+		TTL:              r.TTL,
+		Comment:          r.Comment,
+	}
 
-	// the record identifier changes on update (new revision); DecodeAPIResponse of
-	// clouddnsv1.Record re-finds the record in the returned zone and sets the new identifier
-	if err := a.Update(ctx, &r); err != nil {
+	if err := a.Update(ctx, &update); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -372,4 +379,35 @@ func resourceDNSRecordCanonicalIdentifier(r clouddnsv1.Record) string {
 		r.Region,
 		fmt.Sprint(r.Immutable),
 	}, "_")
+}
+
+// dnsRecordUpdate keeps URL routing data out of the JSON request body. The
+// CloudDNS endpoint identifies the record through the URL and rejects an
+// identifier field in the update payload.
+type dnsRecordUpdate struct {
+	zoneName         string
+	recordIdentifier string
+
+	Name    string  `json:"name"`
+	Type    string  `json:"type"`
+	RData   string  `json:"rdata"`
+	Region  string  `json:"region"`
+	TTL     int     `json:"ttl"`
+	Comment *string `json:"comment,omitempty"`
+}
+
+func (u *dnsRecordUpdate) GetIdentifier(context.Context) (string, error) {
+	return u.recordIdentifier, nil
+}
+
+func (u *dnsRecordUpdate) EndpointURL(ctx context.Context) (*url.URL, error) {
+	op, err := types.OperationFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if op != types.OperationUpdate {
+		return nil, errors.New("helper resource 'dnsRecordUpdate' only supports Update operations")
+	}
+
+	return url.Parse(fmt.Sprintf("/api/clouddns/v1/zone.json/%s/records", u.zoneName))
 }
