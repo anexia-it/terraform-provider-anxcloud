@@ -24,11 +24,7 @@ data "anxcloud_vlan" "example" {
 resource "anxcloud_kubernetes_cluster" "example" {
   name                 = "example-cluster"
   location             = data.anxcloud_core_location.anx04.id
-  version              = "1.35"
   external_ip_families = "IPv4"
-
-  # Recommended: wait for cluster reconciliation to complete before Terraform returns.
-  wait_until_ready = true
 }
 
 resource "anxcloud_kubernetes_node_pool" "example" {
