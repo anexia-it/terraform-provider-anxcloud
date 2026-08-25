@@ -23,7 +23,7 @@ jobs:
     - uses: actions/checkout@v7
     - uses: actions/setup-go@v7
       with:
-        go-version-file: go.mod
+        go-version: 'stable'
 
     - name: Check for spelling errors
       run: make misspell
@@ -37,7 +37,7 @@ jobs:
     - uses: actions/checkout@v7
     - uses: actions/setup-go@v7
       with:
-        go-version-file: go.mod
+        go-version: 'stable'
 
     - name: Check code format
       run: make fmtcheck
@@ -51,7 +51,7 @@ jobs:
     - uses: actions/checkout@v7
     - uses: actions/setup-go@v7
       with:
-        go-version-file: go.mod
+        go-version: 'stable'
 
     - name: run depscheck
       run: make depscheck
@@ -62,7 +62,7 @@ jobs:
     - uses: actions/checkout@v7
     - uses: actions/setup-go@v7
       with:
-        go-version-file: go.mod
+        go-version: 'stable'
 
     - name: run unit tests
       run: make test
@@ -75,7 +75,7 @@ jobs:
     - uses: actions/checkout@v7
     - uses: actions/setup-go@v7
       with:
-        go-version-file: go.mod
+        go-version: 'stable'
 
     - name: Run acceptance tests
       run: make testacc
