@@ -29,7 +29,7 @@ func resourceDNSRecord() *schema.Resource {
 	return &schema.Resource{
 		Description: "This resource allows you to create DNS records for a specified zone. TXT records might behave funny, we are working on it." +
 			" Create and delete operations will be handled in batches internally. As a side effect this will cause whole batches to fail in case some of the operations are invalid." +
-			" Record attributes are updated in place, except for `zone_name` which triggers a replacement (destroy old -> create new).",
+			" Updating record attributes triggers a replacement (destroy old -> create new).",
 		CreateContext: resourceDNSRecordCreate,
 		ReadContext:   resourceDNSRecordRead,
 		DeleteContext: resourceDNSRecordDelete,
@@ -137,21 +137,21 @@ func resourceDNSRecordRead(ctx context.Context, d *schema.ResourceData, m interf
 }
 
 func resourceDNSRecordUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	a := apiFromProviderConfig(m)
 
-	r := dnsRecordFromResourceData(d)
-	r.Identifier = d.Get("identifier").(string)
-
-	// the record identifier changes on update (new revision); DecodeAPIResponse of
-	// clouddnsv1.Record re-finds the record in the returned zone and sets the new identifier
-	if err := a.Update(ctx, &r); err != nil {
-		return diag.FromErr(err)
+	update := &dnsRecordUpdate{
+		zone:     d.Get("zone_name").(string),
+		recordID: d.Get("identifier").(string),
+		Comment:  d.Get("comment").(string),
 	}
 
-	// recompute from resource data because the engine returns TXT rdata enclosed in quotes
-	d.SetId(resourceDNSRecordCanonicalIdentifier(dnsRecordFromResourceData(d)))
+	a := apiFromProviderConfig(m)
+	err := a.Update(ctx, update)
 
-	return resourceDNSRecordRead(ctx, d, m)
+	var diags []diag.Diagnostic
+	if err != nil {
+		diags = append(diags, diag.FromErr(err)...)
+	}
+	return diags
 }
 
 func resourceDNSRecordDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -372,4 +372,27 @@ func resourceDNSRecordCanonicalIdentifier(r clouddnsv1.Record) string {
 		r.Region,
 		fmt.Sprint(r.Immutable),
 	}, "_")
+}
+
+type dnsRecordUpdate struct {
+	zone     string
+	recordID string
+	Comment  string `json:"comment"`
+}
+
+func (u *dnsRecordUpdate) GetIdentifier(ctx context.Context) (string, error) {
+	return u.recordID, nil
+}
+func (u *dnsRecordUpdate) EndpointURL(ctx context.Context) (*url.URL, error) {
+	op, err := types.OperationFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if op != types.OperationUpdate {
+		return nil, errors.New("helper resource 'dnsRecordUpdate' only supports Update operations")
+	}
+
+	return url.Parse(fmt.Sprintf("/api/clouddns/v1/zone.json/%s/records/",
+		u.zone))
 }
