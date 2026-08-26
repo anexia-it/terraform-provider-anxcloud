@@ -28,7 +28,6 @@ resource "anxcloud_kubernetes_cluster" "example" {
   external_ip_families       = "IPv4"
   enable_oidc_authentication = false
 
-  # Recommended: wait for cluster reconciliation to complete before Terraform returns.
   wait_until_ready = true
 }
 

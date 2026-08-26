@@ -25,9 +25,6 @@ const (
 	kubernetesAPIEnvironmentProd  = "prod"
 	kubernetesAPIEnvironmentStage = "stage"
 	kubernetesAPIEnvironmentDev   = "dev"
-
-	requestKubeConfigRuleIdentifier = "12277a581e1c47cba72338425a008aa3"
-	removeKubeConfigRuleIdentifier  = "eec87131729e44fa91a4b7ee8c365a26"
 )
 
 func kubernetesAPIPath(environment string, version int) string {
@@ -166,18 +163,14 @@ func (k *kubernetesKubeconfigRequest) EndpointURL(ctx context.Context) (*url.URL
 		return nil, err
 	}
 
-	ruleIdentifier := requestKubeConfigRuleIdentifier
-	if operation == types.OperationDestroy {
-		ruleIdentifier = removeKubeConfigRuleIdentifier
-	} else if operation != types.OperationCreate {
+	if operation != types.OperationDestroy && operation != types.OperationCreate {
 		return nil, fmt.Errorf("unsupported kubeconfig operation %q", operation)
 	}
 
 	return url.Parse(fmt.Sprintf(
-		"%s/cluster.json/%s/rule/%s",
-		kubernetesAPIPath(k.apiEnvironment, 1),
+		"%s/cluster/%s/trigger/rotate_kubeconfig",
+		kubernetesAPIPath(k.apiEnvironment, 2),
 		k.Cluster,
-		ruleIdentifier,
 	))
 }
 
