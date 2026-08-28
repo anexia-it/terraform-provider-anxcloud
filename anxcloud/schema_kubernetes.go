@@ -97,8 +97,8 @@ Enable autoscaling for this cluster. Defaults to false if unset.
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
-			Description:  "IP families used for external networking. Valid values are `IPv4` and `Dualstack`.",
-			ValidateFunc: validation.StringInSlice([]string{"IPv4", "Dualstack"}, false),
+			Description:  "IP families used for external networking. Valid values are `IPv4` and `DualStack`.",
+			ValidateFunc: validation.StringInSlice([]string{"IPv4", "DualStack"}, false),
 		},
 		"enable_oidc_authentication": {
 			Type:        schema.TypeBool,

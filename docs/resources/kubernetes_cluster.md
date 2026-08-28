@@ -108,7 +108,7 @@ resource "anxcloud_network_prefix" "external_v6" {
 resource "anxcloud_kubernetes_cluster" "foo" {
   name                 = "foo"
   location             = data.anxcloud_core_location.anx04.id
-  external_ip_families = "Dualstack"
+  external_ip_families = "DualStack"
 
   internal_ipv4_prefix = anxcloud_network_prefix.internal_v4.id
   external_ipv4_prefix = anxcloud_network_prefix.external_v4.id
@@ -139,7 +139,7 @@ resource "anxcloud_kubernetes_cluster" "foo" {
 - `apiserver_allowlist` ([]String) Limits access to the kubernetes API server to the given CIDRs.
 - `cni_plugin` (String) Container Network Interface plugin. Currently only Canal is supported.
 - `enable_oidc_authentication` (Boolean) Enable OIDC authentication for the Kubernetes cluster.
-- `external_ip_families` (String) IP families used for external networking. Valid values are `IPv4` and `Dualstack`.
+- `external_ip_families` (String) IP families used for external networking. Valid values are `IPv4` and `DualStack`.
 - `maintenance_window_duration` (String) Maintenance window duration, for example `2h`, `30m`, or `15h30m`.
 - `maintenance_window_start_time` (String) Maintenance window start in UTC, for example `Tue 22:00` or `22:00`.
 - `oidc_client_id` (String) OIDC client ID.

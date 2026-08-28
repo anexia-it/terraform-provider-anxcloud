@@ -39,11 +39,11 @@ func TestKubernetesResourcesExposeUpdatesAndCurrentFields(t *testing.T) {
 		assert.False(t, fieldSchema.ForceNew, "%s must be updated without replacing the cluster", fieldName)
 	}
 	assert.NotContains(t, dataSourceKubernetesCluster().Schema, "wait_until_ready")
-	for _, value := range []string{"IPv4", "Dualstack"} {
+	for _, value := range []string{"IPv4", "DualStack"} {
 		_, errors := clusterResource.Schema["external_ip_families"].ValidateFunc(value, "external_ip_families")
 		assert.Empty(t, errors, "%s must be a valid external IP family", value)
 	}
-	_, errors := clusterResource.Schema["external_ip_families"].ValidateFunc("DualStack", "external_ip_families")
+	_, errors := clusterResource.Schema["external_ip_families"].ValidateFunc("Dualstack", "external_ip_families")
 	assert.NotEmpty(t, errors, "external IP family values must match the API spelling")
 
 	nodePoolResource := resourceKubernetesNodePool()
@@ -67,6 +67,11 @@ func TestKubernetesResourcesExposeUpdatesAndCurrentFields(t *testing.T) {
 	}
 	assert.False(t, nodePoolResource.Schema["initial_replicas"].ForceNew)
 	assert.False(t, nodePoolResource.Schema["disk"].ForceNew)
+	assert.True(t, nodePoolResource.Schema["cpu_performance_type"].Optional)
+	assert.Equal(t, "performance", nodePoolResource.Schema["cpu_performance_type"].Default)
+	primaryDiskSchema := nodePoolResource.Schema["disk"].Elem.(*schema.Resource).Schema
+	assert.True(t, primaryDiskSchema["performance_type"].Optional)
+	assert.True(t, primaryDiskSchema["performance_type"].Computed)
 	assert.True(t, nodePoolResource.Schema["networks"].Required)
 	assert.Equal(t, 1, nodePoolResource.Schema["networks"].MinItems)
 	assert.Equal(t, 10, nodePoolResource.Schema["networks"].MaxItems)
@@ -112,6 +117,49 @@ func TestKubernetesClusterCreateDefinitionExcludesReadOnlyFields(t *testing.T) {
 	assert.NotContains(t, definition, "state_text")
 	assert.NotContains(t, definition, "wait_until_ready")
 	assert.NotContains(t, definition, "api_environment")
+	assert.Equal(t, false, definition["manage_external_ipv6_prefix"])
+}
+
+func TestKubernetesClusterCreateDefinitionManagesExternalIPv6PrefixOnlyWhenNeeded(t *testing.T) {
+	tests := []struct {
+		name               string
+		externalIPFamilies string
+		externalIPv6Prefix string
+		wantManaged        bool
+	}{
+		{name: "unspecified IP families", wantManaged: false},
+		{name: "IPv4", externalIPFamilies: "IPv4", wantManaged: false},
+		{name: "DualStack without prefix", externalIPFamilies: "DualStack", wantManaged: true},
+		{
+			name:               "DualStack with explicit prefix",
+			externalIPFamilies: "DualStack",
+			externalIPv6Prefix: "prefix-id",
+			wantManaged:        false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			configuration := map[string]any{
+				"name":     "test-cluster",
+				"location": "location-id",
+			}
+			if test.externalIPFamilies != "" {
+				configuration["external_ip_families"] = test.externalIPFamilies
+			}
+			if test.externalIPv6Prefix != "" {
+				configuration["external_ipv6_prefix"] = test.externalIPv6Prefix
+			}
+
+			d := schema.TestResourceDataRaw(t, schemaKubernetesCluster(), configuration)
+			definition := kubernetesClusterCreateDefinition(d)
+
+			assert.Equal(t, test.wantManaged, definition["manage_external_ipv6_prefix"])
+			if test.externalIPv6Prefix != "" {
+				assert.Equal(t, test.externalIPv6Prefix, definition["external_ipv6_prefix"])
+			}
+		})
+	}
 }
 
 func TestKubernetesAPIEnvironmentPaths(t *testing.T) {
@@ -327,14 +375,14 @@ func TestKubernetesClusterCreateDoesNotWaitByDefault(t *testing.T) {
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
 		assert.NotContains(t, body, "state")
 		assert.NotContains(t, body, "backend_name")
-		assert.Equal(t, "Dualstack", body["external_ip_families"])
+		assert.Equal(t, "DualStack", body["external_ip_families"])
 		return kubernetesTestResponse(t, http.StatusOK, map[string]any{
 			"identifier": "cluster-id",
 			"name":       "test-cluster",
 			"location":   map[string]any{"identifier": "location-id", "name": "ANX04"},
 			"version":    map[string]any{"id": "1.35", "title": "1.35"},
 			"external_ip_families": map[string]any{
-				"id":    "Dualstack",
+				"id":    "DualStack",
 				"title": "IPv4 and IPv6",
 			},
 			"state": map[string]any{"id": "1", "title": "Error", "type": 1},
@@ -343,7 +391,7 @@ func TestKubernetesClusterCreateDoesNotWaitByDefault(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, resourceKubernetesCluster().Schema, map[string]any{
 		"name":                 "test-cluster",
 		"location":             "location-id",
-		"external_ip_families": "Dualstack",
+		"external_ip_families": "DualStack",
 	})
 
 	diags := resourceKubernetesClusterCreate(context.Background(), d, provider)
@@ -352,8 +400,29 @@ func TestKubernetesClusterCreateDoesNotWaitByDefault(t *testing.T) {
 	assert.Equal(t, "cluster-id", d.Id())
 	assert.Equal(t, "1", d.Get("state"))
 	assert.Equal(t, "Error", d.Get("state_text"))
-	assert.Equal(t, "Dualstack", d.Get("external_ip_families"))
+	assert.Equal(t, "DualStack", d.Get("external_ip_families"))
 	assert.Equal(t, 1, requestCount)
+}
+
+func TestKubernetesClusterCreateReportsEngineResponseMessage(t *testing.T) {
+	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
+		require.Equal(t, http.MethodPost, r.Method)
+		return kubernetesTestResponse(t, http.StatusBadRequest, map[string]any{
+			"message": "Missing field external_ipv4_prefix",
+		}), nil
+	})
+	d := schema.TestResourceDataRaw(t, resourceKubernetesCluster().Schema, map[string]any{
+		"name":     "test-cluster",
+		"location": "location-id",
+	})
+
+	diags := resourceKubernetesClusterCreate(context.Background(), d, provider)
+
+	require.True(t, diags.HasError())
+	require.NotEmpty(t, diags)
+	assert.Contains(t, diags[0].Summary, "failed to create Kubernetes cluster")
+	assert.Contains(t, diags[0].Summary, "400 Bad Request")
+	assert.Contains(t, diags[0].Summary, "Missing field external_ipv4_prefix")
 }
 
 func TestKubernetesNodePoolCreateDefinitionIncludesCompleteConfiguration(t *testing.T) {
@@ -368,7 +437,6 @@ func TestKubernetesNodePoolCreateDefinitionIncludesCompleteConfiguration(t *test
 		"operating_system":     "Flatcar Linux",
 		"cluster":              "cluster-id",
 		"sync_source":          "Cluster",
-		"cpu_performance_type": "standard",
 		"autoscaler_enabled":   true,
 		"autoscaler_min_nodes": 2,
 		"autoscaler_max_nodes": 5,
@@ -389,7 +457,8 @@ func TestKubernetesNodePoolCreateDefinitionIncludesCompleteConfiguration(t *test
 
 	definition := kubernetesNodePoolCreateDefinition(d)
 	assert.Equal(t, "cluster", definition["syncsource"])
-	assert.Equal(t, "standard", definition["cpu_performance_type"])
+	assert.Equal(t, "performance", definition["cpu_performance_type"])
+	assert.Equal(t, "ENT2", definition["disk_performance_type"])
 	assert.Equal(t, true, definition["autoscaler_enabled"])
 	assert.Equal(t, 2, definition["autoscaler_min_nodes"])
 	assert.Equal(t, 5, definition["autoscaler_max_nodes"])
@@ -405,6 +474,45 @@ func TestKubernetesNodePoolCreateDefinitionIncludesCompleteConfiguration(t *test
 	assert.Equal(t, "vlan-id", definition["networks"].([]map[string]any)[0]["vlan"])
 	assert.NotContains(t, definition, "state")
 	assert.NotContains(t, definition, "api_environment")
+}
+
+func TestKubernetesNodePoolCreateReportsEngineResponseMessages(t *testing.T) {
+	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
+		require.Equal(t, http.MethodPost, r.Method)
+		return kubernetesTestResponse(t, http.StatusBadRequest, map[string]any{
+			"messages": []string{"Missing field networks"},
+			"error": map[string]any{
+				"validation": map[string]string{
+					"cluster": "Missing field cluster",
+				},
+			},
+		}), nil
+	})
+	d := schema.TestResourceDataRaw(t, resourceKubernetesNodePool().Schema, map[string]any{
+		"name":             "test-node-pool",
+		"initial_replicas": 3,
+		"cpus":             2,
+		"memory_gib":       4,
+		"disk": []any{map[string]any{
+			"size_gib": 20,
+		}},
+		"operating_system": "Flatcar Linux",
+		"cluster":          "cluster-id",
+		"networks": []any{map[string]any{
+			"name":            "internal",
+			"bandwidth_limit": "1000",
+			"vlan":            "vlan-id",
+		}},
+	})
+
+	diags := resourceKubernetesNodePoolCreate(context.Background(), d, provider)
+
+	require.True(t, diags.HasError())
+	require.NotEmpty(t, diags)
+	assert.Contains(t, diags[0].Summary, "failed to create Kubernetes node pool")
+	assert.Contains(t, diags[0].Summary, "400 Bad Request")
+	assert.Contains(t, diags[0].Summary, "Missing field networks")
+	assert.Contains(t, diags[0].Summary, "cluster: Missing field cluster")
 }
 
 func TestAwaitKubernetesClusterReconciliationIgnoresIntermediateStates(t *testing.T) {
