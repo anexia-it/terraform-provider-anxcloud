@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+* resource/anxcloud_kubernetes_cluster: accept DualStack with capital S instead of lower case and set external_ipv6_prefix managed to false if not DualStack
+
 <!--
 Please add your changelog entry under this comment in the correct category (Security, Fixed, Added, Changed, Deprecated, Removed - in this order).
 <!--
