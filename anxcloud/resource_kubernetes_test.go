@@ -39,11 +39,11 @@ func TestKubernetesResourcesExposeUpdatesAndCurrentFields(t *testing.T) {
 		assert.False(t, fieldSchema.ForceNew, "%s must be updated without replacing the cluster", fieldName)
 	}
 	assert.NotContains(t, dataSourceKubernetesCluster().Schema, "wait_until_ready")
-	for _, value := range []string{"IPv4", "Dualstack"} {
+	for _, value := range []string{"IPv4", "DualStack"} {
 		_, errors := clusterResource.Schema["external_ip_families"].ValidateFunc(value, "external_ip_families")
 		assert.Empty(t, errors, "%s must be a valid external IP family", value)
 	}
-	_, errors := clusterResource.Schema["external_ip_families"].ValidateFunc("DualStack", "external_ip_families")
+	_, errors := clusterResource.Schema["external_ip_families"].ValidateFunc("Dualstack", "external_ip_families")
 	assert.NotEmpty(t, errors, "external IP family values must match the API spelling")
 
 	nodePoolResource := resourceKubernetesNodePool()
@@ -327,14 +327,14 @@ func TestKubernetesClusterCreateDoesNotWaitByDefault(t *testing.T) {
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
 		assert.NotContains(t, body, "state")
 		assert.NotContains(t, body, "backend_name")
-		assert.Equal(t, "Dualstack", body["external_ip_families"])
+		assert.Equal(t, "DualStack", body["external_ip_families"])
 		return kubernetesTestResponse(t, http.StatusOK, map[string]any{
 			"identifier": "cluster-id",
 			"name":       "test-cluster",
 			"location":   map[string]any{"identifier": "location-id", "name": "ANX04"},
 			"version":    map[string]any{"id": "1.35", "title": "1.35"},
 			"external_ip_families": map[string]any{
-				"id":    "Dualstack",
+				"id":    "DualStack",
 				"title": "IPv4 and IPv6",
 			},
 			"state": map[string]any{"id": "1", "title": "Error", "type": 1},
@@ -343,7 +343,7 @@ func TestKubernetesClusterCreateDoesNotWaitByDefault(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, resourceKubernetesCluster().Schema, map[string]any{
 		"name":                 "test-cluster",
 		"location":             "location-id",
-		"external_ip_families": "Dualstack",
+		"external_ip_families": "DualStack",
 	})
 
 	diags := resourceKubernetesClusterCreate(context.Background(), d, provider)
@@ -352,7 +352,7 @@ func TestKubernetesClusterCreateDoesNotWaitByDefault(t *testing.T) {
 	assert.Equal(t, "cluster-id", d.Id())
 	assert.Equal(t, "1", d.Get("state"))
 	assert.Equal(t, "Error", d.Get("state_text"))
-	assert.Equal(t, "Dualstack", d.Get("external_ip_families"))
+	assert.Equal(t, "DualStack", d.Get("external_ip_families"))
 	assert.Equal(t, 1, requestCount)
 }
 

@@ -67,8 +67,8 @@ variable "external_ip_families" {
   default     = "IPv4"
 
   validation {
-    condition     = contains(["IPv4", "Dualstack"], var.external_ip_families)
-    error_message = "external_ip_families must be IPv4 or Dualstack."
+    condition     = contains(["IPv4", "DualStack"], var.external_ip_families)
+    error_message = "external_ip_families must be IPv4 or DualStack."
   }
 }
 
