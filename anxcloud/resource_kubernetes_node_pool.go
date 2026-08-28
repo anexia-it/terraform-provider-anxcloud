@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"go.anx.io/go-anxcloud/pkg/api"
+	"go.anx.io/go-anxcloud/pkg/kubernetes/disk"
 )
 
 func resourceKubernetesNodePool() *schema.Resource {
@@ -146,9 +147,11 @@ func kubernetesNodePoolCreateDefinition(d *schema.ResourceData) map[string]any {
 	}
 
 	primaryDisk := d.Get("disk").([]any)[0].(map[string]any)
-	if performanceType := primaryDisk["performance_type"].(string); performanceType != "" {
-		definition["disk_performance_type"] = performanceType
+	diskPerformanceType, _ := primaryDisk["performance_type"].(string)
+	if diskPerformanceType == "" {
+		diskPerformanceType = string(disk.DiskPerformanceTypeENT2)
 	}
+	definition["disk_performance_type"] = diskPerformanceType
 	if disks := kubernetesNodePoolAdditionalDisksDefinition(d); len(disks) != 0 {
 		definition["additional_disks"] = disks
 	}

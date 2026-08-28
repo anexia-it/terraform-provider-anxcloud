@@ -67,6 +67,11 @@ func TestKubernetesResourcesExposeUpdatesAndCurrentFields(t *testing.T) {
 	}
 	assert.False(t, nodePoolResource.Schema["initial_replicas"].ForceNew)
 	assert.False(t, nodePoolResource.Schema["disk"].ForceNew)
+	assert.True(t, nodePoolResource.Schema["cpu_performance_type"].Optional)
+	assert.Equal(t, "performance", nodePoolResource.Schema["cpu_performance_type"].Default)
+	primaryDiskSchema := nodePoolResource.Schema["disk"].Elem.(*schema.Resource).Schema
+	assert.True(t, primaryDiskSchema["performance_type"].Optional)
+	assert.True(t, primaryDiskSchema["performance_type"].Computed)
 	assert.True(t, nodePoolResource.Schema["networks"].Required)
 	assert.Equal(t, 1, nodePoolResource.Schema["networks"].MinItems)
 	assert.Equal(t, 10, nodePoolResource.Schema["networks"].MaxItems)
@@ -389,7 +394,6 @@ func TestKubernetesNodePoolCreateDefinitionIncludesCompleteConfiguration(t *test
 		"operating_system":     "Flatcar Linux",
 		"cluster":              "cluster-id",
 		"sync_source":          "Cluster",
-		"cpu_performance_type": "standard",
 		"autoscaler_enabled":   true,
 		"autoscaler_min_nodes": 2,
 		"autoscaler_max_nodes": 5,
@@ -410,7 +414,8 @@ func TestKubernetesNodePoolCreateDefinitionIncludesCompleteConfiguration(t *test
 
 	definition := kubernetesNodePoolCreateDefinition(d)
 	assert.Equal(t, "cluster", definition["syncsource"])
-	assert.Equal(t, "standard", definition["cpu_performance_type"])
+	assert.Equal(t, "performance", definition["cpu_performance_type"])
+	assert.Equal(t, "ENT2", definition["disk_performance_type"])
 	assert.Equal(t, true, definition["autoscaler_enabled"])
 	assert.Equal(t, 2, definition["autoscaler_min_nodes"])
 	assert.Equal(t, 5, definition["autoscaler_max_nodes"])
