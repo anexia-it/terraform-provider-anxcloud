@@ -356,6 +356,27 @@ func TestKubernetesClusterCreateDoesNotWaitByDefault(t *testing.T) {
 	assert.Equal(t, 1, requestCount)
 }
 
+func TestKubernetesClusterCreateReportsEngineResponseMessage(t *testing.T) {
+	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
+		require.Equal(t, http.MethodPost, r.Method)
+		return kubernetesTestResponse(t, http.StatusBadRequest, map[string]any{
+			"message": "Missing field external_ipv4_prefix",
+		}), nil
+	})
+	d := schema.TestResourceDataRaw(t, resourceKubernetesCluster().Schema, map[string]any{
+		"name":     "test-cluster",
+		"location": "location-id",
+	})
+
+	diags := resourceKubernetesClusterCreate(context.Background(), d, provider)
+
+	require.True(t, diags.HasError())
+	require.NotEmpty(t, diags)
+	assert.Contains(t, diags[0].Summary, "failed to create Kubernetes cluster")
+	assert.Contains(t, diags[0].Summary, "400 Bad Request")
+	assert.Contains(t, diags[0].Summary, "Missing field external_ipv4_prefix")
+}
+
 func TestKubernetesNodePoolCreateDefinitionIncludesCompleteConfiguration(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, schemaKubernetesNodePool(), map[string]any{
 		"name":             "test-node-pool",
@@ -405,6 +426,45 @@ func TestKubernetesNodePoolCreateDefinitionIncludesCompleteConfiguration(t *test
 	assert.Equal(t, "vlan-id", definition["networks"].([]map[string]any)[0]["vlan"])
 	assert.NotContains(t, definition, "state")
 	assert.NotContains(t, definition, "api_environment")
+}
+
+func TestKubernetesNodePoolCreateReportsEngineResponseMessages(t *testing.T) {
+	provider := kubernetesTestProviderContext(t, func(r *http.Request) (*http.Response, error) {
+		require.Equal(t, http.MethodPost, r.Method)
+		return kubernetesTestResponse(t, http.StatusBadRequest, map[string]any{
+			"messages": []string{"Missing field networks"},
+			"error": map[string]any{
+				"validation": map[string]string{
+					"cluster": "Missing field cluster",
+				},
+			},
+		}), nil
+	})
+	d := schema.TestResourceDataRaw(t, resourceKubernetesNodePool().Schema, map[string]any{
+		"name":             "test-node-pool",
+		"initial_replicas": 3,
+		"cpus":             2,
+		"memory_gib":       4,
+		"disk": []any{map[string]any{
+			"size_gib": 20,
+		}},
+		"operating_system": "Flatcar Linux",
+		"cluster":          "cluster-id",
+		"networks": []any{map[string]any{
+			"name":            "internal",
+			"bandwidth_limit": "1000",
+			"vlan":            "vlan-id",
+		}},
+	})
+
+	diags := resourceKubernetesNodePoolCreate(context.Background(), d, provider)
+
+	require.True(t, diags.HasError())
+	require.NotEmpty(t, diags)
+	assert.Contains(t, diags[0].Summary, "failed to create Kubernetes node pool")
+	assert.Contains(t, diags[0].Summary, "400 Bad Request")
+	assert.Contains(t, diags[0].Summary, "Missing field networks")
+	assert.Contains(t, diags[0].Summary, "cluster: Missing field cluster")
 }
 
 func TestAwaitKubernetesClusterReconciliationIgnoresIntermediateStates(t *testing.T) {
