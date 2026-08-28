@@ -265,7 +265,6 @@ func setKubernetesClusterPrefixDefinitionFields(definition map[string]any, d *sc
 	prefixes := map[string]string{
 		"internal_ipv4_prefix": "manage_internal_ipv4_prefix",
 		"external_ipv4_prefix": "manage_external_ipv4_prefix",
-		"external_ipv6_prefix": "manage_external_ipv6_prefix",
 	}
 	for field, manageField := range prefixes {
 		if changedOnly && !d.HasChange(field) {
@@ -276,6 +275,19 @@ func setKubernetesClusterPrefixDefinitionFields(definition map[string]any, d *sc
 			definition[manageField] = false
 		}
 	}
+
+	externalIPv6PrefixChanged := d.HasChange("external_ipv6_prefix")
+	externalIPFamiliesChanged := d.HasChange("external_ip_families")
+	if changedOnly && !externalIPv6PrefixChanged && !externalIPFamiliesChanged {
+		return
+	}
+
+	externalIPv6Prefix, hasExternalIPv6Prefix := d.GetOk("external_ipv6_prefix")
+	if hasExternalIPv6Prefix {
+		definition["external_ipv6_prefix"] = externalIPv6Prefix.(string)
+	}
+	definition["manage_external_ipv6_prefix"] =
+		d.Get("external_ip_families").(string) == "DualStack" && !hasExternalIPv6Prefix
 }
 
 func setChangedKubernetesClusterOIDCFields(definition map[string]any, d *schema.ResourceData) {

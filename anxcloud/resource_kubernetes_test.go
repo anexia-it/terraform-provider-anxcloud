@@ -117,6 +117,49 @@ func TestKubernetesClusterCreateDefinitionExcludesReadOnlyFields(t *testing.T) {
 	assert.NotContains(t, definition, "state_text")
 	assert.NotContains(t, definition, "wait_until_ready")
 	assert.NotContains(t, definition, "api_environment")
+	assert.Equal(t, false, definition["manage_external_ipv6_prefix"])
+}
+
+func TestKubernetesClusterCreateDefinitionManagesExternalIPv6PrefixOnlyWhenNeeded(t *testing.T) {
+	tests := []struct {
+		name               string
+		externalIPFamilies string
+		externalIPv6Prefix string
+		wantManaged        bool
+	}{
+		{name: "unspecified IP families", wantManaged: false},
+		{name: "IPv4", externalIPFamilies: "IPv4", wantManaged: false},
+		{name: "DualStack without prefix", externalIPFamilies: "DualStack", wantManaged: true},
+		{
+			name:               "DualStack with explicit prefix",
+			externalIPFamilies: "DualStack",
+			externalIPv6Prefix: "prefix-id",
+			wantManaged:        false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			configuration := map[string]any{
+				"name":     "test-cluster",
+				"location": "location-id",
+			}
+			if test.externalIPFamilies != "" {
+				configuration["external_ip_families"] = test.externalIPFamilies
+			}
+			if test.externalIPv6Prefix != "" {
+				configuration["external_ipv6_prefix"] = test.externalIPv6Prefix
+			}
+
+			d := schema.TestResourceDataRaw(t, schemaKubernetesCluster(), configuration)
+			definition := kubernetesClusterCreateDefinition(d)
+
+			assert.Equal(t, test.wantManaged, definition["manage_external_ipv6_prefix"])
+			if test.externalIPv6Prefix != "" {
+				assert.Equal(t, test.externalIPv6Prefix, definition["external_ipv6_prefix"])
+			}
+		})
+	}
 }
 
 func TestKubernetesAPIEnvironmentPaths(t *testing.T) {
