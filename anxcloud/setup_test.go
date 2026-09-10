@@ -41,6 +41,11 @@ func TestMain(m *testing.M) {
 }
 
 func cleanupEnvironment() {
+	_, hasToken := os.LookupEnv("ANEXIA_TOKEN")
+	if !hasToken {
+		return
+	}
+
 	ctx := context.Background()
 
 	// Init client
