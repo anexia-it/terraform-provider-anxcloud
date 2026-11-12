@@ -262,17 +262,19 @@ func kubernetesClusterUpdateDefinition(d *schema.ResourceData) map[string]any {
 }
 
 func setKubernetesClusterPrefixDefinitionFields(definition map[string]any, d *schema.ResourceData, changedOnly bool) {
-	prefixes := map[string]string{
-		"internal_ipv4_prefix": "manage_internal_ipv4_prefix",
-		"external_ipv4_prefix": "manage_external_ipv4_prefix",
+	// The Engine Kubernetes API does not accept the legacy manage_* prefix
+	// parameters anymore. Explicitly provided prefixes are attached as-is;
+	// prefixes without a value are managed by the API automatically.
+	prefixes := []string{
+		"internal_ipv4_prefix",
+		"external_ipv4_prefix",
 	}
-	for field, manageField := range prefixes {
+	for _, field := range prefixes {
 		if changedOnly && !d.HasChange(field) {
 			continue
 		}
 		if value, ok := d.GetOk(field); ok {
 			definition[field] = value.(string)
-			definition[manageField] = false
 		}
 	}
 
@@ -286,8 +288,6 @@ func setKubernetesClusterPrefixDefinitionFields(definition map[string]any, d *sc
 	if hasExternalIPv6Prefix {
 		definition["external_ipv6_prefix"] = externalIPv6Prefix.(string)
 	}
-	definition["manage_external_ipv6_prefix"] =
-		d.Get("external_ip_families").(string) == "DualStack" && !hasExternalIPv6Prefix
 }
 
 func setChangedKubernetesClusterOIDCFields(definition map[string]any, d *schema.ResourceData) {
