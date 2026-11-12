@@ -117,24 +117,24 @@ func TestKubernetesClusterCreateDefinitionExcludesReadOnlyFields(t *testing.T) {
 	assert.NotContains(t, definition, "state_text")
 	assert.NotContains(t, definition, "wait_until_ready")
 	assert.NotContains(t, definition, "api_environment")
-	assert.Equal(t, false, definition["manage_external_ipv6_prefix"])
+	assert.NotContains(t, definition, "manage_internal_ipv4_prefix")
+	assert.NotContains(t, definition, "manage_external_ipv4_prefix")
+	assert.NotContains(t, definition, "manage_external_ipv6_prefix")
 }
 
-func TestKubernetesClusterCreateDefinitionManagesExternalIPv6PrefixOnlyWhenNeeded(t *testing.T) {
+func TestKubernetesClusterCreateDefinitionIncludesExplicitExternalIPv6Prefix(t *testing.T) {
 	tests := []struct {
 		name               string
 		externalIPFamilies string
 		externalIPv6Prefix string
-		wantManaged        bool
 	}{
-		{name: "unspecified IP families", wantManaged: false},
-		{name: "IPv4", externalIPFamilies: "IPv4", wantManaged: false},
-		{name: "DualStack without prefix", externalIPFamilies: "DualStack", wantManaged: true},
+		{name: "unspecified IP families"},
+		{name: "IPv4", externalIPFamilies: "IPv4"},
+		{name: "DualStack without prefix", externalIPFamilies: "DualStack"},
 		{
 			name:               "DualStack with explicit prefix",
 			externalIPFamilies: "DualStack",
 			externalIPv6Prefix: "prefix-id",
-			wantManaged:        false,
 		},
 	}
 
@@ -154,9 +154,13 @@ func TestKubernetesClusterCreateDefinitionManagesExternalIPv6PrefixOnlyWhenNeede
 			d := schema.TestResourceDataRaw(t, schemaKubernetesCluster(), configuration)
 			definition := kubernetesClusterCreateDefinition(d)
 
-			assert.Equal(t, test.wantManaged, definition["manage_external_ipv6_prefix"])
+			assert.NotContains(t, definition, "manage_internal_ipv4_prefix")
+			assert.NotContains(t, definition, "manage_external_ipv4_prefix")
+			assert.NotContains(t, definition, "manage_external_ipv6_prefix")
 			if test.externalIPv6Prefix != "" {
 				assert.Equal(t, test.externalIPv6Prefix, definition["external_ipv6_prefix"])
+			} else {
+				assert.NotContains(t, definition, "external_ipv6_prefix")
 			}
 		})
 	}
