@@ -7,10 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-* resource/anxcloud_kubernetes_cluster: accept DualStack with capital S instead of lower case and set external_ipv6_prefix managed to false if not DualStack
-
-<!--
-Please add your changelog entry under this comment in the correct category (Security, Fixed, Added, Changed, Deprecated, Removed - in this order).
 <!--
 Please add your changelog entry under this comment in the correct category (Security, Fixed, Added, Changed, Deprecated, Removed - in this order).
 
@@ -28,6 +24,8 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 * resource/anxcloud_kubernetes_cluster: include external IP families in cluster creation requests without sending unsupported backend, persistent-storage, or read-only reconciliation state fields
 * resource/anxcloud_kubernetes_node_pool: send the complete desired configuration during creation, including the required sync source, CPU performance type, and at least one network
 * resource/anxcloud_kubernetes_cluster: serialize unset or cleared OIDC group and username claims as JSON null values
+* resource/anxcloud_kubernetes_cluster: accept DualStack with capital S instead of lower case and set external_ipv6_prefix managed to false if not DualStack
+* resource/anxcloud_kubernetes_cluster: no longer sends manage_internal_ipv4_prefix or manage_external_ipv4_prefix
 
 ### Added
 
