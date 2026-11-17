@@ -123,3 +123,17 @@ Optional:
 - `delete` (String)
 - `read` (String)
 - `update` (String)
+
+## Import
+
+Production Kubernetes node pools can be imported using their node pool identifier:
+
+```shell
+terraform import anxcloud_kubernetes_node_pool.example '<node-pool-id>'
+```
+
+For node pools in another Kubernetes API environment, prefix the identifier with `stage:` or `dev:`. The prefix sets `api_environment` in the imported state before the node pool is refreshed:
+
+```shell
+terraform import anxcloud_kubernetes_node_pool.example 'stage:<node-pool-id>'
+```

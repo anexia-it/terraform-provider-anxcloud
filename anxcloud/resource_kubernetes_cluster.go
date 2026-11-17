@@ -43,38 +43,6 @@ func resourceKubernetesCluster() *schema.Resource {
 	}
 }
 
-func resourceKubernetesClusterImport(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
-	importID := d.Id()
-	apiEnvironment := kubernetesAPIEnvironmentProd
-	identifier := importID
-
-	if environment, clusterID, found := strings.Cut(importID, ":"); found {
-		apiEnvironment = environment
-		identifier = clusterID
-	}
-
-	switch apiEnvironment {
-	case kubernetesAPIEnvironmentProd, kubernetesAPIEnvironmentStage, kubernetesAPIEnvironmentDev:
-	default:
-		return nil, fmt.Errorf(
-			"invalid Kubernetes cluster import ID %q: API environment must be one of prod, stage, or dev",
-			importID,
-		)
-	}
-	if identifier == "" || strings.Contains(identifier, ":") {
-		return nil, fmt.Errorf(
-			"invalid Kubernetes cluster import ID %q: expected <cluster-id> or <api-environment>:<cluster-id>",
-			importID,
-		)
-	}
-	if err := d.Set("api_environment", apiEnvironment); err != nil {
-		return nil, fmt.Errorf("failed setting Kubernetes API environment during import: %w", err)
-	}
-
-	d.SetId(identifier)
-	return []*schema.ResourceData{d}, nil
-}
-
 func resourceKubernetesClusterCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	a := apiFromProviderConfig(m)
 	apiEnvironment := d.Get("api_environment").(string)

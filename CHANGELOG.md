@@ -19,7 +19,7 @@ If the change isn't user-facing but still relevant enough for a changelog entry,
 
 ### Fixed
 
-* resource/anxcloud_kubernetes_cluster: preserve `api_environment` when importing clusters from the stage or development Kubernetes service API
+* resource/anxcloud_kubernetes_cluster, resource/anxcloud_kubernetes_node_pool: preserve `api_environment` when importing resources from the stage or development Kubernetes service API
 * resource/anxcloud_kubernetes_cluster: preserve failed clusters in Terraform state so they can be updated or deleted, and make reconciliation waiting opt-in
 * resource/anxcloud_kubernetes_cluster, resource/anxcloud_kubernetes_node_pool: wait for deletion to finish before removing resources from Terraform state
 * resource/anxcloud_kubernetes_cluster: include external IP families in cluster creation requests without sending unsupported backend, persistent-storage, or read-only reconciliation state fields

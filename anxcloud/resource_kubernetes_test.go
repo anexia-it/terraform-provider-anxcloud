@@ -164,6 +164,43 @@ func TestKubernetesClusterImportRejectsInvalidID(t *testing.T) {
 	}
 }
 
+func TestKubernetesNodePoolImportSetsAPIEnvironment(t *testing.T) {
+	for name, test := range map[string]struct {
+		importID       string
+		identifier     string
+		apiEnvironment string
+	}{
+		"production ID": {
+			importID:       "node-pool-id",
+			identifier:     "node-pool-id",
+			apiEnvironment: kubernetesAPIEnvironmentProd,
+		},
+		"stage ID": {
+			importID:       "stage:node-pool-id",
+			identifier:     "node-pool-id",
+			apiEnvironment: kubernetesAPIEnvironmentStage,
+		},
+		"development ID": {
+			importID:       "dev:node-pool-id",
+			identifier:     "node-pool-id",
+			apiEnvironment: kubernetesAPIEnvironmentDev,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			resource := resourceKubernetesNodePool()
+			d := schema.TestResourceDataRaw(t, resource.Schema, nil)
+			d.SetId(test.importID)
+
+			states, err := resource.Importer.StateContext(context.Background(), d, nil)
+
+			require.NoError(t, err)
+			require.Len(t, states, 1)
+			assert.Equal(t, test.identifier, states[0].Id())
+			assert.Equal(t, test.apiEnvironment, states[0].Get("api_environment"))
+		})
+	}
+}
+
 func TestKubernetesClusterCreateDefinitionExcludesReadOnlyFields(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, schemaKubernetesCluster(), map[string]any{
 		"name":     "test-cluster",
