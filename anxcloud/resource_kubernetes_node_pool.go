@@ -16,7 +16,7 @@ func resourceKubernetesNodePool() *schema.Resource {
 	return &schema.Resource{
 		Description: "Resource to create and update Kubernetes node pools.",
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceKubernetesNodePoolImport,
 		},
 		CreateContext: tagsMiddlewareCreate(resourceKubernetesNodePoolCreate),
 		ReadContext:   tagsMiddlewareRead(resourceKubernetesNodePoolRead),

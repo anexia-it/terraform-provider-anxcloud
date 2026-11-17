@@ -171,3 +171,17 @@ Optional:
 - `delete` (String)
 - `read` (String)
 - `update` (String)
+
+## Import
+
+Production Kubernetes clusters can be imported using their cluster identifier:
+
+```shell
+terraform import anxcloud_kubernetes_cluster.example '<cluster-id>'
+```
+
+For clusters in another Kubernetes API environment, prefix the identifier with `stage:` or `dev:`. The prefix sets `api_environment` in the imported state before the cluster is refreshed:
+
+```shell
+terraform import anxcloud_kubernetes_cluster.example 'stage:<cluster-id>'
+```

@@ -31,7 +31,7 @@ func resourceKubernetesCluster() *schema.Resource {
 		UpdateContext: tagsMiddlewareUpdate(resourceKubernetesClusterUpdate),
 		DeleteContext: resourceKubernetesClusterDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceKubernetesClusterImport,
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
