@@ -102,6 +102,68 @@ func TestKubernetesResourcesExposeUpdatesAndCurrentFields(t *testing.T) {
 	}
 }
 
+func TestKubernetesClusterImportSetsAPIEnvironment(t *testing.T) {
+	for name, test := range map[string]struct {
+		importID       string
+		identifier     string
+		apiEnvironment string
+	}{
+		"production ID": {
+			importID:       "cluster-id",
+			identifier:     "cluster-id",
+			apiEnvironment: kubernetesAPIEnvironmentProd,
+		},
+		"explicit production ID": {
+			importID:       "prod:cluster-id",
+			identifier:     "cluster-id",
+			apiEnvironment: kubernetesAPIEnvironmentProd,
+		},
+		"stage ID": {
+			importID:       "stage:cluster-id",
+			identifier:     "cluster-id",
+			apiEnvironment: kubernetesAPIEnvironmentStage,
+		},
+		"development ID": {
+			importID:       "dev:cluster-id",
+			identifier:     "cluster-id",
+			apiEnvironment: kubernetesAPIEnvironmentDev,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			resource := resourceKubernetesCluster()
+			d := schema.TestResourceDataRaw(t, resource.Schema, nil)
+			d.SetId(test.importID)
+
+			states, err := resource.Importer.StateContext(context.Background(), d, nil)
+
+			require.NoError(t, err)
+			require.Len(t, states, 1)
+			assert.Equal(t, test.identifier, states[0].Id())
+			assert.Equal(t, test.apiEnvironment, states[0].Get("api_environment"))
+		})
+	}
+}
+
+func TestKubernetesClusterImportRejectsInvalidID(t *testing.T) {
+	for _, importID := range []string{
+		"testing:cluster-id",
+		"stage:",
+		"stage:cluster:id",
+	} {
+		t.Run(importID, func(t *testing.T) {
+			resource := resourceKubernetesCluster()
+			d := schema.TestResourceDataRaw(t, resource.Schema, nil)
+			d.SetId(importID)
+
+			states, err := resource.Importer.StateContext(context.Background(), d, nil)
+
+			require.Error(t, err)
+			assert.Nil(t, states)
+			assert.Contains(t, err.Error(), "invalid Kubernetes cluster import ID")
+		})
+	}
+}
+
 func TestKubernetesClusterCreateDefinitionExcludesReadOnlyFields(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, schemaKubernetesCluster(), map[string]any{
 		"name":     "test-cluster",
